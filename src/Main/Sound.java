@@ -13,8 +13,9 @@ public class Sound {
     public Sound(){
         soundURL[0]=getClass().getResource("/res/sound/background_1.wav"); // Background music 1
         soundURL[1]=getClass().getResource("/res/sound/background_2.wav"); // Background music 2
-        soundURL[13]=getClass().getResource("/res/sound/background_3.wav"); // Background music 2
-        soundURL[14]=getClass().getResource("/res/sound/background_4.wav"); // Background music 2
+        soundURL[13]=getClass().getResource("/res/sound/background_3.wav"); // Background music 3
+        soundURL[14]=getClass().getResource("/res/sound/background_4.wav"); // Background music 4
+        soundURL[15]=getClass().getResource("/res/sound/background_5.wav"); // Background music 5
         soundURL[2]=getClass().getResource("/res/sound/key_pick_up.wav"); // Key sound
         soundURL[3]=getClass().getResource("/res/sound/door.wav"); // Door open sound
         soundURL[4]=getClass().getResource("/res/sound/chest.wav"); // Chest sound

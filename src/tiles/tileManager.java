@@ -1,6 +1,7 @@
 package tiles;
 
 import Main.GamePanel;
+import Main.Utility;
 
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
@@ -17,34 +18,70 @@ public class tileManager extends JPanel {
     //constructor
     public tileManager(GamePanel gp) {
         this.gp = gp;
-        tiles = new tile[100]; // 0: grass, 1: wall, 2: water
+        tiles = new tile[100];
         mapTileNum = new int[gp.maxWorldCol][gp.maxWorldRow];
         getTileImage();
-        loadMap("/res/maps/start_map.txt");
+        loadMap("/res/maps/worldV2.txt");
     }
 
     //load tile images
     public void getTileImage() {
         try {
-            tiles[0] = new tile(); // grass
-            tiles[1] = new tile(); // wall
-            tiles[2] = new tile(); // water
-            tiles[3]=new tile(); //wood
-            tiles[4]=new tile(); // tree1
-            tiles[5]=new tile(); //sand
-
-            tiles[0].image = ImageIO.read(getClass().getResourceAsStream("/res/tileset/grass.png"));
-            tiles[1].image = ImageIO.read(getClass().getResourceAsStream("/res/tileset/wall.png"));
-            tiles[1].collision = true;
-            tiles[2].image = ImageIO.read(getClass().getResourceAsStream("/res/tileset/water_wave.png"));
-            tiles[2].deadly = true;
-            tiles[3].image = ImageIO.read(getClass().getResourceAsStream("/res/tileset/wooden.png"));
-            tiles[3].collision = false;
-            tiles[4].image = ImageIO.read(getClass().getResourceAsStream("/res/tileset/tree1.png"));
-            tiles[4].collision = true;
-            tiles[5].image = ImageIO.read(getClass().getResourceAsStream("/res/tileset/sand.png"));
+            setup(0, "grass00", false);
+            setup(1, "grass00", false);
+            setup(2, "grass00", false);
+            setup(3, "grass00", false);
+            setup(4, "grass00", false);
+            setup(5, "grass00", false);
+            setup(6, "grass00", false);
+            setup(7, "grass00", false);
+            setup(9, "grass00", false);
+            setup(10, "grass00", false);
+            setup(11, "grass01", false);
+            setup(12, "water00", true);
+            setup(13, "water01", true);
+            setup(14, "water02", true);
+            setup(15, "water03", true);
+            setup(16, "water04", true);
+            setup(17, "water05", true);
+            setup(18, "water06", true);
+            setup(19, "water07", true);
+            setup(20, "water08", true);
+            setup(21, "water09", true);
+            setup(22, "water10", true);
+            setup(23, "water11", true);
+            setup(24, "water12", true);
+            setup(25, "water13", true);
+            setup(26,"road00", false);
+            setup(27,"road01", false);
+            setup(28,"road02", false);
+            setup(29,"road03", false);
+            setup(30,"road04", false);
+            setup(31,"road05", false);
+            setup(32,"road06", false);
+            setup(33,"road07", false);
+            setup(34,"road08", false);
+            setup(35,"road09", false);
+            setup(36,"road10", false);
+            setup(37,"road11", false);
+            setup(38,"road12", false);
+            setup(39,"earth", false);
+            setup(40,"wall", true);
+            setup(41,"tree", true);
 
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public void setup(int index,String path,boolean collision){
+        Utility u = new Utility();
+        try{
+            tiles[index]=new tile();
+            tiles[index].image = ImageIO.read(getClass().getResourceAsStream("/res/tileset/"+ path +".png"));
+            tiles[index].image= u.scaleImage(tiles[index].image, gp.tileSize, gp.tileSize);
+            tiles[index].collision = collision;
+        }
+        catch (Exception e){
             e.printStackTrace();
         }
     }
@@ -95,7 +132,7 @@ public class tileManager extends JPanel {
                     worldX-gp.tileSize<gp.player.x+gp.player.screenX &&
                     worldY+gp.tileSize>gp.player.y-gp.player.screenY &&
                     worldY-gp.tileSize<gp.player.y+gp.player.screenY) {
-                g2.drawImage(tiles[tileNum].image, x, y, gp.tileSize, gp.tileSize, null);
+                g2.drawImage(tiles[tileNum].image, x, y,  null);
             }
             worldCol++;
 

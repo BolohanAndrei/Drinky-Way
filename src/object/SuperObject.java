@@ -1,6 +1,7 @@
 package object;
 
 import Main.GamePanel;
+import Main.Utility;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -14,6 +15,8 @@ public class SuperObject {
     public Rectangle solidArea = new Rectangle(0, 0, 48, 48);
     public int solidAreaDefaultX = 0;
     public int solidAreaDefaultY = 0;
+
+    Utility utility = new Utility();
 
     public void draw(Graphics g, GamePanel gp){
         int x = worldX - gp.player.x + gp.player.screenX;
