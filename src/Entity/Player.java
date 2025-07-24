@@ -3,20 +3,17 @@
 
 import Main.GamePanel;
 import Main.KeyHandler;
+import Main.Utility;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class Player extends Entity {
-    GamePanel gp;
     KeyHandler keyHandler;
 
     public final int screenX;
     public final int screenY;
-    public int hasGoldKey=0;
-    public int hasEmeraldKey=0;
-    public int hasSilverKey=0;
 
     private double currentSpeed = 0;
     private final double acceleration = 0.2;
@@ -25,7 +22,7 @@ public class Player extends Entity {
 
     //CONSTRUCTOR
     public Player(GamePanel gp, KeyHandler kh) {
-        this.gp = gp;
+        super(gp);
         this.keyHandler = kh;
 
         screenX = gp.screenWidth / 2 - (gp.tileSize / 2);
@@ -50,25 +47,28 @@ public class Player extends Entity {
     //LOAD PLAYER IMAGES
     public void getPlayerImage() {
         try {
-            up1 = ImageIO.read(getClass().getResourceAsStream("/res/player/pirate_up_1.png"));
-            up2 = ImageIO.read(getClass().getResourceAsStream("/res/player/pirate_up_2.png"));
-            down1 = ImageIO.read(getClass().getResourceAsStream("/res/player/pirate_down_1.png"));
-            down2 = ImageIO.read(getClass().getResourceAsStream("/res/player/pirate_down_2.png"));
-            left1 = ImageIO.read(getClass().getResourceAsStream("/res/player/pirate_left_1.png"));
-            left2 = ImageIO.read(getClass().getResourceAsStream("/res/player/pirate_left_2.png"));
-            right1 = ImageIO.read(getClass().getResourceAsStream("/res/player/pirate_right_1.png"));
-            right2 = ImageIO.read(getClass().getResourceAsStream("/res/player/pirate_right_2.png"));
-            idle_up = ImageIO.read(getClass().getResourceAsStream("/res/player/pirate_up_idle.png"));
-            idle_down = ImageIO.read(getClass().getResourceAsStream("/res/player/pirate_down_idle.png"));
-            idle_left = ImageIO.read(getClass().getResourceAsStream("/res/player/pirate_left_idle.png"));
-            idle_right = ImageIO.read(getClass().getResourceAsStream("/res/player/pirate_right_idle.png"));
-            die1 = ImageIO.read(getClass().getResourceAsStream("/res/player/die1.png"));
-            die2 = ImageIO.read(getClass().getResourceAsStream("/res/player/die2.png"));
-            die3 = ImageIO.read(getClass().getResourceAsStream("/res/player/die3.png"));
+            up1=setup("player/pirate_up_1");
+            up2 = setup("player/pirate_up_2");
+            down1 = setup("player/pirate_down_1");
+            down2 = setup("player/pirate_down_2");
+            left1 = setup("player/pirate_left_1");
+            left2 = setup("player/pirate_left_2");
+            right1 = setup("player/pirate_right_1");
+            right2 = setup("player/pirate_right_2");
+
+            // Idle animations
+            idle_up = setup("player/pirate_up_idle");
+            idle_down = setup("player/pirate_down_idle");
+            idle_left = setup("player/pirate_left_idle");
+            idle_right = setup("player/pirate_right_idle");
+            die1 = setup("player/die1");
+            die2 = setup("player/die2");
+            die3 = setup("player/die3");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 
     public void update() {
         boolean moved = false;
@@ -136,6 +136,10 @@ public class Player extends Entity {
         int objIndex= gp.collisionCheck.checkObj(this,true);
         pickUpObj(objIndex);
 
+        // Check for collisions with NPCs
+        int npcIndex = gp.collisionCheck.checkEntity(this, gp.npc);
+        interactNPC(npcIndex);
+
         if(collisionOn){
             canMoveX=false;
             canMoveY=false;
@@ -148,6 +152,7 @@ public class Player extends Entity {
         if(canMoveY){
             y += dy * currentSpeed;
         }
+
 
         //Dead check - not working
         if(gp.deadCheck.check(this)){
@@ -189,69 +194,15 @@ public class Player extends Entity {
     }
 
     //PICK UP OBJECTS
-    public void pickUpObj(int i){
-        if(i!=999) {
-            String objName = gp.obj[i].name;
-            switch (objName) {
-                case "Gold_Key":
-                    gp.playSE(2);
-                    hasGoldKey++;
-                    gp.obj[i] = null;
-                    gp.ui.showMessage("Ahoy Captain, you got a gold key!");
-                    break;
-                case "Silver_Key":
-                    gp.playSE(2);
-                    hasSilverKey++;
-                    gp.obj[i] = null;
-                    gp.ui.showMessage("Ahoy Captain, you got a silver key!");
-                    break;
-                case "Emerald_Key":
-                    gp.playSE(2);
-                    hasEmeraldKey++;
-                    gp.obj[i] = null;
-                    gp.ui.showMessage("Ahoy Captain, you got an emerald key!");
-                    break;
-                case "Door":
-                    gp.playSE(3);
-                    if (hasGoldKey > 0) {
-                        gp.obj[i] = null;
-                        hasGoldKey--;
-                        gp.ui.showMessage("You opened a door, Captain!");
-                    }else{
-                        gp.ui.showMessage("You need a gold key to open this door, Captain!");
-                    }
-                    break;
-                case "Skull_Door":
-                    gp.playSE(3);
-                    if (hasEmeraldKey > 0) {
-                        gp.obj[i] = null;
-                        hasEmeraldKey--;
-                        gp.ui.showMessage("You opened a skull door, Captain!");
-                    }else{
-                        gp.ui.showMessage("You need an emerald key to open this skull door, Captain!");
-                    }
-                    break;
-                case "Crusty Boots":
-                    gp.playSE(5);
-                    gp.obj[i] = null;
-                    speed += 1;
-                    gp.ui.showMessage("You found Crusty Boots, Captain! Your speed increased by 1!");
-                    break;
-                case "Chest":
-                    gp.playSE(4);
-                    if (hasSilverKey > 0) {
-                        gp.obj[i] = null;
-                        hasSilverKey--;
-                        //gp.ui.showMessage("You opened a chest, Captain!");
-                        gp.ui.gameFinished = true;
-                        gp.stopMusic();
-                        gp.playSE(8);
-                       // gp.ui.showMessage("Congratulations, Captain! You found the treasure and completed the game!");
-                    } else {
-                        gp.ui.showMessage("You need a silver key to open this chest, Captain!");
-                    }
-                    break;
-            }
+    public void pickUpObj(int i) {
+        if (i != 999) {
+            ;
+        }
+    }
+
+    //INTERACT WITH NPC
+    public void interactNPC(int i) {
+        if (i != 999) {
         }
     }
 
@@ -317,6 +268,6 @@ public class Player extends Entity {
                 image = idle_right;
                 break;
         }
-        g2d.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+        g2d.drawImage(image, screenX, screenY, null);
     }
 }
