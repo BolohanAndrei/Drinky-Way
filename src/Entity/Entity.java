@@ -11,6 +11,7 @@ public class Entity {
 
     GamePanel gp;
 
+    // Position and movement
     public int x, y;
     public int speed;
     public int actionLockCounter = 0;
@@ -18,12 +19,20 @@ public class Entity {
     public BufferedImage up1, up2, down1, down2, left1, left2, right1, right2, idle_up, idle_down, idle_left, idle_right, die1, die2, die3, idle_1, idle_2, idle_3, idle_4;
     public String direction;
 
+    // Dialogue system
+    String[] dialogue = new String[20];
+    public int dialogueIndex = 0;
+
+    // Animation control
     public int spriteCounter = 0;
     public int spriteNum = 1;
+
+    // Collision detection
     public Rectangle solidArea = new Rectangle(0, 0, 48, 48);
     public int solidAreaDefaultX, solidAreaDefaultY;
     public boolean collisionOn = false;
 
+    //Dead state
     public boolean dead = false;
     public int dieFrame = 0;
 
@@ -34,6 +43,24 @@ public class Entity {
 
     public void setAction(){
 
+    }
+
+    public void speak(){
+    if(dialogue[dialogueIndex] != null) {
+        gp.ui.currentDialogue=dialogue[dialogueIndex];
+        dialogueIndex = (dialogueIndex + 1) % dialogue.length;
+        switch(gp.player.direction) {
+            case "up": direction = "down"; break;
+            case "down": direction = "up"; break;
+            case "left": direction = "right"; break;
+            case "right": direction = "left"; break;
+            default: direction = "down"; break;
+        }
+
+    }
+    else{
+        dialogueIndex = 0;
+    }
     }
 
     public void update(){
