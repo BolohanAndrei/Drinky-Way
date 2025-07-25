@@ -15,6 +15,7 @@ public class DrunkNPC extends Entity {
         speed = 1;
 
         getDrunkNPCImage();
+        setDialogue();
     }
 
     public void getDrunkNPCImage() {
@@ -36,13 +37,21 @@ public class DrunkNPC extends Entity {
         }
     }
 
+    public void setDialogue() {
+        dialogue[0] = "Ahoy, Captain!";
+        dialogue[1] = "Did you try this magic potion?";
+        dialogue[2] = "Whoooo...are you?";
+        dialogue[3] = "The world is spinning!";
+        dialogue[4] = "Where am I again?";
+    }
+
     public void setAction() {
         if (isIdle) {
             idleCounter++;
 
             // Change idle animation every 15 ticks
             if (idleCounter % 30 == 0) {
-                spriteNum = (spriteNum % 4) + 1; // cycle 1 → 2 → 3 → 4 → 1 ...
+                spriteNum = (spriteNum % 4) + 1;
                 switch (spriteNum) {
                     case 1: direction="idle_1"; break;
                     case 2: direction="idle_2"; break;
@@ -68,14 +77,19 @@ public class DrunkNPC extends Entity {
             else if (i <= 75) direction = "left";
             else direction = "right";
 
-            if (rand.nextInt(100) < 30) { // 30% chance to idle
+            if (rand.nextInt(100) < 30) {
                 isIdle = true;
                 spriteNum = 1;
-                idleCounter = 0; // reset idle counter
+                idleCounter = 0;
             }
 
             actionLockCounter = 0;
         }
+    }
+
+    public void speak(){
+        super.speak();
+
     }
 
 }

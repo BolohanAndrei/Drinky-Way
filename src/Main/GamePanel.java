@@ -29,9 +29,10 @@ public class GamePanel extends JPanel implements Runnable{
     public int gameState;
     public final int playState = 1;
     public final int pauseState = 2;
+    public final int dialogueState = 3;
 
     //Other-System classes
-    KeyHandler keyHandler=new KeyHandler(this);
+    public KeyHandler keyHandler=new KeyHandler(this);
     tileManager tileManager=new tileManager(this);
     public CollisionCheck collisionCheck = new CollisionCheck(this);
     public ObjManager objManager=new ObjManager(this);
