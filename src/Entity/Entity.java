@@ -36,6 +36,10 @@ public class Entity {
     public boolean dead = false;
     public int dieFrame = 0;
 
+    //Character status
+    public int maxHealth;
+    public int health;
+
     public Entity(GamePanel gp) {
         this.gp = gp;
 
@@ -46,9 +50,17 @@ public class Entity {
     }
 
     public void speak(){
-    if(dialogue[dialogueIndex] != null) {
-        gp.ui.currentDialogue=dialogue[dialogueIndex];
-        dialogueIndex = (dialogueIndex + 1) % dialogue.length;
+    if(dialogueIndex<0 || dialogueIndex>dialogue.length-1 || dialogue[dialogueIndex]==null){
+        dialogueIndex = 0;
+        return;
+    }
+        gp.ui.currentDialogue = dialogue[dialogueIndex];
+        ++dialogueIndex;
+
+        facePlayer();
+
+    }
+    public void facePlayer(){
         switch(gp.player.direction) {
             case "up": direction = "down"; break;
             case "down": direction = "up"; break;
@@ -56,11 +68,6 @@ public class Entity {
             case "right": direction = "left"; break;
             default: direction = "down"; break;
         }
-
-    }
-    else{
-        dialogueIndex = 0;
-    }
     }
 
     public void update(){

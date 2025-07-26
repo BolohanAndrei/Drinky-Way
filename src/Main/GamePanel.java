@@ -27,9 +27,11 @@ public class GamePanel extends JPanel implements Runnable{
 
     //Game state
     public int gameState;
+    public final int titleState = 0;
     public final int playState = 1;
     public final int pauseState = 2;
     public final int dialogueState = 3;
+
 
     //Other-System classes
     public KeyHandler keyHandler=new KeyHandler(this);
@@ -37,6 +39,7 @@ public class GamePanel extends JPanel implements Runnable{
     public CollisionCheck collisionCheck = new CollisionCheck(this);
     public ObjManager objManager=new ObjManager(this);
     public DeadCheck deadCheck = new DeadCheck(this);
+    public EventHandler eventHandler = new EventHandler(this);
 
     Thread gameThread;
 
@@ -62,9 +65,9 @@ public class GamePanel extends JPanel implements Runnable{
     public void setupGame(){
         objManager.setObj();
         //sound.playAlternatingLoop(0,1,13,14);
+        playMusic(0);
         objManager.setNPC();
-        playMusic(15);
-        gameState = playState;
+        gameState = titleState;
     }
 
     //Start the game
@@ -131,30 +134,39 @@ public class GamePanel extends JPanel implements Runnable{
 
         Graphics2D g2d = (Graphics2D) g;
 
-        //TILE
-        tileManager.draw(g2d);
+        //TITLE SCREEN
+        if (gameState == titleState) {
+            ui.draw(g2d);
+        } else {
 
-        //OBJECTS
-        for(int i=0;i<obj.length;i++) {
-            if(obj[i] != null) {
-                obj[i].draw(g2d, this);
+
+            //TILE
+            tileManager.draw(g2d);
+
+            //OBJECTS
+            for (int i = 0; i < obj.length; i++) {
+                if (obj[i] != null) {
+                    obj[i].draw(g2d, this);
+                }
             }
-        }
 
-        //NPC
-        for(int i=0;i<npc.length;i++) {
-            if(npc[i] != null) {
-                npc[i].draw(g2d);
+            //NPC
+            for (int i = 0; i < npc.length; i++) {
+                if (npc[i] != null) {
+                    npc[i].draw(g2d);
+                }
             }
-        }
 
-        //PlAYER
-        player.paint(g2d);
+            //PlAYER
+            player.paint(g2d);
 
-        //UI
-        ui.draw(g2d);
+                eventHandler.draw(g2d);
 
-        //DEBUG
+
+            //UI
+            ui.draw(g2d);
+
+            //DEBUG
 //        long drawStart = System.nanoTime();
 //        long drawEnd = System.nanoTime();
 //        long passed = drawEnd - drawStart;
@@ -162,7 +174,8 @@ public class GamePanel extends JPanel implements Runnable{
 //        g2d.drawString("Draw Time: " + passed / 1000000.0 + " ms", 10, 550);
 //        System.out.println("Draw Time: " + passed / 1000000.0 + " ms");
 
-        g2d.dispose();
+            g2d.dispose();
+        }
     }
 
     public void playMusic(int i) {

@@ -7,7 +7,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class SuperObject {
-    public BufferedImage image;
+    public BufferedImage image1, image2, image3, image4;
     public String name;
     public boolean collision = false;
     public int worldX, worldY;
@@ -26,7 +26,7 @@ public class SuperObject {
                 worldX-gp.tileSize<gp.player.x+gp.player.screenX &&
                 worldY+gp.tileSize>gp.player.y-gp.player.screenY &&
                 worldY-gp.tileSize<gp.player.y+gp.player.screenY) {
-            g.drawImage(image, x, y, gp.tileSize, gp.tileSize, null);
+            g.drawImage(image1, x, y, gp.tileSize, gp.tileSize, null);
         }
 
     }

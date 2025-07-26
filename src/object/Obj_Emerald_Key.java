@@ -8,8 +8,8 @@ public class Obj_Emerald_Key extends SuperObject {
         this.gp = gp;
         name = "Emerald_Key";
         try {
-            image = javax.imageio.ImageIO.read(getClass().getResourceAsStream("/res/objects/emerald_key.png"));
-            utility.scaleImage(image,gp.tileSize,gp.tileSize);
+            image1= javax.imageio.ImageIO.read(getClass().getResourceAsStream("/res/objects/emerald_key.png"));
+            utility.scaleImage(image1,gp.tileSize,gp.tileSize);
         } catch (Exception e) {
             e.printStackTrace();
         }

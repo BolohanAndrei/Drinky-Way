@@ -8,8 +8,8 @@ public class Obj_Armour_Boots_Crusty extends SuperObject{
         this.gp = gp;
         name = "Crusty Boots";
         try {
-            image = javax.imageio.ImageIO.read(getClass().getResourceAsStream("/res/objects/armour_boots_crusty.png"));
-            utility.scaleImage(image,gp.tileSize,gp.tileSize);
+            image1 = javax.imageio.ImageIO.read(getClass().getResourceAsStream("/res/objects/armour_boots_crusty.png"));
+            utility.scaleImage(image1,gp.tileSize,gp.tileSize);
         } catch (Exception e) {
             e.printStackTrace();
 }}}
