@@ -11,8 +11,8 @@ public class Obj_Silver_Key extends SuperObject{
         this.gp = gp;
         name="Silver_Key";
         try{
-            image= ImageIO.read(getClass().getResourceAsStream("/res/objects/silver_key.png"));
-            utility.scaleImage(image,gp.tileSize,gp.tileSize);
+            image1= ImageIO.read(getClass().getResourceAsStream("/res/objects/silver_key.png"));
+            utility.scaleImage(image1,gp.tileSize,gp.tileSize);
         }
         catch (Exception e){
             e.printStackTrace();

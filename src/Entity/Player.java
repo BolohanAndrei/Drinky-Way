@@ -19,6 +19,9 @@ public class Player extends Entity {
     private final double acceleration = 0.2;
     private final double maxSpeed = 4.0;
 
+    public int maxDrunk;
+    public int drunk;
+
 
     //CONSTRUCTOR
     public Player(GamePanel gp, KeyHandler kh) {
@@ -41,6 +44,13 @@ public class Player extends Entity {
         y = gp.tileSize * 23;
         speed = 4;
         direction = "down";
+
+        //player status
+        maxHealth=10;
+        health=maxHealth;
+
+        maxDrunk=6;
+        drunk=0;
     }
 
 
@@ -140,6 +150,11 @@ public class Player extends Entity {
         int npcIndex = gp.collisionCheck.checkEntity(this, gp.npc);
         interactNPC(npcIndex);
 
+        gp.keyHandler.enterPressed = false;
+
+        //Check event
+        gp.eventHandler.checkEvent();
+
         if(collisionOn){
             canMoveX=false;
             canMoveY=false;
@@ -191,6 +206,7 @@ public class Player extends Entity {
             spriteNum = (spriteNum == 1) ? 2 : 1;
             spriteCounter = 0;
         }
+
     }
 
     //PICK UP OBJECTS
@@ -206,7 +222,6 @@ public class Player extends Entity {
             if(gp.keyHandler.enterPressed) {
                 gp.npc[i].speak();
                 gp.gameState=gp.dialogueState;
-                gp.keyHandler.enterPressed = false;
             }
 
         }
