@@ -1,17 +1,12 @@
 package object;
 
+import Entity.Entity;
 import Main.GamePanel;
 
-public class Obj_Emerald_Key extends SuperObject {
-    GamePanel gp;
+public class Obj_Emerald_Key extends Entity {
     public Obj_Emerald_Key(GamePanel gp) {
-        this.gp = gp;
+        super(gp);
         name = "Emerald_Key";
-        try {
-            image1= javax.imageio.ImageIO.read(getClass().getResourceAsStream("/res/objects/emerald_key.png"));
-            utility.scaleImage(image1,gp.tileSize,gp.tileSize);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        down1=setup("objects/emerald_key");
     }
 }

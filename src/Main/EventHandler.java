@@ -4,28 +4,51 @@ import java.awt.*;
 
 public class EventHandler {
     GamePanel gp;
-    Rectangle eventRect;
-    int eventRectDefaultX;
-    int eventRectDefaultY;
+    EventRect[][] eventRect;
 
-    boolean eventActive = false;
+    int previousEventX, previousEventY;
+    boolean canTouchEvent=true;
+
 
     public EventHandler(GamePanel gp) {
         this.gp = gp;
-        eventRect = new Rectangle(8, 8, 32, 32);
-        eventRectDefaultX = eventRect.x;
-        eventRectDefaultY = eventRect.y;
+
+        eventRect = new EventRect[gp.maxWorldCol][gp.maxWorldRow];
+        int col=0,row=0;
+        while(col < gp.maxWorldCol && row < gp.maxWorldRow) {
+            eventRect[col][row] = new EventRect();
+            eventRect[col][row].x = 8;
+            eventRect[col][row].y = 8;
+            eventRect[col][row].width = 32;
+            eventRect[col][row].height = 32;
+            eventRect[col][row].eventRectDefaultX = eventRect[col][row].x;
+            eventRect[col][row].eventRectDefaultY = eventRect[col][row].y;
+            col++;
+            if (col == gp.maxWorldCol) {
+                col = 0;
+                row++;
+            }
+
+        }
+
     }
 
     public void checkEvent() {
-        if (!eventActive) {
+        int xDistance=Math.abs(gp.player.x-previousEventX);
+        int yDistance=Math.abs(gp.player.y-previousEventY);
+        int distance=Math.max(xDistance, yDistance);
+        if(distance>gp.tileSize){
+            canTouchEvent=true;
+        }
+
+        if(canTouchEvent) {
             if (hit(27, 16, "right")) {
-                damagePit(gp.dialogueState);
-                eventActive = true;
-            }
+                damagePit(27, 16, gp.dialogueState);}
             if (hit(23, 12, "up")) {
-                healingEvent(gp.dialogueState);
-                eventActive = true;
+                healingEvent(23, 12, gp.dialogueState);
+            }
+            if (hit(25, 19, "right")) {
+                teleportEvent(25, 19, gp.dialogueState);
             }
         }
     }
@@ -35,63 +58,56 @@ public class EventHandler {
 
         gp.player.solidArea.x = gp.player.x + gp.player.solidArea.x;
         gp.player.solidArea.y = gp.player.y + gp.player.solidArea.y;
-        eventRect.x = col * gp.tileSize + eventRectDefaultX;
-        eventRect.y = row * gp.tileSize + eventRectDefaultY;
+        eventRect[col][row].x = col * gp.tileSize + eventRect[col][row].eventRectDefaultX;
+        eventRect[col][row].y = row * gp.tileSize + eventRect[col][row].eventRectDefaultY;
 
-        if (gp.player.solidArea.intersects(eventRect)) {
-            if (gp.player.direction.equals(reqDirection) || reqDirection.equals("any")) {
+        if (gp.player.solidArea.intersects(eventRect[col][row]) && !eventRect[col][row].eventDone) {
+            if (gp.player.direction.contentEquals(reqDirection) || reqDirection.contentEquals("any")) {
                 hit = true;
+                previousEventX=gp.player.x;
+                previousEventY=gp.player.y;
             }
         }
 
         // Reset the solid area position
-        gp.player.solidArea.x = gp.player.x + gp.player.solidAreaDefaultX;
-        gp.player.solidArea.y = gp.player.y + gp.player.solidAreaDefaultY;
-        eventRect.x = eventRectDefaultX;
-        eventRect.y = eventRectDefaultY;
+        gp.player.solidArea.x =  gp.player.solidAreaDefaultX;
+        gp.player.solidArea.y =  gp.player.solidAreaDefaultY;
+        eventRect[col][row].x = eventRect[col][row].eventRectDefaultX;
+        eventRect[col][row].y = eventRect[col][row].eventRectDefaultY;
 
         return hit;
 
     }
 
-    public void damagePit(int gameState) {
-        gp.gameState = gameState;
-        gp.ui.currentDialogue = "Arrr! You fell into a pit!";
-        gp.player.health -= 2;
+    public void damagePit(int col,int row,int gameState) {
+            gp.gameState = gameState;
+            gp.playSE(18);
+            gp.ui.currentDialogue = "Arrr! You fell into a pit!";
+            gp.player.health -= 2;
+            eventRect[col][row].eventDone=true;
+            canTouchEvent=false;
+
     }
 
-    public void healingEvent(int gameState) {
-        if(gp.keyHandler.enterPressed){
+    public void teleportEvent(int col,int row,int gameState){
+            gp.gameState = gameState;
+            gp.ui.currentDialogue = "Arrr! Where I am?!";
+            gp.player.x = gp.tileSize * 37;
+            gp.player.y = gp.tileSize * 10;
+            gp.player.direction = "down";
+    }
+
+    public void healingEvent(int col,int row,int gameState) {
+        if(gp.keyHandler.ePressed){
+            gp.playSE(12);
         gp.gameState = gameState;
         gp.ui.currentDialogue = "Arrr! You found a healing drink!";
-        gp.player.health += 2;
-        if (gp.player.health > gp.player.maxHealth) {
-            gp.player.health = gp.player.maxHealth;
-        }
+        gp.player.health =gp.player.maxHealth;
     }}
 
     public void resetEvent() {
-        eventActive = false;
+       // eventRect.x = eventRectDefaultX;
+        //eventRect.y = eventRectDefaultY;
     }
 
-    public void draw(Graphics2D g2) {
-        // Debug: Draw event areas
-        g2.setColor(new Color(255, 0, 0, 80)); // Semi-transparent red
-
-        // Draw damage pit - convert world coordinates to screen coordinates
-        int worldX1 = 27 * gp.tileSize + eventRectDefaultX;
-        int worldY1 = 16 * gp.tileSize + eventRectDefaultY;
-        int screenX1 = worldX1 - gp.player.x + gp.player.screenX;
-        int screenY1 = worldY1 - gp.player.y + gp.player.screenY;
-        g2.fillRect(screenX1, screenY1, eventRect.width, eventRect.height);
-
-
-        g2.setColor(new Color(0, 255, 0, 80));
-        // Draw healing event - convert world coordinates to screen coordinates
-        int worldX2 = 23 * gp.tileSize + eventRectDefaultX;
-        int worldY2 = 12 * gp.tileSize + eventRectDefaultY;
-        int screenX2 = worldX2 - gp.player.x + gp.player.screenX;
-        int screenY2 = worldY2 - gp.player.y + gp.player.screenY;
-        g2.fillRect(screenX2, screenY2, eventRect.width, eventRect.height);
-    }
 }

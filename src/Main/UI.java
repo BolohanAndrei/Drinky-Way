@@ -1,5 +1,6 @@
 package Main;
 
+import Entity.Entity;
 import object.*;
 
 import java.awt.*;
@@ -12,7 +13,7 @@ public class UI {
     GamePanel gp;
     Graphics2D g2;
 
-    Font PublicPixel;
+    private Font PublicPixel;
 
     BufferedImage heartFull, heartHalf, heartEmpty;
     BufferedImage bottleFull, bottleHalf, bottleEmpty;
@@ -30,7 +31,7 @@ public class UI {
             InputStream is = getClass().getResourceAsStream("/res/Fonts/PublicPixel-rv0pA.ttf");
             if (is != null) {
                 PublicPixel = Font.createFont(Font.TRUETYPE_FONT, is);
-                PublicPixel = PublicPixel.deriveFont(24F);
+                PublicPixel = getPublicPixel().deriveFont(24F);
             } else {
                 System.err.println("Font file not found!");
                 PublicPixel = new Font("Arial", Font.BOLD, 24);
@@ -41,12 +42,12 @@ public class UI {
         }
 
         //HEARTS
-        SuperObject heart = new Obj_Heart(gp);
+        Entity heart = new Obj_Heart(gp);
         heartFull = heart.image1;
         heartHalf = heart.image2;
         heartEmpty = heart.image3;
 
-        SuperObject bottle = new Obj_Alcohol(gp);
+        Entity bottle = new Obj_Alcohol(gp);
         bottleFull = bottle.image1;
         bottleHalf = bottle.image2;
         bottleEmpty = bottle.image3;
@@ -60,7 +61,7 @@ public class UI {
     public void draw(Graphics2D g2) {
         this.g2 = g2;
 
-        g2.setFont(PublicPixel);
+        g2.setFont(getPublicPixel());
         g2.setColor(Color.white);
 
         //TITLE STATE
@@ -91,7 +92,7 @@ public class UI {
     }
 
     public void drawPauseScreen() {
-        g2.setFont(PublicPixel.deriveFont(48F));
+        g2.setFont(getPublicPixel().deriveFont(48F));
         g2.setColor(Color.white);
         String text = "PAUSED";
         int x = getXforCenteredText(text);
@@ -134,7 +135,7 @@ public class UI {
         if (titleScreenState == 0) {
 
             //GAME NAME + PLAYER IMAGE
-            g2.setFont(PublicPixel.deriveFont(68F));
+            g2.setFont(getPublicPixel().deriveFont(68F));
             String text = "Drinky Way";
             int x = getXforCenteredText(text);
             int y = gp.screenHeight / 4;
@@ -142,7 +143,7 @@ public class UI {
 
             //MENU GAME
             //New Game
-            g2.setFont(PublicPixel.deriveFont(48F));
+            g2.setFont(getPublicPixel().deriveFont(48F));
             text = "New Game";
             x = getXforCenteredText(text);
             y += gp.tileSize * 3;
@@ -170,7 +171,7 @@ public class UI {
         } else if (titleScreenState == 1) {
             //Class selection screen
             g2.setColor(Color.white);
-            g2.setFont(PublicPixel.deriveFont(30F));
+            g2.setFont(getPublicPixel().deriveFont(30F));
             String text = "Select your class";
             int x = getXforCenteredText(text);
             int y = gp.tileSize * 2;
@@ -350,5 +351,9 @@ public class UI {
     public int getXforCenteredText(String text) {
         int length = (int) g2.getFontMetrics().getStringBounds(text, g2).getWidth();
         return (gp.screenWidth / 2) - (length / 2);
+    }
+
+    public Font getPublicPixel() {
+        return PublicPixel;
     }
 }

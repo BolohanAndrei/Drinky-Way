@@ -2,6 +2,8 @@ package Main;
 
 import Entity.Entity;
 
+import java.awt.*;
+
 public class CollisionCheck {
     GamePanel gp;
 
@@ -102,8 +104,8 @@ public class CollisionCheck {
             if (gp.obj[i] != null) {
                 entity.solidArea.x = entity.x + entity.solidArea.x;
                 entity.solidArea.y = entity.y + entity.solidArea.y;
-                gp.obj[i].solidArea.x = gp.obj[i].worldX + gp.obj[i].solidArea.x;
-                gp.obj[i].solidArea.y = gp.obj[i].worldY + gp.obj[i].solidArea.y;
+                gp.obj[i].solidArea.x = gp.obj[i].x + gp.obj[i].solidArea.x;
+                gp.obj[i].solidArea.y = gp.obj[i].y + gp.obj[i].solidArea.y;
 
                 switch (entity.direction) {
                     case "up":
@@ -253,8 +255,10 @@ public class CollisionCheck {
                 }
 
                 if (entity.solidArea.intersects(target[i].solidArea)) {
-                    entity.collisionOn = true;
-                    index = i;
+                    if(target[i]!=entity) {
+                        entity.collisionOn = true;
+                        index = i;
+                    }
                 }
 
                 // Reset solidArea position
@@ -267,7 +271,8 @@ public class CollisionCheck {
         return index;
     }
 
-    public void checkPlayer(Entity entity) {
+    public boolean checkPlayer(Entity entity) {
+        boolean contactPlayer=false;
         entity.solidArea.x = entity.x + entity.solidArea.x;
         entity.solidArea.y = entity.y + entity.solidArea.y;
         gp.player.solidArea.x = gp.player.x + gp.player.solidArea.x;
@@ -306,6 +311,7 @@ public class CollisionCheck {
 
         if (entity.solidArea.intersects(gp.player.solidArea)) {
             entity.collisionOn = true;
+            contactPlayer=true;
         }
 
         // Reset solidArea position
@@ -313,5 +319,7 @@ public class CollisionCheck {
         entity.solidArea.y = entity.solidAreaDefaultY;
         gp.player.solidArea.x = gp.player.solidAreaDefaultX;
         gp.player.solidArea.y = gp.player.solidAreaDefaultY;
+
+        return contactPlayer;
     }
 }
