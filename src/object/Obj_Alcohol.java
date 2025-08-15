@@ -1,25 +1,18 @@
 package object;
 
+import Entity.Entity;
 import Main.GamePanel;
 
 import javax.imageio.ImageIO;
 
-public class Obj_Alcohol extends SuperObject{
-    GamePanel gp;
+public class Obj_Alcohol extends Entity {
+
     public Obj_Alcohol(GamePanel gp)
     {
-        this.gp = gp;
+        super(gp);
         name="Heart";
-        try{
-            image1= ImageIO.read(getClass().getResourceAsStream("/res/stats/FullBottle.png"));
-            image2= ImageIO.read(getClass().getResourceAsStream("/res/stats/HalfBottle.png"));
-            image3= ImageIO.read(getClass().getResourceAsStream("/res/stats/EmptyBottle.png"));
-            image1=utility.scaleImage(image1,gp.tileSize,gp.tileSize);
-            image2= utility.scaleImage(image2,gp.tileSize,gp.tileSize);
-            image3=utility.scaleImage(image3,gp.tileSize,gp.tileSize);
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
+        image1=setup("stats/FullBottle");
+        image2=setup("stats/HalfBottle");
+        image3=setup("stats/EmptyBottle");
     }
 }

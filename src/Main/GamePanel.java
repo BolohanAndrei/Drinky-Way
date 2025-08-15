@@ -2,11 +2,13 @@ package Main;
 
 import Entity.Entity;
 import Entity.Player;
-import object.SuperObject;
 import tiles.tileManager;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class GamePanel extends JPanel implements Runnable{
     //Variables
@@ -17,6 +19,8 @@ public class GamePanel extends JPanel implements Runnable{
     public final int maxScreenRow = 12;
     public final int screenWidth = tileSize * maxScreenCol; // 48 * 16 = 768
     public final int screenHeight = tileSize * maxScreenRow; // 48 * 12 = 576
+
+    public long seconds;
 
     //FPS
     int FPS = 60;
@@ -37,7 +41,7 @@ public class GamePanel extends JPanel implements Runnable{
     public KeyHandler keyHandler=new KeyHandler(this);
     tileManager tileManager=new tileManager(this);
     public CollisionCheck collisionCheck = new CollisionCheck(this);
-    public ObjManager objManager=new ObjManager(this);
+    public AssetManager assetManager =new AssetManager(this);
     public DeadCheck deadCheck = new DeadCheck(this);
     public EventHandler eventHandler = new EventHandler(this);
 
@@ -49,9 +53,12 @@ public class GamePanel extends JPanel implements Runnable{
 
 
     //player and objects
-    public SuperObject[] obj=new SuperObject[10];
+    public Entity[] obj=new Entity[10];
     public Player player=new Player(this, keyHandler);
     public Entity[] npc =new Entity[10];
+    ArrayList<Entity> entities=new ArrayList<>();
+    public Entity[] monster=new Entity[20];
+
     //Constructor
     public GamePanel() {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
@@ -63,10 +70,11 @@ public class GamePanel extends JPanel implements Runnable{
 
     //Setup game
     public void setupGame(){
-        objManager.setObj();
+        assetManager.setObj();
         //sound.playAlternatingLoop(0,1,13,14);
         playMusic(0);
-        objManager.setNPC();
+        assetManager.setNPC();
+        assetManager.setMonster();
         gameState = titleState;
     }
 
@@ -112,15 +120,29 @@ public class GamePanel extends JPanel implements Runnable{
     public void update() {
 
         if(gameState == playState) {
+//            seconds= (System.nanoTime());
+//            seconds/= (1000000000L);
             //PlAYER
+
             player.update();
 
             //NPC
-            for(int i=0;i<npc.length;i++) {
-                if(npc[i] != null) {
-                    npc[i].update();
+            for (Entity entity : npc) {
+                if (entity != null) {
+                    entity.update();
                 }
             }
+            for (int i = 0; i < monster.length; i++) {
+                Entity m = monster[i];
+                if (m == null) continue;
+                if (m.alive && !m.dying) {
+                    m.update();
+                }
+                if (!m.alive) {
+                    monster[i] = null;
+                }
+            }
+
         }
         if(gameState == pauseState) {
             //
@@ -143,25 +165,44 @@ public class GamePanel extends JPanel implements Runnable{
             //TILE
             tileManager.draw(g2d);
 
-            //OBJECTS
-            for (int i = 0; i < obj.length; i++) {
-                if (obj[i] != null) {
-                    obj[i].draw(g2d, this);
+            //Entities
+            entities.add(player);
+            for (Entity entity : npc) {
+                if (entity != null) {
+                    entities.add(entity);
                 }
             }
 
-            //NPC
-            for (int i = 0; i < npc.length; i++) {
-                if (npc[i] != null) {
-                    npc[i].draw(g2d);
+            //Objects
+            for (Entity objects: obj) {
+                if (objects != null) {
+                    entities.add(objects);
                 }
             }
 
-            //PlAYER
-            player.paint(g2d);
+            //Monsters
+            for (Entity monsters: monster) {
+                if (monsters != null) {
+                    entities.add(monsters);
+                }
+            }
 
-                eventHandler.draw(g2d);
+            entities.sort(new Comparator<Entity>() {
 
+                @Override
+                public int compare(Entity e1, Entity e2) {
+                    return Integer.compare(e1.x, e2.x);
+                }
+            });
+
+            //player.paint(g2d);
+            //Draw entities
+            for (Entity entity : entities) {
+                entity.draw(g2d);
+            }
+
+            //Empty entities
+            entities.clear();
 
             //UI
             ui.draw(g2d);

@@ -13,6 +13,7 @@ public class DrunkNPC extends Entity {
         super(gp);
         direction = "right";
         speed = 1;
+        type = 1;
 
         getDrunkNPCImage();
         setDialogue();

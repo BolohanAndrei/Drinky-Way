@@ -1,11 +1,8 @@
-
-        package Entity;
+package Entity;
 
 import Main.GamePanel;
 import Main.KeyHandler;
-import Main.Utility;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
@@ -19,11 +16,16 @@ public class Player extends Entity {
     private final double acceleration = 0.2;
     private final double maxSpeed = 4.0;
 
+    private String moveDirection = "down";
+    private String facingDirection = "down";
+    private boolean hasHit = false;
+
+    private int attackCounter = 0;
+
+
     public int maxDrunk;
     public int drunk;
 
-
-    //CONSTRUCTOR
     public Player(GamePanel gp, KeyHandler kh) {
         super(gp);
         this.keyHandler = kh;
@@ -32,32 +34,30 @@ public class Player extends Entity {
         screenY = gp.screenHeight / 2 - (gp.tileSize / 2);
 
         solidArea = new Rectangle(8, 16, 16, 16);
-        solidAreaDefaultX= solidArea.x;
-        solidAreaDefaultY= solidArea.y;
+        solidAreaDefaultX = solidArea.x;
+        solidAreaDefaultY = solidArea.y;
         setDefaultValues();
         getPlayerImage();
+        getPlayerAttackImage();
     }
 
-    //DEFAULT VALUES
     public void setDefaultValues() {
         x = gp.tileSize * 23;
         y = gp.tileSize * 23;
         speed = 4;
-        direction = "down";
+        moveDirection = "down";
+        facingDirection = "down";
 
-        //player status
-        maxHealth=10;
-        health=maxHealth;
+        maxHealth = 10;
+        health = maxHealth;
 
-        maxDrunk=6;
-        drunk=0;
+        maxDrunk = 6;
+        drunk = 0;
     }
 
-
-    //LOAD PLAYER IMAGES
     public void getPlayerImage() {
         try {
-            up1=setup("player/pirate_up_1");
+            up1 = setup("player/pirate_up_1");
             up2 = setup("player/pirate_up_2");
             down1 = setup("player/pirate_down_1");
             down2 = setup("player/pirate_down_2");
@@ -66,11 +66,11 @@ public class Player extends Entity {
             right1 = setup("player/pirate_right_1");
             right2 = setup("player/pirate_right_2");
 
-            // Idle animations
             idle_up = setup("player/pirate_up_idle");
             idle_down = setup("player/pirate_down_idle");
             idle_left = setup("player/pirate_left_idle");
             idle_right = setup("player/pirate_right_idle");
+
             die1 = setup("player/die1");
             die2 = setup("player/die2");
             die3 = setup("player/die3");
@@ -79,216 +79,402 @@ public class Player extends Entity {
         }
     }
 
+    public void getPlayerAttackImage() {
+        try {
+            attackUp1 = setup("player/attack_up_1");
+            attackUp2 = setup("player/attack_up_2");
+            attackUDown1 = setup("player/attack_down_1");
+            attackDown2 = setup("player/attack_down_2");
+            attackLeft1 = setup("player/attack_left_1");
+            attackLeft2 = setup("player/attack_left_2");
+            attackRight1 = setup("player/attack_right_1");
+            attackRight2 = setup("player/attack_right_2");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public void update() {
-        boolean moved = false;
         double dx = 0, dy = 0;
+        boolean moved = false;
 
-        // Diagonal and straight movement
-        if (keyHandler.upPressed && keyHandler.leftPressed) {
-            dx = -1; dy = -1; moved = true; direction = "up_left";
-        } else if (keyHandler.upPressed && keyHandler.rightPressed) {
-            dx = 1; dy = -1; moved = true; direction = "up_right";
-        } else if (keyHandler.downPressed && keyHandler.leftPressed) {
-            dx = -1; dy = 1; moved = true; direction = "down_left";
-        } else if (keyHandler.downPressed && keyHandler.rightPressed) {
-            dx = 1; dy = 1; moved = true; direction = "down_right";
-        } else if (keyHandler.upPressed) {
-            dy = -1; moved = true; direction = "up";
-        } else if (keyHandler.downPressed) {
-            dy = 1; moved = true; direction = "down";
-        } else if (keyHandler.leftPressed) {
-            dx = -1; moved = true; direction = "left";
-        } else if (keyHandler.rightPressed) {
-            dx = 1; moved = true; direction = "right";
+        if (!attacking && keyHandler.attackClicked) {
+            attacking = true;
+            keyHandler.attackClicked = false;
+            attackCounter = 0;
+            hasHit = false;
+            gp.playSE(17);
         }
 
 
-        // Idle state
-        if (moved) {
-            currentSpeed = Math.min(currentSpeed + acceleration, maxSpeed);
-        } else {
-            currentSpeed = Math.max(currentSpeed - acceleration, 0);
-        }
+            boolean up = keyHandler.upPressed;
+            boolean down = keyHandler.downPressed;
+            boolean left = keyHandler.leftPressed;
+            boolean right = keyHandler.rightPressed;
 
-        // Normalize diagonal movement
-        if (dx != 0 && dy != 0) {
-            dx /= Math.sqrt(2);
-            dy /= Math.sqrt(2);
-        }
+            if (up && left) {
+                dx = -1; dy = -1;
+                moveDirection = "up_left";
+            } else if (up && right) {
+                dx = 1; dy = -1;
+                moveDirection = "up_right";
+            } else if (down && left) {
+                dx = -1; dy = 1;
+                moveDirection = "down_left";
+            } else if (down && right) {
+                dx = 1; dy = 1;
+                moveDirection = "down_right";
+            } else if (up) {
+                dy = -1; moveDirection = "up";
+            } else if (down) {
+                dy = 1; moveDirection = "down";
+            } else if (left) {
+                dx = -1; moveDirection = "left";
+            } else if (right) {
+                dx = 1; moveDirection = "right";
+            }
 
-        // Calculate future position based on current speed
+            if (dx != 0 || dy != 0) {
+                facingDirection = moveDirection;
+                moved = true;
+            }
+
+            if (dx != 0 && dy != 0) {
+                dx /= Math.sqrt(2);
+                dy /= Math.sqrt(2);
+            }
+
+            if(moved) {
+                currentSpeed = Math.min(currentSpeed + acceleration, maxSpeed);
+            } else {
+                currentSpeed = 0;
+            }
+
+
+        // Collision checks
         double futureX = x + dx * currentSpeed;
         double futureY = y + dy * currentSpeed;
-        boolean canMoveX = true;
-        boolean canMoveY = true;
 
-        // Check for collisions with tiles
-        if (dx!=0) {
-            double tempX=x;
+        boolean canMoveX = true, canMoveY = true;
+
+        // Tile collision check for X movement
+        if (dx != 0) {
+            double tempX = x;
             x = (int) futureX;
-            collisionOn=false;
+            direction = dx > 0 ? "right" : "left";
+            collisionOn = false;
             gp.collisionCheck.checkTile(this);
-            canMoveX=!collisionOn;
-            x= (int) tempX;
+            canMoveX = !collisionOn;
+            x = (int) tempX;
         }
 
+        // Tile collision check for Y movement
         if (dy != 0) {
             double tempY = y;
             y = (int) futureY;
+            direction = dy > 0 ? "down" : "up";
             collisionOn = false;
             gp.collisionCheck.checkTile(this);
             canMoveY = !collisionOn;
             y = (int) tempY;
         }
 
-        // Check for collisions with objects
-        int objIndex= gp.collisionCheck.checkObj(this,true);
+        // NPC collision check for X movement
+        if (dx != 0 && canMoveX) {
+            double tempX = x;
+            x = (int) futureX;
+            direction = dx > 0 ? "right" : "left";
+            int npcIndexX = gp.collisionCheck.checkEntity(this, gp.npc);
+            if (npcIndexX != 999) canMoveX = false;
+            x = (int) tempX;
+        }
+
+        // NPC collision check for Y movement
+        if (dy != 0 && canMoveY) {
+            double tempY = y;
+            y = (int) futureY;
+            direction = dy > 0 ? "down" : "up";
+            int npcIndexY = gp.collisionCheck.checkEntity(this, gp.npc);
+            if (npcIndexY != 999) canMoveY = false;
+            y = (int) tempY;
+        }
+
+        // Restore actual movement direction
+        direction = moveDirection;
+
+        // Object collision
+        int objIndex = gp.collisionCheck.checkObj(this, true);
         pickUpObj(objIndex);
 
-        // Check for collisions with NPCs
+        // NPC interaction
+        collisionOn = false;
         int npcIndex = gp.collisionCheck.checkEntity(this, gp.npc);
         interactNPC(npcIndex);
 
-        gp.keyHandler.enterPressed = false;
+        // Monster collision
+        int monsterIndex = gp.collisionCheck.checkEntity(this, gp.monster);
+        contactMonster(monsterIndex);
 
-        //Check event
+        // Check events
         gp.eventHandler.checkEvent();
 
-        if(collisionOn){
-            canMoveX=false;
-            canMoveY=false;
-        }
 
-        // Update position based on movement
-        if(canMoveX){
-            x += dx * currentSpeed;
-        }
-        if(canMoveY){
-            y += dy * currentSpeed;
-        }
+        gp.keyHandler.ePressed=false;
 
 
-        //Dead check - not working
-        if(gp.deadCheck.check(this)){
+
+        // Apply movement if allowed
+        if (canMoveX) x += dx * currentSpeed;
+        if (canMoveY) y += dy * currentSpeed;
+
+        // Monster contact
+
+
+        // Death check
+        if (gp.deadCheck.check(this)) {
             dead = true;
-            dieFrame=0;
-
+            dieFrame = 0;
         }
 
-        //IDLE
-        if (!moved) {
-            switch (direction) {
-                case "up": direction = "idle_up"; break;
-                case "up_left": direction = "idle_up"; break;
-                case "up_right": direction = "idle_up"; break;
-                case "down": direction = "idle_down"; break;
-                case "down_left": direction = "idle_down"; break;
-                case "down_right": direction = "idle_down"; break;
-                case "left": direction = "idle_left"; break;
-                case "right": direction = "idle_right"; break;
+        // Death animation
+        if (dead) {
+            if (dieFrame == 0) up1 = die1;
+            else if (dieFrame == 1) up1 = die2;
+            else if (dieFrame == 2) up1 = die3;
+            dieFrame++;
+            if (dieFrame > 2) dead = false;
+        }
+
+        // Animation updates
+        if (!attacking) {
+            spriteCounter++;
+            if (spriteCounter > 10) {
+                spriteNum = (spriteNum == 1) ? 2 : 1;
+                spriteCounter = 0;
             }
         }
 
-        //Dead animation
-        if (dead) {
-            if (dieFrame == 0) { up1 = die1; down1 = die1; left1 = die1; right1 = die1; }
-            else if (dieFrame == 1) { up1 = die2; down1 = die2; left1 = die2; right1 = die2; }
-            else if (dieFrame == 2) { up1 = die3; down1 = die3; left1 = die3; right1 = die3; }
-            dieFrame++;
-            if (dieFrame > 2) { dead = false; }
-        }
+        // Attack handling
+        if (attacking) attacking();
 
-        //Sprite animation
-        spriteCounter++;
-        //System.out.println("Speed"+ speed);
-        if (spriteCounter > 10) {
-            spriteNum = (spriteNum == 1) ? 2 : 1;
-            spriteCounter = 0;
+        // Invincibility handling
+        if (invincible) {
+            invincibleCounter++;
+            if (invincibleCounter > 120) {
+                invincible = false;
+                invincibleCounter = 0;
+            }
         }
-
     }
 
-    //PICK UP OBJECTS
+    public void attacking() {
+        attackCounter++;
+
+        if (attackCounter <= 5) {
+            spriteNum = 1;
+        } else if (attackCounter <= 25) {
+            spriteNum = 2;
+            if (attackCounter == 15 && !hasHit) {
+                checkAttackHit();
+                hasHit = true;
+            }
+        } else {
+            spriteNum = 1;
+            attacking = false;
+            attackCounter = 0;
+            hasHit = false;
+        }
+    }
+
+    public void checkAttackHit() {
+        Rectangle attackArea = new Rectangle(x, y, 36, 36);
+        int attackRange = gp.tileSize;
+
+        switch (facingDirection) {
+            case "up":
+                attackArea.x = x - (attackRange / 2);
+                attackArea.y = y - attackRange;
+                attackArea.width = gp.tileSize + attackRange;
+                attackArea.height = attackRange;
+                break;
+            case "down":
+                attackArea.x = x - (attackRange / 2);
+                attackArea.y = y + gp.tileSize;
+                attackArea.width = gp.tileSize + attackRange;
+                attackArea.height = attackRange;
+                break;
+            case "left":
+                attackArea.x = x - attackRange;
+                attackArea.y = y;
+                attackArea.width = attackRange;
+                attackArea.height = gp.tileSize;
+                break;
+            case "right":
+                attackArea.x = x + gp.tileSize;
+                attackArea.y = y;
+                attackArea.width = attackRange;
+                attackArea.height = gp.tileSize;
+                break;
+            case "up_left":
+                attackArea.x = x - attackRange;
+                attackArea.y = y - attackRange;
+                attackArea.width = attackRange;
+                attackArea.height = attackRange;
+                break;
+            case "up_right":
+                attackArea.x = x + gp.tileSize;
+                attackArea.y = y - attackRange;
+                attackArea.width = attackRange;
+                attackArea.height = attackRange;
+                break;
+            case "down_left":
+                attackArea.x = x - attackRange;
+                attackArea.y = y + gp.tileSize;
+                attackArea.width = attackRange;
+                attackArea.height = attackRange;
+                break;
+            case "down_right":
+                attackArea.x = x + gp.tileSize;
+                attackArea.y = y + gp.tileSize;
+                attackArea.width = attackRange;
+                attackArea.height = attackRange;
+                break;
+        }
+
+        for (int i = 0; i < gp.monster.length; i++) {
+            if (gp.monster[i] != null) {
+                Rectangle monsterArea = new Rectangle(
+                        gp.monster[i].x,
+                        gp.monster[i].y,
+                        gp.tileSize,
+                        gp.tileSize
+                );
+
+                if (attackArea.intersects(monsterArea)) {
+                    gp.playSE(16);
+                    Entity mon = gp.monster[i];
+                    mon.health--;
+                    mon.hpBarOn = true;
+                    mon.hpBarCounter = 0;
+                    mon.invincible = true;
+                    mon.invincibleCounter = 0;
+                    mon.damageReaction();
+                    if (mon.health <= 0) {
+                        mon.dying = true;
+                    }
+                }
+            }
+        }
+    }
+
     public void pickUpObj(int i) {
         if (i != 999) {
-            ;
+            // add logic here
         }
     }
 
-    //INTERACT WITH NPC
     public void interactNPC(int i) {
-        if (i != 999) {
-            if(gp.keyHandler.enterPressed) {
-                gp.npc[i].speak();
-                gp.gameState=gp.dialogueState;
+        if (gp.keyHandler.ePressed) {
+            int nearestNPC = findNearestNPC();
+            if (nearestNPC != 999) {
+                gp.gameState = gp.dialogueState;
+                gp.npc[nearestNPC].speak();
             }
-
         }
     }
 
+    private int findNearestNPC() {
+        int nearestIndex = 999;
+        double shortestDistance = Double.MAX_VALUE;
+        int interactionRange = gp.tileSize *2;
 
-    //DRAW PLAYER
-    public void paint(Graphics2D g2d) {
+        for (int i = 0; i < gp.npc.length; i++) {
+            if (gp.npc[i] != null) {
+                double playerCenterX = x + gp.tileSize / 2.0;
+                double playerCenterY = y + gp.tileSize / 2.0;
+                double npcCenterX = gp.npc[i].x + gp.tileSize / 2.0;
+                double npcCenterY = gp.npc[i].y + gp.tileSize / 2.0;
+
+                double distance = Math.sqrt(
+                        Math.pow(playerCenterX - npcCenterX, 2) +
+                                Math.pow(playerCenterY - npcCenterY, 2)
+                );
+
+                if (distance <= interactionRange && distance < shortestDistance) {
+                    shortestDistance = distance;
+                    nearestIndex = i;
+                }
+            }
+        }
+
+        return nearestIndex;
+    }
+
+    public void contactMonster(int i) {
+        if (i != 999 && !invincible) {
+            gp.playSE(18);
+            health -= 1;
+            invincible = true;
+            damageReaction();
+        }
+    }
+
+    public void draw(Graphics2D g2d) {
         BufferedImage image = null;
+
         if (dead) {
-            if (dieFrame == 0) image = die1;
-            else if (dieFrame == 1) image = die2;
-            else if (dieFrame == 2) image = die3;
-            g2d.drawImage(image, x, y, gp.tileSize, gp.tileSize, null);
+            image = switch (dieFrame) {
+                case 0 -> die1;
+                case 1 -> die2;
+                case 2 -> die3;
+                default -> die3;
+            };
+            g2d.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
             return;
         }
 
-        switch (direction) {
-            case "up":
-                image = (spriteNum == 1) ? up1 : up2;
-                break;
-            case "up_left":
-                image = (spriteNum == 1) ? left1 : left2;
-                break;
-            case "up_right":
-                image = (spriteNum == 1) ? right1 : right2;
-                break;
-            case "down":
-                image = (spriteNum == 1) ? down1 : down2;
-                break;
-            case "down_left":
-                image = (spriteNum == 1) ? left1 : left2;
-                break;
-            case "down_right":
-                image = (spriteNum == 1) ? right1 : right2;
-                break;
-            case "left":
-                image = (spriteNum == 1) ? left1 : left2;
-                break;
-            case "right":
-                image = (spriteNum == 1) ? right1 : right2;
-                break;
-            case "idle_up":
-                image = idle_up;
-                break;
-                case "idle_up_left":
-                image = idle_up;
-                break;
-            case "idle_up_right":
-                image = idle_up;
-                break;
-            case "idle_down":
-                image = idle_down;
-                break;
-            case "idle_down_left":
-                image = idle_down;
-                break;
-            case "idle_down_right":
-                image = idle_down;
-                break;
-            case "idle_left":
-                image = idle_left;
-                break;
-            case "idle_right":
-                image = idle_right;
-                break;
+        if (attacking) {
+            switch (facingDirection) {
+                case "up", "up_left", "up_right" -> image = (spriteNum == 1) ? attackUp1 : attackUp2;
+                case "down", "down_left", "down_right" -> image = (spriteNum == 1) ? attackUDown1 : attackDown2;
+                case "left" -> image = (spriteNum == 1) ? attackLeft1 : attackLeft2;
+                case "right" -> image = (spriteNum == 1) ? attackRight1 : attackRight2;
+            }
+        } else {
+            switch (moveDirection) {
+                case "up"-> image = (spriteNum == 1) ? up1 : up2;
+                case "down" -> image = (spriteNum == 1) ? down1 : down2;
+                case "left" ,"up_left","down_left" -> image = (spriteNum == 1) ? left1 : left2;
+                case "right","up_right","down_right" -> image = (spriteNum == 1) ? right1 : right2;
+            }
+
+            if (currentSpeed == 0) {
+                image = switch (facingDirection) {
+                    case "up", "up_left", "up_right" -> idle_up;
+                    case "down", "down_left", "down_right" -> idle_down;
+                    case "left" -> idle_left;
+                    case "right" -> idle_right;
+                    default -> image;
+                };
+            }
         }
-        g2d.drawImage(image, screenX, screenY, null);
+
+        Composite originalComposite = g2d.getComposite();
+        if(invincible) {
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
+        }
+
+        g2d.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+        g2d.setComposite(originalComposite);
+    }
+
+    public void damageReaction() {
+        int knock = gp.tileSize / 4;
+        switch (facingDirection) {
+            case "up","up_left","up_right" -> y += knock;
+            case "down","down_left","down_right" -> y -= knock;
+            case "left" -> x += knock;
+            case "right" -> x -= knock;
+        }
     }
 }

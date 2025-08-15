@@ -1,15 +1,11 @@
 package object;
 
 import Main.GamePanel;
+import Entity.Entity;
 
-public class Obj_Armour_Boots_Crusty extends SuperObject{
-    GamePanel gp;
+public class Obj_Armour_Boots_Crusty extends Entity{
     public Obj_Armour_Boots_Crusty(GamePanel gp) {
-        this.gp = gp;
+        super(gp);
         name = "Crusty Boots";
-        try {
-            image1 = javax.imageio.ImageIO.read(getClass().getResourceAsStream("/res/objects/armour_boots_crusty.png"));
-            utility.scaleImage(image1,gp.tileSize,gp.tileSize);
-        } catch (Exception e) {
-            e.printStackTrace();
-}}}
+       down1=setup("objects/armour_boots_crusty");
+    }}
