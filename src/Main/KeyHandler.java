@@ -26,7 +26,28 @@ public class KeyHandler implements KeyListener, MouseListener {
 
         //Title state
         if(gp.gameState==gp.titleState){
-            if(gp.ui.titleScreenState==0){
+            titleState(code);
+        }
+        //Play state
+        if(gp.gameState==gp.playState){
+            playState(code);
+        }
+        //Pause state
+      else if(gp.gameState==gp.pauseState) {
+            pauseState(code);
+        }
+        //Dialogue state
+       else if(gp.gameState==gp.dialogueState){
+            dialogueState(code);
+        }
+        //Character state
+       else if(gp.gameState==gp.characterState){
+            characterState(code);
+        }
+    }
+
+    public void titleState(int code){
+        if(gp.ui.titleScreenState==0){
             if(code==KeyEvent.VK_W) {
                 gp.ui.commandNum++;
                 if(gp.ui.commandNum>2){
@@ -52,88 +73,128 @@ public class KeyHandler implements KeyListener, MouseListener {
                     }
                 }
             }}
-            else if(gp.ui.titleScreenState==1){
-                if(code==KeyEvent.VK_W) {
-                    gp.ui.commandNum++;
-                    if(gp.ui.commandNum>3){
-                        gp.ui.commandNum=0;
-                    }
-                }
-                if(code==KeyEvent.VK_S) {
-                    gp.ui.commandNum--;
-                    if(gp.ui.commandNum<0){
-                        gp.ui.commandNum=3;
-                        gp.ui.commandNum=3;
-                    }
-                }
-                if(code==KeyEvent.VK_ENTER) {
-                    switch (gp.ui.commandNum) {
-                        case 0 -> {
-
-                            gp.stopMusic();
-                            gp.gameState=gp.playState;
-                            gp.playMusic(15);
-                        }
-                        case 1 -> {
-                            gp.stopMusic();
-                            gp.gameState=gp.playState;
-                            gp.playMusic(15);
-                        }
-                        case 2 -> {
-                            gp.stopMusic();
-                            gp.gameState=gp.playState;
-                            gp.playMusic(15);
-
-                        }
-                        case 3->{
-                            System.out.println(gp.ui.commandNum);
-                            gp.ui.titleScreenState=0;
-                            gp.ui.commandNum=0;
-
-                        }
-                    }
-                }
-            }
-        }
-
-        //Play state
-        if(gp.gameState==gp.playState){
+        else if(gp.ui.titleScreenState==1){
             if(code==KeyEvent.VK_W) {
-                upPressed=true;
+                gp.ui.commandNum++;
+                if(gp.ui.commandNum>3){
+                    gp.ui.commandNum=0;
+                }
             }
             if(code==KeyEvent.VK_S) {
-                downPressed=true;
-            }
-            if(code==KeyEvent.VK_A) {
-                leftPressed=true;
-            }
-            if(code==KeyEvent.VK_D) {
-                rightPressed=true;
-            }
-            if(code==KeyEvent.VK_ESCAPE) {
-                gp.gameState=gp.pauseState;
+                gp.ui.commandNum--;
+                if(gp.ui.commandNum<0){
+                    gp.ui.commandNum=3;
+                    gp.ui.commandNum=3;
+                }
             }
             if(code==KeyEvent.VK_ENTER) {
-                enterPressed=true;
-            }
-            if(code==KeyEvent.VK_E) {
-                ePressed = true;
+                switch (gp.ui.commandNum) {
+                    case 0 -> {
+
+                        gp.stopMusic();
+                        gp.gameState=gp.playState;
+                        gp.playMusic(15);
+                    }
+                    case 1 -> {
+                        gp.stopMusic();
+                        gp.gameState=gp.playState;
+                        gp.playMusic(15);
+                    }
+                    case 2 -> {
+                        gp.stopMusic();
+                        gp.gameState=gp.playState;
+                        gp.playMusic(15);
+
+                    }
+                    case 3->{
+                        System.out.println(gp.ui.commandNum);
+                        gp.ui.titleScreenState=0;
+                        gp.ui.commandNum=0;
+
+                    }
+                }
             }
         }
-        //Pause state
-       else if(gp.gameState==gp.pauseState) {
-            if (code == KeyEvent.VK_ESCAPE) {
-                gp.gameState = gp.playState;
+    }
+    public void playState(int code){
+        if(code==KeyEvent.VK_W) {
+            upPressed=true;
+        }
+        if(code==KeyEvent.VK_S) {
+            downPressed=true;
+        }
+        if(code==KeyEvent.VK_A) {
+            leftPressed=true;
+        }
+        if(code==KeyEvent.VK_D) {
+            rightPressed=true;
+        }
+        if(code==KeyEvent.VK_ESCAPE) {
+            gp.gameState=gp.pauseState;
+        }
+        if(code==KeyEvent.VK_ENTER) {
+            enterPressed=true;
+        }
+        if(code==KeyEvent.VK_E) {
+            ePressed = true;
+        }
+        if(code==KeyEvent.VK_TAB) {
+            gp.gameState=gp.characterState;
+        }
+    }
+    public void pauseState(int code){
+        if (code == KeyEvent.VK_ESCAPE) {
+            gp.gameState = gp.playState;
+        }
+    }
+    public void dialogueState(int code){
+        if(code==KeyEvent.VK_E) {
+            gp.gameState = gp.playState;
+            gp.eventHandler.resetEvent();
+        }
+    }
+    public void characterState(int code) {
+        if (code == KeyEvent.VK_TAB) {
+            gp.gameState = gp.playState;
+        }
+        if (code == KeyEvent.VK_W) {
+            if (gp.ui.slotRow != 0) {
+                gp.ui.slotRow--;
+                gp.playSE(19);
+            }
+            else{
+                gp.ui.slotRow = 3;
+                gp.playSE(19);
             }
         }
-        //Dialogue state
-        else if(gp.gameState==gp.dialogueState){
-            if(code==KeyEvent.VK_E) {
-                gp.gameState = gp.playState;
-                gp.eventHandler.resetEvent();
+        if (code == KeyEvent.VK_S) {
+            if (gp.ui.slotRow != 3) {
+                gp.ui.slotRow++;
+                gp.playSE(19);
             }
-
-
+            else{
+                gp.ui.slotRow = 0;
+                gp.playSE(19);
+            }
+        }
+        if (code == KeyEvent.VK_A) {
+            if (gp.ui.slotCol != 0) {
+                gp.ui.slotCol--;
+                gp.playSE(19);
+            }
+            else{
+                gp.ui.slotCol = 4;
+                gp.playSE(19);
+            }
+        }
+        if (code == KeyEvent.VK_D) {
+            if (gp.ui.slotCol != 4) {
+                gp.ui.slotCol++;
+                gp.playSE(19);
+            }else{
+                gp.ui.slotCol = 0;
+                gp.playSE(19);
+            }
         }
     }
 
