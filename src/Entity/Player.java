@@ -2,9 +2,11 @@ package Entity;
 
 import Main.GamePanel;
 import Main.KeyHandler;
+import object.*;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 public class Player extends Entity {
     KeyHandler keyHandler;
@@ -26,6 +28,9 @@ public class Player extends Entity {
     public int maxDrunk;
     public int drunk;
 
+    public ArrayList<Entity> inventory=new ArrayList<>();
+    //public final int maxinventorySize=20;
+
     public Player(GamePanel gp, KeyHandler kh) {
         super(gp);
         this.keyHandler = kh;
@@ -39,6 +44,7 @@ public class Player extends Entity {
         setDefaultValues();
         getPlayerImage();
         getPlayerAttackImage();
+        setItems();
     }
 
     public void setDefaultValues() {
@@ -48,11 +54,42 @@ public class Player extends Entity {
         moveDirection = "down";
         facingDirection = "down";
 
+        //Status
         maxHealth = 10;
         health = maxHealth;
-
         maxDrunk = 6;
         drunk = 0;
+
+        level = 1;
+        strength=1;
+        dexterity = 1;
+        exp=0;
+        nextLevelExp=10;
+        coin=0;
+        currentWeapon=new Obj_Weapon(gp);
+        currentShield=new Obj_Shield(gp);
+        attack=getAttack();
+        defense=getDefense();
+
+    }
+
+    public int getAttack(){
+        return attack=strength*currentWeapon.attackValue;
+    }
+
+    public int getDefense(){
+        return defense=dexterity*currentShield.defenseValue;
+    }
+
+    public void setItems(){
+        inventory.add(currentWeapon); //wooden Sword
+        inventory.add(currentShield); //wooden Shield
+        inventory.add(new Obj_Rum(gp));
+        inventory.add(new Obj_Tequila(gp));
+        inventory.add(new Obj_Whiskey(gp));
+        inventory.add(new Obj_Beer(gp));
+        inventory.add(new Obj_Drugs(gp));
+        inventory.add(new Obj_Cigarette(gp));
     }
 
     public void getPlayerImage() {
@@ -267,6 +304,7 @@ public class Player extends Entity {
         }
     }
 
+    //Attack animation
     public void attacking() {
         attackCounter++;
 
@@ -286,6 +324,7 @@ public class Player extends Entity {
         }
     }
 
+    //Damage Monster
     public void checkAttackHit() {
         Rectangle attackArea = new Rectangle(x, y, 36, 36);
         int attackRange = gp.tileSize;
@@ -353,13 +392,22 @@ public class Player extends Entity {
                 if (attackArea.intersects(monsterArea)) {
                     gp.playSE(16);
                     Entity mon = gp.monster[i];
-                    mon.health--;
+                    int damage=attack-mon.defense;
+                    if(damage<0){
+                        damage=0;
+                    }
+                    mon.health-=damage;
+
                     mon.hpBarOn = true;
                     mon.hpBarCounter = 0;
                     mon.invincible = true;
                     mon.invincibleCounter = 0;
                     mon.damageReaction();
                     if (mon.health <= 0) {
+
+                        gp.ui.addMessage(mon.exp+" EXP");
+                        exp+=mon.exp;
+                        checkLevelUp();
                         mon.dying = true;
                     }
                 }
@@ -413,7 +461,11 @@ public class Player extends Entity {
     public void contactMonster(int i) {
         if (i != 999 && !invincible) {
             gp.playSE(18);
-            health -= 1;
+            int damage=gp.monster[i].attack-defense;
+            if(damage<0){
+                damage=0;
+            }
+            health -= damage;
             invincible = true;
             damageReaction();
         }
@@ -475,6 +527,23 @@ public class Player extends Entity {
             case "down","down_left","down_right" -> y -= knock;
             case "left" -> x += knock;
             case "right" -> x -= knock;
+        }
+    }
+
+    public void checkLevelUp(){
+        if(exp>=nextLevelExp){
+            gp.playSE(11);
+            level++;
+            nextLevelExp=nextLevelExp*2;
+            maxHealth+=2;
+            strength++;
+            dexterity++;
+            coin+=exp;
+            attack=getAttack();
+            defense=getDefense();
+            exp=0;
+            gp.gameState=gp.dialogueState;
+            gp.ui.currentDialogue="Ahoy, you are at another level,"+level+"!\nStats improved";
         }
     }
 }

@@ -48,7 +48,28 @@ public class Entity {
     public int invincibleCounter=0;
     int dyingCounter=0;
     public boolean hpBarOn=false;
-   public int hpBarCounter=0;
+    public int hpBarCounter=0;
+    public int level;
+    public int strength;
+    public int dexterity;
+    public int attack;
+    public int defense;
+    public int exp;
+    public int nextLevelExp;
+    public int coin;
+    public int alcohol;
+    public Entity currentWeapon;
+    public Entity currentShield;
+    public Entity currentHelmet;
+    public Entity currentChest;
+    public Entity currentBoots;
+    public Entity currentDrink;
+
+    //item status
+    public int attackValue;
+    public int defenseValue;
+    public String itemDescription="";
+
 
 
     //NPC
@@ -119,7 +140,12 @@ public class Entity {
        if(this.type==2 && contactPlayer){
            if(!gp.player.invincible){
                gp.playSE(18);
-               gp.player.health-=1;
+
+               int damage=attack-gp.player.defense;
+               if(damage<0){
+                   damage=0;
+               }
+               gp.player.health-=damage;
                gp.player.invincible=true;
            }
        }

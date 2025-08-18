@@ -19,10 +19,15 @@ public class UI {
     BufferedImage bottleFull, bottleHalf, bottleEmpty;
 
     public boolean MessageOn = false;
-    public String message = "";
+    ArrayList<String> message=new ArrayList<>();
+    ArrayList<Integer> messageID=new ArrayList<>();
+
     public String currentDialogue = "";
     public int commandNum = 0;
     public int titleScreenState = 0;
+
+    public int slotCol=0;
+    public int slotRow=0;
 
     //CONSTRUCTOR
     public UI(GamePanel gp) {
@@ -53,9 +58,9 @@ public class UI {
         bottleEmpty = bottle.image3;
     }
 
-    public void showMessage(String text) {
-        message = text;
-        MessageOn = true;
+    public void addMessage(String text){
+        message.add(text);
+        messageID.add(0);
     }
 
     public void draw(Graphics2D g2) {
@@ -73,6 +78,7 @@ public class UI {
         if (gp.gameState == gp.playState) {
             drawPlayerLife();
             drawDrunkLevel();
+            drawMessage();
         }
 
         //PAUSE STATE
@@ -88,6 +94,12 @@ public class UI {
             drawDrunkLevel();
             drawDialogueScreen();
 
+        }
+
+        //CHARACTER STATE
+        if(gp.gameState == gp.characterState){
+            drawCharacterScreen();
+            drawInventory();
         }
     }
 
@@ -212,6 +224,149 @@ public class UI {
 
     }
 
+    public void drawCharacterScreen(){
+        final int frameX=gp.tileSize;
+        final int frameY=gp.tileSize;
+        final int frameWidth=gp.tileSize*5;
+        final int frameHeight=gp.tileSize*10;
+        drawSubWindow(frameX,frameY,frameWidth,frameHeight);
+
+        //text
+        g2.setColor(Color.white);
+        g2.setFont(getPublicPixel().deriveFont(12F));
+
+        int textX=frameX+20;
+        int textY=frameY+gp.tileSize;
+        final int lineHeight=30;
+
+        //Names
+        textY=statusDraw("Level",textX,textY,lineHeight);
+        textY=statusDraw("Exp",textX,textY,lineHeight);
+        textY=statusDraw("Exp to up",textX,textY,lineHeight);
+        textY=statusDraw("Life",textX,textY,lineHeight);
+        textY=statusDraw("Alcohol",textX,textY,lineHeight);
+        textY=statusDraw("Armour",textX,textY,lineHeight);
+        textY=statusDraw("Attack",textX,textY,lineHeight);
+        textY=statusDraw("Strength",textX,textY,lineHeight);
+        textY=statusDraw("Dexterity",textX,textY,lineHeight);
+        textY=statusDraw("Coins",textX,textY,lineHeight);
+        textY+=lineHeight;
+        textY=statusDraw("Weapon",textX,textY,lineHeight);
+        textY+=lineHeight/2;
+        textY=statusDraw("Shield",textX,textY,lineHeight);
+
+
+        //Values
+        int tailX=(frameX+frameWidth)-30;
+        textY=frameY+gp.tileSize;
+        String value;
+        value=String.valueOf(gp.player.level);
+        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        value=String.valueOf(gp.player.exp);
+        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        value=String.valueOf(gp.player.nextLevelExp);
+        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        value=String.valueOf(gp.player.health+"/"+gp.player.maxHealth);
+        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        value=String.valueOf(gp.player.drunk+"/"+gp.player.maxDrunk);
+        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        value=String.valueOf(gp.player.defense);
+        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        value=String.valueOf(gp.player.attack);
+        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        value=String.valueOf(gp.player.strength);
+        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        value=String.valueOf(gp.player.dexterity);
+        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        value=String.valueOf(gp.player.coin);
+        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+       // textY+=20;
+
+        g2.drawImage(gp.player.currentWeapon.down1, tailX-gp.tileSize,textY-5,null);
+        textY+=gp.tileSize;
+        g2.drawImage(gp.player.currentShield.down1, tailX-gp.tileSize,textY-5,null);
+    }
+
+    public void drawInventory(){
+        //frame
+         int frameX=gp.tileSize*9;
+         int frameY=gp.tileSize;
+         int frameWidth=gp.tileSize*6;
+         int frameHeight=gp.tileSize*5;
+         drawSubWindow(frameX,frameY,frameWidth,frameHeight);
+
+         //slot
+         final int slotXStart=frameX+20;
+         final int slotYStart=frameY+20;
+         int slotX=slotXStart;
+         int slotY=slotYStart;
+         int slotSize=gp.tileSize+3;
+
+         //draw items
+        for(int i=0;i<gp.player.inventory.size();i++)
+        {
+            if(gp.player.inventory.get(i)!=null){
+                g2.drawImage(gp.player.inventory.get(i).down1,slotX,slotY,null);
+                slotX+=slotSize;
+                if(i%5==4){
+                    slotX=slotXStart;
+                    slotY+=slotSize;
+                }
+            }
+        }
+
+         //cursor
+         int cursorX=slotXStart+(slotSize*slotCol);
+         int cursorY=slotYStart+(slotSize*slotRow);
+         int cursorWidth=gp.tileSize;
+         int cursorHeight=gp.tileSize;
+        //draw cursor
+         g2.setColor(Color.white);
+         g2.setStroke(new BasicStroke(3));
+         g2.drawRoundRect(cursorX,cursorY,cursorWidth,cursorHeight,10,10);
+
+         //description
+        int dFrameX=frameX;
+        int dFrameY=frameY+frameHeight+gp.tileSize;
+        int dFrameWidth=frameWidth;
+        int dFrameHeight=gp.tileSize*5;
+        drawSubWindow(dFrameX,dFrameY,dFrameWidth,dFrameHeight);
+        //draw description
+        int textX=dFrameX+20;
+        int textY=dFrameY+gp.tileSize;
+        g2.setFont(getPublicPixel().deriveFont(10F));
+
+        int itemIndex=getItemIndexSlot();
+
+        if(itemIndex<gp.player.inventory.size()){
+
+            ArrayList<String> wrappedLines = wrapText(gp.player.inventory.get(itemIndex).itemDescription, dFrameWidth);
+
+            // Draw each wrapped line
+            for (String line : wrappedLines) {
+                g2.drawString(line, textX, textY);
+                textY += 40;
+            }
+        }
+
+
+    }
+
+    public int getItemIndexSlot(){
+        return slotCol+(slotRow*5);
+    }
+
+    public int valuesDraw(String value,int textX,int tailX,int textY,int lineHeight){
+        textX=getXAlignToRightText(value,tailX);
+        g2.drawString(value,textX,textY);
+        return textY+lineHeight;
+    }
+
+    public int statusDraw(String status,int textX,int textY,int lineHeight){
+        g2.drawString(status,textX,textY);
+        return textY+lineHeight;
+    }
+
     public ArrayList<String> wrapText(String text, int maxWidth) {
         ArrayList<String> wrappedLines = new ArrayList<>();
 
@@ -219,33 +374,39 @@ public class UI {
             return wrappedLines;
         }
 
-        if (g2.getFontMetrics().stringWidth(text) <= maxWidth) {
-            wrappedLines.add(text);
-            return wrappedLines;
-        }
+        // First split by manual line breaks (\n)
+        String[] manualLines = text.split("\\n");
 
-        String[] words = text.split(" ");
-        StringBuilder currentLine = new StringBuilder();
+        for (String line : manualLines) {
+            // Check if this line needs wrapping
+            if (g2.getFontMetrics().stringWidth(line) <= maxWidth) {
+                wrappedLines.add(line);
+            } else {
+                // Apply word wrapping to this line
+                String[] words = line.split(" ");
+                StringBuilder currentLine = new StringBuilder();
 
-        for (String word : words) {
-            String testLine = currentLine.length() == 0 ? word : currentLine + " " + word;
+                for (String word : words) {
+                    String testLine = currentLine.length() == 0 ? word : currentLine + " " + word;
 
-            if (g2.getFontMetrics().stringWidth(testLine) > maxWidth) {
+                    if (g2.getFontMetrics().stringWidth(testLine) > maxWidth) {
+                        if (currentLine.length() > 0) {
+                            wrappedLines.add(currentLine.toString());
+                            currentLine = new StringBuilder(word);
+                        } else {
+                            String brokenWord = breakLongWord(word, maxWidth);
+                            wrappedLines.add(brokenWord);
+                            currentLine = new StringBuilder();
+                        }
+                    } else {
+                        currentLine = new StringBuilder(testLine);
+                    }
+                }
+
                 if (currentLine.length() > 0) {
                     wrappedLines.add(currentLine.toString());
-                    currentLine = new StringBuilder(word);
-                } else {
-                    String brokenWord = breakLongWord(word, maxWidth);
-                    wrappedLines.add(brokenWord);
-                    currentLine = new StringBuilder();
                 }
-            } else {
-                currentLine = new StringBuilder(testLine);
             }
-        }
-
-        if (currentLine.length() > 0) {
-            wrappedLines.add(currentLine.toString());
         }
 
         return wrappedLines;
@@ -348,9 +509,34 @@ public class UI {
 
     }
 
+    public void drawMessage(){
+        int messageX = gp.tileSize;
+        int messageY = gp.screenHeight - gp.tileSize*2;
+        g2.setFont(getPublicPixel().deriveFont(10F));
+        for(int i=0;i<message.size();i++){
+            if(message.get(i)!=null){
+                g2.setColor(Color.white);
+                g2.drawString(message.get(i),messageX,messageY);
+                int counter=messageID.get(i)+1;
+                messageID.set(i,counter);
+                messageY+=gp.tileSize;
+
+                if(messageID.get(i)>90){
+                    message.remove(i);
+                    messageID.remove(i);
+                }
+            }
+        }
+    }
+
     public int getXforCenteredText(String text) {
         int length = (int) g2.getFontMetrics().getStringBounds(text, g2).getWidth();
         return (gp.screenWidth / 2) - (length / 2);
+    }
+    public int getXAlignToRightText(String text,int tailX) {
+        int length = (int) g2.getFontMetrics().getStringBounds(text, g2).getWidth();
+        int x=tailX-length;
+        return x;
     }
 
     public Font getPublicPixel() {

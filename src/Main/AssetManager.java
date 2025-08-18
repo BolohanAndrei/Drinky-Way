@@ -23,25 +23,46 @@ public class AssetManager {
     }
 
     public void setNPC(){
-        gp.npc[0]=new DrunkNPC(gp);
-        gp.npc[0].x = 21 * gp.tileSize;
-        gp.npc[0].y = 21 * gp.tileSize;
-        gp.npc[1]=new DrunkNPC1(gp);
-        gp.npc[1].x = 23 * gp.tileSize;
-        gp.npc[1].y = 21 * gp.tileSize;
+        int i=0;
+        gp.npc[i]=new DrunkNPC(gp);
+        gp.npc[i].x = 21 * gp.tileSize;
+        gp.npc[i].y = 21 * gp.tileSize;
+        i++;
+        gp.npc[i]=new DrunkNPC1(gp);
+        gp.npc[i].x = 23 * gp.tileSize;
+        gp.npc[i].y = 21 * gp.tileSize;
 
     }
 
     public void setMonster(){
-        gp.monster[0]=new MON_GSlime(gp);
-        gp.monster[0].x = 23 * gp.tileSize;
-        gp.monster[0].y = 36 * gp.tileSize;
-        gp.monster[1]=new MON_GSlime(gp);
-        gp.monster[1].x = 23 * gp.tileSize;
-        gp.monster[1].y = 37 * gp.tileSize;
-        gp.monster[2]=new MON_GSlime(gp);
-        gp.monster[2].x = 24 * gp.tileSize;
-        gp.monster[2].y = 35 * gp.tileSize;
+        int i=0;
+        gp.monster[i]=new MON_GSlime(gp);
+        gp.monster[i].x = 22 * gp.tileSize;
+        gp.monster[i].y = 30 * gp.tileSize;
+        i++;
+        gp.monster[i]=new MON_GSlime(gp);
+        gp.monster[i].x = 22 * gp.tileSize;
+        gp.monster[i].y = 31 * gp.tileSize;
+        i++;
+        gp.monster[i]=new MON_GSlime(gp);
+        gp.monster[i].x = 22 * gp.tileSize;
+        gp.monster[i].y = 32 * gp.tileSize;
+        i++;
+        gp.monster[i]=new MON_GSlime(gp);
+        gp.monster[i].x = 22 * gp.tileSize;
+        gp.monster[i].y = 33 * gp.tileSize;
+        i++;
+        gp.monster[i]=new MON_GSlime(gp);
+        gp.monster[i].x = 22 * gp.tileSize;
+        gp.monster[i].y = 34 * gp.tileSize;
+        i++;
+        gp.monster[i]=new MON_GSlime(gp);
+        gp.monster[i].x = 22 * gp.tileSize;
+        gp.monster[i].y = 35 * gp.tileSize;
+        i++;
+        gp.monster[i]=new MON_GSlime(gp);
+        gp.monster[i].x = 22 * gp.tileSize;
+        gp.monster[i].y = 36 * gp.tileSize;
 
     }
 }
