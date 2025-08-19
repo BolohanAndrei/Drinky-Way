@@ -268,7 +268,7 @@ public class UI {
         textY=valuesDraw(value,textX,tailX,textY,lineHeight);
         value=String.valueOf(gp.player.health+"/"+gp.player.maxHealth);
         textY=valuesDraw(value,textX,tailX,textY,lineHeight);
-        value=String.valueOf(gp.player.drunk+"/"+gp.player.maxDrunk);
+        value=String.valueOf(gp.player.drinkPercent+"/"+gp.player.maxDrinkPercent+" %");
         textY=valuesDraw(value,textX,tailX,textY,lineHeight);
         value=String.valueOf(gp.player.defense);
         textY=valuesDraw(value,textX,tailX,textY,lineHeight);
@@ -303,14 +303,23 @@ public class UI {
          int slotSize=gp.tileSize+3;
 
          //draw items
-        for(int i=0;i<gp.player.inventory.size();i++)
-        {
-            if(gp.player.inventory.get(i)!=null){
-                g2.drawImage(gp.player.inventory.get(i).down1,slotX,slotY,null);
-                slotX+=slotSize;
-                if(i%5==4){
-                    slotX=slotXStart;
-                    slotY+=slotSize;
+        for(int i=0;i<gp.player.inventory.size();i++) {
+
+            //equip cursor
+            if (gp.player.inventory.get(i) == gp.player.currentWeapon ||
+                    gp.player.inventory.get(i) == gp.player.currentShield ||
+                    gp.player.inventory.get(i) == gp.player.currentBoots ||
+                    gp.player.inventory.get(i) == gp.player.currentChest ||
+                    gp.player.inventory.get(i) == gp.player.currentHelmet) {
+                g2.setColor(new Color(98, 189, 38, 139));
+                g2.fillRoundRect(slotX,slotY,gp.tileSize,gp.tileSize,10,10);
+            }
+            if (gp.player.inventory.get(i) != null) {
+                g2.drawImage(gp.player.inventory.get(i).down1, slotX, slotY, null);
+                slotX += slotSize;
+                if (i % 5 == 4) {
+                    slotX = slotXStart;
+                    slotY += slotSize;
                 }
             }
         }
@@ -330,7 +339,6 @@ public class UI {
         int dFrameY=frameY+frameHeight+gp.tileSize;
         int dFrameWidth=frameWidth;
         int dFrameHeight=gp.tileSize*5;
-        drawSubWindow(dFrameX,dFrameY,dFrameWidth,dFrameHeight);
         //draw description
         int textX=dFrameX+20;
         int textY=dFrameY+gp.tileSize;
@@ -339,6 +347,8 @@ public class UI {
         int itemIndex=getItemIndexSlot();
 
         if(itemIndex<gp.player.inventory.size()){
+
+            drawSubWindow(dFrameX,dFrameY,dFrameWidth,dFrameHeight);
 
             ArrayList<String> wrappedLines = wrapText(gp.player.inventory.get(itemIndex).itemDescription, dFrameWidth);
 

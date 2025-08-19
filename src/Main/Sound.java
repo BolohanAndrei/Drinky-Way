@@ -31,6 +31,7 @@ public class Sound {
         soundURL[17]=getClass().getResource("/res/sound/swing.wav"); // sword swing sound
         soundURL[18]=getClass().getResource("/res/sound/take_damage.wav"); // take damage sound
         soundURL[19]=getClass().getResource("/res/sound/cursor.wav"); // cursor sound
+        soundURL[20]=getClass().getResource("/res/sound/drink.wav"); // drink sound
 
 
     }

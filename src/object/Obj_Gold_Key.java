@@ -9,7 +9,10 @@ public class Obj_Gold_Key extends Entity {
     public Obj_Gold_Key(GamePanel gp)
     {
         super(gp);
-        name="Gold_Key";
+        name="Gold Key";
+        gearType=2;
         down1=setup("objects/gold_key");
+        itemDescription = "["+name+"]\nOpens chests, doors, and maybe your ex’s heart. Shiny enough to blind a sober man.";
+
     }
 }

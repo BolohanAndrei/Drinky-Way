@@ -69,14 +69,14 @@ public class Entity {
     public int attackValue;
     public int defenseValue;
     public String itemDescription="";
-
-
+    public int gearType=-1; //0 sword 1 shield 2 consumable
+    public int armourType=-1; //0 helmet 1 chest 2 boots
 
     //NPC
     public BufferedImage image1, image2, image3, image4;
     public String name;
     public boolean collision = false;
-    public int type; //0 player 1 npc 2 monster
+    public int entityType=-1; //0 player 1 npc 2 monster
 
     public Entity(GamePanel gp) {
         this.gp = gp;
@@ -128,6 +128,8 @@ public class Entity {
 
     }
 
+    public void use(Entity e){}
+
     public void update(){
 
         collisionOn = false;
@@ -137,7 +139,7 @@ public class Entity {
         gp.collisionCheck.checkEntity(this,gp.monster);
        boolean contactPlayer= gp.collisionCheck.checkPlayer(this);
 
-       if(this.type==2 && contactPlayer){
+       if(this.entityType==2 && contactPlayer){
            if(!gp.player.invincible){
                gp.playSE(18);
 
@@ -201,7 +203,7 @@ public class Entity {
             }
 
             //Monster HP bar
-            if (type == 2 && hpBarOn) {
+            if (entityType == 2 && hpBarOn) {
                 double oneScale=(double)gp.tileSize/maxHealth;
                 double hpBarValue=oneScale*health;
 

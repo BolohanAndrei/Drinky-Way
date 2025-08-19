@@ -4,7 +4,7 @@ import Entity.DrunkNPC;
 //import Entity.DrunkNPC1;
 import Entity.DrunkNPC1;
 import Monster.MON_GSlime;
-import object.Obj_Door;
+import object.*;
 
 public class AssetManager {
     GamePanel gp;
@@ -13,13 +13,30 @@ public class AssetManager {
     }
     //initializes the objects in the game
     public void setObj(){
-//        gp.obj[0]=new Obj_Door(gp);
-//        gp.obj[0].x=gp.tileSize*21;
-//        gp.obj[0].y=gp.tileSize*22;
-//
-//        gp.obj[1]=new Obj_Door(gp);
-//        gp.obj[1].x=gp.tileSize*23;
-//        gp.obj[1].y=gp.tileSize*25;
+    int i=0;
+        gp.obj[i]=new Obj_Gold_Key(gp);
+        gp.obj[i].x = 25 * gp.tileSize;
+        gp.obj[i].y = 23 * gp.tileSize;
+        i++;
+        gp.obj[i]=new Obj_Gold_Key(gp);
+        gp.obj[i].x = 21 * gp.tileSize;
+        gp.obj[i].y = 19 * gp.tileSize;
+        i++;
+        gp.obj[i]=new Obj_Gold_Key(gp);
+        gp.obj[i].x = 26 * gp.tileSize;
+        gp.obj[i].y = 21 * gp.tileSize;
+        i++;
+        gp.obj[i]=new Obj_Iron_Sword(gp);
+        gp.obj[i].x = 33 * gp.tileSize;
+        gp.obj[i].y = 21 * gp.tileSize;
+        i++;
+        gp.obj[i]=new Obj_Hook(gp);
+        gp.obj[i].x = 35 * gp.tileSize;
+        gp.obj[i].y = 21 * gp.tileSize;
+        i++;
+        gp.obj[i]=new Obj_Heal_Potion(gp);
+        gp.obj[i].x = 22 * gp.tileSize;
+        gp.obj[i].y = 27 * gp.tileSize;
     }
 
     public void setNPC(){
