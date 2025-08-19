@@ -11,7 +11,7 @@ public class MON_GSlime extends Entity {
     public MON_GSlime(GamePanel gp) {
         super(gp);
         name="Green Slime";
-        type=2;
+        entityType=2;
         speed=1;
         maxHealth=4;
         health=maxHealth;

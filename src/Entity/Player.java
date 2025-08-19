@@ -27,9 +27,11 @@ public class Player extends Entity {
 
     public int maxDrunk;
     public int drunk;
+    public int drinkPercent;
+    public final int maxDrinkPercent=100;
 
     public ArrayList<Entity> inventory=new ArrayList<>();
-    //public final int maxinventorySize=20;
+    public final int maxInventorySize=20;
 
     public Player(GamePanel gp, KeyHandler kh) {
         super(gp);
@@ -57,8 +59,10 @@ public class Player extends Entity {
         //Status
         maxHealth = 10;
         health = maxHealth;
+
         maxDrunk = 6;
         drunk = 0;
+        drinkPercent=0;
 
         level = 1;
         strength=1;
@@ -66,8 +70,11 @@ public class Player extends Entity {
         exp=0;
         nextLevelExp=10;
         coin=0;
-        currentWeapon=new Obj_Weapon(gp);
+        currentWeapon=new Obj_Wooden_Sword(gp);
         currentShield=new Obj_Shield(gp);
+        currentHelmet=new Obj_Armour_Helmet_Crusty(gp);
+        currentChest=new Obj_Armour_Chest_Crusty(gp);
+        currentBoots=new Obj_Armour_Boots_Crusty(gp);
         attack=getAttack();
         defense=getDefense();
 
@@ -78,12 +85,38 @@ public class Player extends Entity {
     }
 
     public int getDefense(){
-        return defense=dexterity*currentShield.defenseValue;
+        return defense=dexterity*(currentShield.defenseValue+currentHelmet.defenseValue+currentChest.defenseValue+currentBoots.defenseValue);
     }
+
+    private void updateDrunkFromPercent(){
+        float units=(drinkPercent/100f)*maxDrunk;
+        drunk=Math.round(units);
+        if(drunk>maxDrunk) drunk=maxDrunk;
+        if(drunk<0) drunk=0;
+    }
+
+    private void consumeDrunk(Entity drink){
+        if(drink.alcohol>0){
+            drinkPercent+=drink.alcohol;
+            if(drinkPercent>maxDrinkPercent) drinkPercent=maxDrinkPercent;
+            updateDrunkFromPercent();
+            inventory.remove(drink);
+            gp.playSE(20);
+            gp.ui.addMessage("Alcohol +" + drink.alcohol + "% (" + drinkPercent + "%)");
+        }
+    }
+
+    public int getDrinkPercent(){
+        return drinkPercent;
+    }
+
 
     public void setItems(){
         inventory.add(currentWeapon); //wooden Sword
         inventory.add(currentShield); //wooden Shield
+        inventory.add(currentChest);
+        inventory.add(currentBoots);
+        inventory.add(currentHelmet);
         inventory.add(new Obj_Rum(gp));
         inventory.add(new Obj_Tequila(gp));
         inventory.add(new Obj_Whiskey(gp));
@@ -417,7 +450,16 @@ public class Player extends Entity {
 
     public void pickUpObj(int i) {
         if (i != 999) {
-            // add logic here
+            String text;
+            if(inventory.size()!=maxInventorySize){
+                inventory.add(gp.obj[i]);
+                gp.playSE(2);
+                text=gp.obj[i].name;
+            }else{
+                text="Inventory Full";
+            }
+            gp.ui.addMessage(text);
+            gp.obj[i]=null;
         }
     }
 
@@ -462,8 +504,9 @@ public class Player extends Entity {
         if (i != 999 && !invincible) {
             gp.playSE(18);
             int damage=gp.monster[i].attack-defense;
+            System.out.println(damage);
             if(damage<0){
-                damage=0;
+                damage=1;
             }
             health -= damage;
             invincible = true;
@@ -544,6 +587,45 @@ public class Player extends Entity {
             exp=0;
             gp.gameState=gp.dialogueState;
             gp.ui.currentDialogue="Ahoy, you are at another level,"+level+"!\nStats improved";
+        }
+    }
+
+    public void selectItem(){
+        int itemIndex=gp.ui.getItemIndexSlot();
+        if(itemIndex<inventory.size()){
+            Entity selectedItem=inventory.get(itemIndex);
+            if(selectedItem.gearType==0)
+            {
+                currentWeapon=selectedItem;
+                attack=getAttack();
+            }
+            else if(selectedItem.gearType==1)
+            {
+                currentShield=selectedItem;
+                defense=getDefense();
+            }
+            else if(selectedItem.gearType==2)
+            {
+                if(selectedItem.alcohol>0) {
+                    consumeDrunk(selectedItem);
+                }else{
+                selectedItem.use(this);
+                inventory.remove(selectedItem);
+                }
+            }
+            else if(selectedItem.armourType==0){
+                currentHelmet=selectedItem;
+                defense=getDefense();
+            }
+            else if(selectedItem.armourType==1){
+                currentChest=selectedItem;
+                defense=getDefense();
+            }
+            else if(selectedItem.armourType==2){
+                currentBoots=selectedItem;
+                defense=getDefense();
+            }
+
         }
     }
 }

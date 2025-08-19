@@ -196,6 +196,9 @@ public class KeyHandler implements KeyListener, MouseListener {
                 gp.playSE(19);
             }
         }
+        if(code==KeyEvent.VK_ENTER) {
+            gp.player.selectItem();
+        }
     }
 
     @Override
