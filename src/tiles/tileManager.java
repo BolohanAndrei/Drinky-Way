@@ -9,6 +9,7 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Objects;
 
 public class tileManager extends JPanel {
     GamePanel gp;
@@ -70,19 +71,19 @@ public class tileManager extends JPanel {
             setup(41,"tree", true);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            e.getStackTrace();
         }
     }
     public void setup(int index,String path,boolean collision){
         Utility u = new Utility();
         try{
             tiles[index]=new tile();
-            tiles[index].image = ImageIO.read(getClass().getResourceAsStream("/res/tileset/"+ path +".png"));
+            tiles[index].image = ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/res/tileset/" + path + ".png")));
             tiles[index].image= u.scaleImage(tiles[index].image, gp.tileSize, gp.tileSize);
             tiles[index].collision = collision;
         }
         catch (Exception e){
-            e.printStackTrace();
+            e.getStackTrace();
         }
     }
 
@@ -90,7 +91,7 @@ public class tileManager extends JPanel {
     public void loadMap(String filePath) {
         try{
             InputStream is = getClass().getResourceAsStream(filePath);
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(is)));
 
             int col=0;
             int row=0;
@@ -110,7 +111,7 @@ public class tileManager extends JPanel {
             }
             br.close();
         }catch(Exception e){
-            e.printStackTrace();
+            e.getStackTrace();
         }
     }
 

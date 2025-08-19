@@ -1,7 +1,5 @@
 package Main;
 
-import java.awt.*;
-
 public class EventHandler {
     GamePanel gp;
     EventRect[][] eventRect;
@@ -42,13 +40,13 @@ public class EventHandler {
         }
 
         if(canTouchEvent) {
-            if (hit(27, 16, "right")) {
-                damagePit(27, 16, gp.dialogueState);}
-            if (hit(23, 12, "up")) {
-                healingEvent(23, 12, gp.dialogueState);
+            if (hit(27, 16, "any")) {
+                damagePit( gp.dialogueState);}
+            if (hit(23, 12, "any")) {
+                healingEvent( gp.dialogueState);
             }
-            if (hit(25, 19, "right")) {
-                teleportEvent(25, 19, gp.dialogueState);
+            if (hit(25, 19, "any")) {
+                teleportEvent( gp.dialogueState);
             }
         }
     }
@@ -79,17 +77,19 @@ public class EventHandler {
 
     }
 
-    public void damagePit(int col,int row,int gameState) {
+    public void damagePit(int gameState) {
+        if(gp.keyHandler.ePressed) {
             gp.gameState = gameState;
-            gp.playSE(18);
-            gp.ui.currentDialogue = "Arrr! You fell into a pit!";
+            gp.sound.playSE(18);
+            gp.ui.currentDialogue = "Arr! You fell into a pit!";
             gp.player.health -= 2;
-            eventRect[col][row].eventDone=true;
-            canTouchEvent=false;
-
+            if (gp.player.health <= 0) {
+                gp.player.health = 0;
+            }
+        }
     }
 
-    public void teleportEvent(int col,int row,int gameState){
+    public void teleportEvent(int gameState){
             gp.gameState = gameState;
             gp.ui.currentDialogue = "Arrr! Where I am?!";
             gp.player.x = gp.tileSize * 37;
@@ -97,17 +97,14 @@ public class EventHandler {
             gp.player.direction = "down";
     }
 
-    public void healingEvent(int col,int row,int gameState) {
+    public void healingEvent(int gameState) {
         if(gp.keyHandler.ePressed){
-            gp.playSE(12);
+            gp.sound.playSE(12);
         gp.gameState = gameState;
         gp.ui.currentDialogue = "Arrr! You found a healing drink!";
         gp.player.health =gp.player.maxHealth;
+        gp.drinkSystem.soberUp(gp.player);
     }}
 
-    public void resetEvent() {
-       // eventRect.x = eventRectDefaultX;
-        //eventRect.y = eventRectDefaultY;
-    }
 
 }

@@ -1,12 +1,13 @@
 package Entity;
 
 import Main.GamePanel;
-import Main.UI;
 import Main.Utility;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Objects;
 
 public class Entity {
 
@@ -63,18 +64,25 @@ public class Entity {
     public Entity currentHelmet;
     public Entity currentChest;
     public Entity currentBoots;
-    public Entity currentDrink;
 
     //item status
     public int attackValue;
     public int defenseValue;
+    public int strengthBonus;
+    public int dexterityBonus;
+    public int attackFlatBonus;
+    public int defenseFlatBonus;
     public String itemDescription="";
     public int gearType=-1; //0 sword 1 shield 2 consumable
     public int armourType=-1; //0 helmet 1 chest 2 boots
+    public boolean pickable=true;
 
     //NPC
-    public BufferedImage image1, image2, image3, image4;
+    public BufferedImage image1, image2, image3;
     public String name;
+    boolean isIdle = false;
+    int idleCounter = 0;
+    int idleDuration = 120;
     public boolean collision = false;
     public int entityType=-1; //0 player 1 npc 2 monster
 
@@ -94,7 +102,9 @@ public class Entity {
     if(dialogueIndex<0 || dialogueIndex>dialogue.length-1 || dialogue[dialogueIndex]==null){
         dialogueIndex = 0;
     }
-        gp.ui.currentDialogue = dialogue[dialogueIndex];
+        String line=dialogue[dialogueIndex];
+    line=gp.drinkSystem.slurIfNeeded(line);
+        gp.ui.currentDialogue = line;
         ++dialogueIndex;
         if(dialogueIndex<0 || dialogueIndex>dialogue.length-1 || dialogue[dialogueIndex]==null){
             dialogueIndex = 0;
@@ -105,27 +115,11 @@ public class Entity {
     }
     public void facePlayer(){
         switch(gp.player.direction) {
-            case "up": direction = "down"; break;
             case "down": direction = "up"; break;
             case "left": direction = "right"; break;
             case "right": direction = "left"; break;
             default: direction = "down"; break;
         }
-    }
-
-    public boolean isPlayerInRange(){
-        int distance=gp.tileSize;
-
-        int entityCenterX=x+gp.tileSize/2;
-        int entityCenterY=y+gp.tileSize/2;
-        int playerCenterX=gp.player.x+gp.tileSize/2;
-        int playerCenterY=gp.player.y+gp.tileSize/2;
-
-        double distX=Math.abs(entityCenterX-playerCenterX);
-        double distY=Math.abs(entityCenterY-playerCenterY);
-
-        return distX<=distance&&distY<=distance;
-
     }
 
     public void use(Entity e){}
@@ -141,13 +135,16 @@ public class Entity {
 
        if(this.entityType==2 && contactPlayer){
            if(!gp.player.invincible){
-               gp.playSE(18);
+               gp.sound.playSE(18);
 
                int damage=attack-gp.player.defense;
                if(damage<0){
-                   damage=0;
+                   damage=1;
                }
                gp.player.health-=damage;
+               if(gp.player.health<0){
+                   gp.player.health=0;
+               }
                gp.player.invincible=true;
            }
        }
@@ -172,30 +169,41 @@ public class Entity {
         }
     }
 
+    private BufferedImage fallbackImage() {
+        if (down1 != null) return down1;
+        if (idle_down != null) return idle_down;
+        if (up1 != null) return up1;
+        if (left1 != null) return left1;
+        if (right1 != null) return right1;
+        if (idle_1 != null) return idle_1;
+        return new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB);
+    }
+
     public void draw(Graphics2D g) {
-        BufferedImage image = null;
         int screenX = x - gp.player.x + gp.player.screenX;
         int screenY = y - gp.player.y + gp.player.screenY;
 
-        if (x + gp.tileSize > gp.player.x - gp.player.screenX &&
-                x - gp.tileSize < gp.player.x + gp.player.screenX &&
-                y + gp.tileSize > gp.player.y - gp.player.screenY &&
-                y - gp.tileSize < gp.player.y + gp.player.screenY) {
+        if (((x + gp.tileSize) > (gp.player.x - gp.player.screenX)) &&
+                ((x - gp.tileSize) < (gp.player.x + gp.player.screenX)) &&
+                ((y + gp.tileSize) > (gp.player.y - gp.player.screenY)) &&
+                ((y - gp.tileSize) < (gp.player.y + gp.player.screenY))) {
+            BufferedImage image = fallbackImage();
 
-            switch (direction) {
-                case "up": image = (spriteNum == 1) ? up1 : up2; break;
-                case "up_left": case "left": case "down_left": image = (spriteNum == 1) ? left1 : left2; break;
-                case "up_right": case "right": case "down_right": image = (spriteNum == 1) ? right1 : right2; break;
-                case "down": image = (spriteNum == 1) ? down1 : down2; break;
-                case "idle_up": case "idle_up_left": case "idle_up_right": image = idle_up; break;
-                case "idle_down": case "idle_down_left": case "idle_down_right": image = idle_down; break;
-                case "idle_left": image = idle_left; break;
-                case "idle_right": image = idle_right; break;
-                case "idle_1": image = idle_1; break;
-                case "idle_2": image = idle_2; break;
-                case "idle_3": image = idle_3; break;
-                case "idle_4": image = idle_4; break;
-            }
+            image = switch (direction) {
+                case "up" -> (spriteNum == 1) ? up1 : up2;
+                case "up_left", "left", "down_left" -> (spriteNum == 1) ? left1 : left2;
+                case "up_right", "right", "down_right" -> (spriteNum == 1) ? right1 : right2;
+                case "down" -> (spriteNum == 1) ? down1 : down2;
+                case "idle_up", "idle_up_left", "idle_up_right" -> idle_up;
+                case "idle_down", "idle_down_left", "idle_down_right" -> idle_down;
+                case "idle_left" -> idle_left;
+                case "idle_right" -> idle_right;
+                case "idle_1" -> idle_1;
+                case "idle_2" -> idle_2;
+                case "idle_3" -> idle_3;
+                case "idle_4" -> idle_4;
+                default -> image;
+            };
 
             if(invincible) {
                 hpBarOn = true;
@@ -236,9 +244,6 @@ public class Entity {
             //reset opacity
             g.setComposite(originalComposite);
 
-//            if(this!=gp.player && type==1 && isPlayerInRange()){
-//                drawInteractionPrompt(g,screenX,screenY);
-//            }
         }
     }
 
@@ -279,31 +284,14 @@ public class Entity {
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
     }
 
-    private void drawInteractionPrompt(Graphics2D g, int screenX, int screenY){
-        Font originalFont = g.getFont();
-        Color originalColor = g.getColor();
-
-        g.setFont(new Font("Arial", Font.BOLD, 12));
-        g.setColor(Color.WHITE);
-
-        String prompt="Press ENTER to talk";
-        int width = g.getFontMetrics().stringWidth(prompt);
-        g.setColor(new Color(0, 0, 0, 180)); // Semi-transparent black
-        g.fillRoundRect(x + (gp.tileSize/2) - (width/2) - 5, y - 25, width + 10, 20, 5, 5);
-
-        g.setFont(originalFont);
-        g.setColor(originalColor);
-
-    }
-
     public BufferedImage setup(String name) {
         Utility u = new Utility();
         BufferedImage scale = null;
         try {
-            scale = ImageIO.read(getClass().getResourceAsStream("/res/" + name + ".png"));
+            scale = ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/res/" + name + ".png")));
             scale = u.scaleImage(scale, gp.tileSize, gp.tileSize);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            e.getStackTrace();
         }
         return scale;
     }

@@ -46,72 +46,25 @@ public class KeyHandler implements KeyListener, MouseListener {
         }
     }
 
-    public void titleState(int code){
-        if(gp.ui.titleScreenState==0){
-            if(code==KeyEvent.VK_W) {
+    public void titleState(int code) {
+        if (gp.ui.titleScreenState == 0) {
+            if (code == KeyEvent.VK_W) {
                 gp.ui.commandNum++;
-                if(gp.ui.commandNum>2){
-                    gp.ui.commandNum=0;
+                if (gp.ui.commandNum > 2) {
+                    gp.ui.commandNum = 0;
                 }
             }
-            if(code==KeyEvent.VK_S) {
+            if (code == KeyEvent.VK_S) {
                 gp.ui.commandNum--;
-                if(gp.ui.commandNum<0){
-                    gp.ui.commandNum=2;
+                if (gp.ui.commandNum < 0) {
+                    gp.ui.commandNum = 2;
                 }
             }
-            if(code==KeyEvent.VK_ENTER) {
+            if (code == KeyEvent.VK_ENTER) {
                 switch (gp.ui.commandNum) {
-                    case 0 -> {
-                        gp.ui.titleScreenState=1;
-                    }
-                    case 1 -> {
-                        System.out.println("Load Game");
-                    }
-                    case 2 -> {
-                        System.exit(0);
-                    }
-                }
-            }}
-        else if(gp.ui.titleScreenState==1){
-            if(code==KeyEvent.VK_W) {
-                gp.ui.commandNum++;
-                if(gp.ui.commandNum>3){
-                    gp.ui.commandNum=0;
-                }
-            }
-            if(code==KeyEvent.VK_S) {
-                gp.ui.commandNum--;
-                if(gp.ui.commandNum<0){
-                    gp.ui.commandNum=3;
-                    gp.ui.commandNum=3;
-                }
-            }
-            if(code==KeyEvent.VK_ENTER) {
-                switch (gp.ui.commandNum) {
-                    case 0 -> {
-
-                        gp.stopMusic();
-                        gp.gameState=gp.playState;
-                        gp.playMusic(15);
-                    }
-                    case 1 -> {
-                        gp.stopMusic();
-                        gp.gameState=gp.playState;
-                        gp.playMusic(15);
-                    }
-                    case 2 -> {
-                        gp.stopMusic();
-                        gp.gameState=gp.playState;
-                        gp.playMusic(15);
-
-                    }
-                    case 3->{
-                        System.out.println(gp.ui.commandNum);
-                        gp.ui.titleScreenState=0;
-                        gp.ui.commandNum=0;
-
-                    }
+                    case 0 -> gp.ui.titleScreenState = 1;
+                    case 1 -> System.out.println("Load Game");
+                    case 2 -> System.exit(0);
                 }
             }
         }
@@ -150,7 +103,6 @@ public class KeyHandler implements KeyListener, MouseListener {
     public void dialogueState(int code){
         if(code==KeyEvent.VK_E) {
             gp.gameState = gp.playState;
-            gp.eventHandler.resetEvent();
         }
     }
     public void characterState(int code) {
@@ -160,40 +112,40 @@ public class KeyHandler implements KeyListener, MouseListener {
         if (code == KeyEvent.VK_W) {
             if (gp.ui.slotRow != 0) {
                 gp.ui.slotRow--;
-                gp.playSE(19);
+                gp.sound.playSE(19);
             }
             else{
                 gp.ui.slotRow = 3;
-                gp.playSE(19);
+                gp.sound.playSE(19);
             }
         }
         if (code == KeyEvent.VK_S) {
             if (gp.ui.slotRow != 3) {
                 gp.ui.slotRow++;
-                gp.playSE(19);
+                gp.sound.playSE(19);
             }
             else{
                 gp.ui.slotRow = 0;
-                gp.playSE(19);
+                gp.sound.playSE(19);
             }
         }
         if (code == KeyEvent.VK_A) {
             if (gp.ui.slotCol != 0) {
                 gp.ui.slotCol--;
-                gp.playSE(19);
+                gp.sound.playSE(19);
             }
             else{
                 gp.ui.slotCol = 4;
-                gp.playSE(19);
+                gp.sound.playSE(19);
             }
         }
         if (code == KeyEvent.VK_D) {
             if (gp.ui.slotCol != 4) {
                 gp.ui.slotCol++;
-                gp.playSE(19);
+                gp.sound.playSE(19);
             }else{
                 gp.ui.slotCol = 0;
-                gp.playSE(19);
+                gp.sound.playSE(19);
             }
         }
         if(code==KeyEvent.VK_ENTER) {

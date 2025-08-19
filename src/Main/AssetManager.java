@@ -37,6 +37,18 @@ public class AssetManager {
         gp.obj[i]=new Obj_Heal_Potion(gp);
         gp.obj[i].x = 22 * gp.tileSize;
         gp.obj[i].y = 27 * gp.tileSize;
+        i++;
+        gp.obj[i]=new Obj_Damage_Pit(gp);
+        gp.obj[i].x = 27 * gp.tileSize;
+        gp.obj[i].y = 16 * gp.tileSize;
+        i++;
+        gp.obj[i]=new Obj_Fountain(gp);
+        gp.obj[i].x = 23 * gp.tileSize;
+        gp.obj[i].y = 11 * gp.tileSize;
+        i++;
+        gp.obj[i]=new Obj_Teleport(gp);
+        gp.obj[i].x = 25 * gp.tileSize;
+        gp.obj[i].y = 19 * gp.tileSize;
     }
 
     public void setNPC(){

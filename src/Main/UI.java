@@ -18,7 +18,6 @@ public class UI {
     BufferedImage heartFull, heartHalf, heartEmpty;
     BufferedImage bottleFull, bottleHalf, bottleEmpty;
 
-    public boolean MessageOn = false;
     ArrayList<String> message=new ArrayList<>();
     ArrayList<Integer> messageID=new ArrayList<>();
 
@@ -42,7 +41,7 @@ public class UI {
                 PublicPixel = new Font("Arial", Font.BOLD, 24);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            e.getStackTrace();
             PublicPixel = new Font("Arial", Font.BOLD, 24);
         }
 
@@ -180,46 +179,10 @@ public class UI {
             if (commandNum == 2) {
                 drawMenuPlayerImages(text, 4);
             }
-        } else if (titleScreenState == 1) {
-            //Class selection screen
-            g2.setColor(Color.white);
-            g2.setFont(getPublicPixel().deriveFont(30F));
-            String text = "Select your class";
-            int x = getXforCenteredText(text);
-            int y = gp.tileSize * 2;
-            g2.drawString(text, x, y);
-
-            text = "Pirate";
-            x = getXforCenteredText(text);
-            y += gp.tileSize * 2;
-            g2.drawString(text, x, y);
-            if (commandNum == 0) {
-                drawMenuPlayerImages(text, -2);
-            }
-
-            text = "Sailor";
-            x = getXforCenteredText(text);
-            y += gp.tileSize*2;
-            g2.drawString(text, x, y);
-            if (commandNum == 1) {
-                drawMenuPlayerImages(text, 0);
-            }
-
-            text = "Thief";
-            x = getXforCenteredText(text);
-            y += gp.tileSize * 2;
-            g2.drawString(text, x, y);
-            if (commandNum == 2) {
-                drawMenuPlayerImages(text, 2);
-            }
-
-            text = "Back";
-            x = getXforCenteredText(text);
-            y += gp.tileSize * 2;
-            g2.drawString(text, x, y);
-            if (commandNum == 3) {
-                drawMenuPlayerImages(text, 4);
-            }
+        }else if (titleScreenState == 1) {
+            gp.gameState = gp.playState;
+            gp.sound.stopMusic();
+            gp.sound.playMusic(15);
         }
 
     }
@@ -253,7 +216,7 @@ public class UI {
         textY+=lineHeight;
         textY=statusDraw("Weapon",textX,textY,lineHeight);
         textY+=lineHeight/2;
-        textY=statusDraw("Shield",textX,textY,lineHeight);
+        statusDraw("Shield",textX,textY,lineHeight);
 
 
         //Values
@@ -261,30 +224,33 @@ public class UI {
         textY=frameY+gp.tileSize;
         String value;
         value=String.valueOf(gp.player.level);
-        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        textY=valuesDraw(value, tailX,textY,lineHeight);
         value=String.valueOf(gp.player.exp);
-        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
-        value=String.valueOf(gp.player.nextLevelExp);
-        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
-        value=String.valueOf(gp.player.health+"/"+gp.player.maxHealth);
-        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
-        value=String.valueOf(gp.player.drinkPercent+"/"+gp.player.maxDrinkPercent+" %");
-        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        textY=valuesDraw(value, tailX,textY,lineHeight);
+        value=String.valueOf(gp.player.nextLevelExp-gp.player.exp);
+        textY=valuesDraw(value, tailX,textY,lineHeight);
+        value= gp.player.health + "/" + gp.player.maxHealth;
+        textY=valuesDraw(value, tailX,textY,lineHeight);
+        value= gp.player.drinkPercent + "/" + gp.player.maxDrinkPercent + "%";
+        textY=valuesDraw(value, tailX,textY,lineHeight);
         value=String.valueOf(gp.player.defense);
-        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        textY=valuesDraw(value, tailX,textY,lineHeight);
         value=String.valueOf(gp.player.attack);
-        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        textY=valuesDraw(value, tailX,textY,lineHeight);
         value=String.valueOf(gp.player.strength);
-        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        textY=valuesDraw(value, tailX,textY,lineHeight);
         value=String.valueOf(gp.player.dexterity);
-        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
+        textY=valuesDraw(value, tailX,textY,lineHeight);
         value=String.valueOf(gp.player.coin);
-        textY=valuesDraw(value,textX,tailX,textY,lineHeight);
-       // textY+=20;
+        textY=valuesDraw(value, tailX,textY,lineHeight);
 
-        g2.drawImage(gp.player.currentWeapon.down1, tailX-gp.tileSize,textY-5,null);
-        textY+=gp.tileSize;
-        g2.drawImage(gp.player.currentShield.down1, tailX-gp.tileSize,textY-5,null);
+        if(gp.player.currentWeapon!=null) {
+            g2.drawImage(gp.player.currentWeapon.down1, tailX - gp.tileSize, textY - 5, null);
+        }
+            textY+=gp.tileSize;
+        if(gp.player.currentShield!=null) {
+            g2.drawImage(gp.player.currentShield.down1, tailX - gp.tileSize, textY - 5, null);
+        }
     }
 
     public void drawInventory(){
@@ -335,12 +301,10 @@ public class UI {
          g2.drawRoundRect(cursorX,cursorY,cursorWidth,cursorHeight,10,10);
 
          //description
-        int dFrameX=frameX;
         int dFrameY=frameY+frameHeight+gp.tileSize;
-        int dFrameWidth=frameWidth;
         int dFrameHeight=gp.tileSize*5;
         //draw description
-        int textX=dFrameX+20;
+        int textX= frameX +20;
         int textY=dFrameY+gp.tileSize;
         g2.setFont(getPublicPixel().deriveFont(10F));
 
@@ -348,9 +312,9 @@ public class UI {
 
         if(itemIndex<gp.player.inventory.size()){
 
-            drawSubWindow(dFrameX,dFrameY,dFrameWidth,dFrameHeight);
+            drawSubWindow(frameX,dFrameY, frameWidth,dFrameHeight);
 
-            ArrayList<String> wrappedLines = wrapText(gp.player.inventory.get(itemIndex).itemDescription, dFrameWidth);
+            ArrayList<String> wrappedLines = wrapText(gp.player.inventory.get(itemIndex).itemDescription, frameWidth);
 
             // Draw each wrapped line
             for (String line : wrappedLines) {
@@ -366,9 +330,9 @@ public class UI {
         return slotCol+(slotRow*5);
     }
 
-    public int valuesDraw(String value,int textX,int tailX,int textY,int lineHeight){
-        textX=getXAlignToRightText(value,tailX);
-        g2.drawString(value,textX,textY);
+    public int valuesDraw(String value, int tailX, int textY, int lineHeight){
+        int textX = getXAlignToRightText(value, tailX);
+        g2.drawString(value, textX,textY);
         return textY+lineHeight;
     }
 
@@ -397,10 +361,10 @@ public class UI {
                 StringBuilder currentLine = new StringBuilder();
 
                 for (String word : words) {
-                    String testLine = currentLine.length() == 0 ? word : currentLine + " " + word;
+                    String testLine = currentLine.isEmpty() ? word : currentLine + " " + word;
 
                     if (g2.getFontMetrics().stringWidth(testLine) > maxWidth) {
-                        if (currentLine.length() > 0) {
+                        if (!currentLine.isEmpty()) {
                             wrappedLines.add(currentLine.toString());
                             currentLine = new StringBuilder(word);
                         } else {
@@ -413,7 +377,7 @@ public class UI {
                     }
                 }
 
-                if (currentLine.length() > 0) {
+                if (!currentLine.isEmpty()) {
                     wrappedLines.add(currentLine.toString());
                 }
             }
@@ -473,7 +437,6 @@ public class UI {
 
         //RESET
          x = gp.tileSize / 2;
-         y = gp.tileSize / 2;
          i = 0;
 
          //FULL HEARTS
@@ -521,21 +484,25 @@ public class UI {
 
     public void drawMessage(){
         int messageX = gp.tileSize;
-        int messageY = gp.screenHeight - gp.tileSize*2;
+        int messageY = gp.screenHeight - gp.tileSize * 2;
         g2.setFont(getPublicPixel().deriveFont(10F));
-        for(int i=0;i<message.size();i++){
-            if(message.get(i)!=null){
-                g2.setColor(Color.white);
-                g2.drawString(message.get(i),messageX,messageY);
-                int counter=messageID.get(i)+1;
-                messageID.set(i,counter);
-                messageY+=gp.tileSize;
 
-                if(messageID.get(i)>90){
+        int i = 0;
+        while(i < message.size()){
+            String txt = message.get(i);
+            if(txt != null){
+                g2.setColor(Color.white);
+                g2.drawString(txt, messageX, messageY);
+                int counter = messageID.get(i) + 1;
+                messageID.set(i, counter);
+                messageY += gp.tileSize;
+                if(counter > 90){
                     message.remove(i);
                     messageID.remove(i);
+                    continue;
                 }
             }
+            i++;
         }
     }
 
@@ -545,8 +512,7 @@ public class UI {
     }
     public int getXAlignToRightText(String text,int tailX) {
         int length = (int) g2.getFontMetrics().getStringBounds(text, g2).getWidth();
-        int x=tailX-length;
-        return x;
+        return tailX-length;
     }
 
     public Font getPublicPixel() {

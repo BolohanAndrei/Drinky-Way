@@ -7,8 +7,6 @@ import tiles.tileManager;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
 public class GamePanel extends JPanel implements Runnable{
     //Variables
@@ -20,10 +18,13 @@ public class GamePanel extends JPanel implements Runnable{
     public final int screenWidth = tileSize * maxScreenCol; // 48 * 16 = 768
     public final int screenHeight = tileSize * maxScreenRow; // 48 * 12 = 576
 
-    public long seconds;
 
     //FPS
     int FPS = 60;
+
+    //drink fx
+    private long tick;
+    public long playerTick(){return tick;}
 
     //World settings
     public final int maxWorldCol = 50;
@@ -45,11 +46,11 @@ public class GamePanel extends JPanel implements Runnable{
     public AssetManager assetManager =new AssetManager(this);
     public DeadCheck deadCheck = new DeadCheck(this);
     public EventHandler eventHandler = new EventHandler(this);
+    public DrinkSystem drinkSystem = new DrinkSystem(this);
 
     Thread gameThread;
 
-    Sound sound = new Sound();
-    Sound se= new Sound();
+   public Sound sound = new Sound();
     public UI ui = new UI(this);
 
 
@@ -76,7 +77,7 @@ public class GamePanel extends JPanel implements Runnable{
     public void setupGame(){
         assetManager.setObj();
         //sound.playAlternatingLoop(0,1,13,14);
-        playMusic(0);
+        sound.playMusic(0);
         assetManager.setNPC();
         assetManager.setMonster();
         gameState = titleState;
@@ -92,7 +93,7 @@ public class GamePanel extends JPanel implements Runnable{
     @Override
     public void run() {
 
-        double drawInterval = 1000000000 / FPS;
+        double drawInterval = (double) 1000000000 / FPS;
         double delta = 0;
         long lastTime = System.nanoTime();
         long currentTime;
@@ -124,11 +125,9 @@ public class GamePanel extends JPanel implements Runnable{
     public void update() {
 
         if(gameState == playState) {
-//            seconds= (System.nanoTime());
-//            seconds/= (1000000000L);
-            //PlAYER
-
+            tick++;
             player.update();
+            drinkSystem.update(player);
 
             //NPC
             for (Entity entity : npc) {
@@ -148,9 +147,6 @@ public class GamePanel extends JPanel implements Runnable{
             }
 
         }
-        if(gameState == pauseState) {
-            //
-        }
     }
 
     //paint the screen
@@ -166,8 +162,11 @@ public class GamePanel extends JPanel implements Runnable{
         } else {
 
 
+            boolean useBuffer=player.drinkPercent>=40;
+            Graphics2D worldG=useBuffer? drinkSystem.beginWorldBuffer() : g2d;
+            drinkSystem.preWorldTransform(worldG);
             //TILE
-            tileManager.draw(g2d);
+            tileManager.draw(worldG);
 
             //Entities
             entities.add(player);
@@ -191,52 +190,30 @@ public class GamePanel extends JPanel implements Runnable{
                 }
             }
 
-            entities.sort(new Comparator<Entity>() {
+            entities.sort((e1, e2) -> Integer.compare(e1.x, e2.x));
 
-                @Override
-                public int compare(Entity e1, Entity e2) {
-                    return Integer.compare(e1.x, e2.x);
-                }
-            });
-
-            //player.paint(g2d);
             //Draw entities
             for (Entity entity : entities) {
-                entity.draw(g2d);
+                entity.draw(worldG);
             }
 
             //Empty entities
             entities.clear();
 
+            drinkSystem.postWorldTransform(worldG);
+            if(useBuffer) {
+                worldG.dispose();
+                drinkSystem.flushWorldBuffer(g2d);
+            }
+
+            drinkSystem.drawAfterImages(g2d);
+            drinkSystem.overlay(g2d);
+
             //UI
             ui.draw(g2d);
-
-            //DEBUG
-//        long drawStart = System.nanoTime();
-//        long drawEnd = System.nanoTime();
-//        long passed = drawEnd - drawStart;
-//        g2d.setColor(Color.white);
-//        g2d.drawString("Draw Time: " + passed / 1000000.0 + " ms", 10, 550);
-//        System.out.println("Draw Time: " + passed / 1000000.0 + " ms");
 
             g2d.dispose();
         }
     }
 
-    public void playMusic(int i) {
-        sound.setFile(i);
-        sound.play();
-        sound.loop();
-    }
-
-    public void stopMusic() {
-        if(sound.clip != null) {
-            sound.stop();
-        }
-    }
-
-    public void playSE(int i) {
-        se.setFile(i);
-        se.play();
-    }
 }

@@ -47,9 +47,12 @@ public class MON_GSlime extends Entity {
     if(actionLockCounter==120) {
         Random rand = new Random();
         int i = rand.nextInt(100) + 1;
-        if (i <= 25) {direction = "up";actionLockCounter=0;}
-        else if (i <= 50){ direction = "down";actionLockCounter=0;}
-        else if (i <= 75){ direction = "left";actionLockCounter=0;}
+        if (i <= 25) {direction = "up";
+        }
+        else if (i <= 50){ direction = "down";
+        }
+        else if (i <= 75){ direction = "left";
+        }
         else direction = "right";actionLockCounter=0;
     }
     }

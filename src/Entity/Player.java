@@ -5,8 +5,10 @@ import Main.KeyHandler;
 import object.*;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Player extends Entity {
     KeyHandler keyHandler;
@@ -14,14 +16,12 @@ public class Player extends Entity {
     public final int screenX;
     public final int screenY;
 
-    private double currentSpeed = 0;
-    private final double acceleration = 0.2;
-    private final double maxSpeed = 4.0;
+    public double currentSpeed = 0;
 
     private String moveDirection = "down";
     private String facingDirection = "down";
-    private boolean hasHit = false;
 
+    private boolean hasHit = false;
     private int attackCounter = 0;
 
 
@@ -32,6 +32,11 @@ public class Player extends Entity {
 
     public ArrayList<Entity> inventory=new ArrayList<>();
     public final int maxInventorySize=20;
+
+    private int baseStrength;
+    private int baseDexterity;
+
+    public AffineTransform drunkOriginalTx;
 
     public Player(GamePanel gp, KeyHandler kh) {
         super(gp);
@@ -52,12 +57,12 @@ public class Player extends Entity {
     public void setDefaultValues() {
         x = gp.tileSize * 23;
         y = gp.tileSize * 23;
+
         speed = 4;
         moveDirection = "down";
         facingDirection = "down";
 
-        //Status
-        maxHealth = 10;
+        maxHealth = 6;
         health = maxHealth;
 
         maxDrunk = 6;
@@ -65,27 +70,56 @@ public class Player extends Entity {
         drinkPercent=0;
 
         level = 1;
-        strength=1;
-        dexterity = 1;
+        baseStrength=1;
+        baseDexterity = 1;
+        strength = baseStrength;
+        dexterity = baseDexterity;
         exp=0;
         nextLevelExp=10;
         coin=0;
+
         currentWeapon=new Obj_Wooden_Sword(gp);
         currentShield=new Obj_Shield(gp);
         currentHelmet=new Obj_Armour_Helmet_Crusty(gp);
         currentChest=new Obj_Armour_Chest_Crusty(gp);
         currentBoots=new Obj_Armour_Boots_Crusty(gp);
-        attack=getAttack();
-        defense=getDefense();
+        reStats();
 
     }
 
-    public int getAttack(){
-        return attack=strength*currentWeapon.attackValue;
+    private List<Entity> getEquippedItems(){
+        List<Entity> list=new ArrayList<>();
+        if(currentWeapon!=null){list.add(currentWeapon);}
+        if(currentShield!=null){list.add(currentShield);}
+        if(currentHelmet!=null){list.add(currentHelmet);}
+        if(currentChest!=null){list.add(currentChest);}
+        if(currentBoots!=null){list.add(currentBoots);}
+        return list;
     }
 
-    public int getDefense(){
-        return defense=dexterity*(currentShield.defenseValue+currentHelmet.defenseValue+currentChest.defenseValue+currentBoots.defenseValue);
+    public void reStats(){
+        int totalStrength=baseStrength;
+        int totalDexterity=baseDexterity;
+        int weaponScale=(currentWeapon!=null)?currentWeapon.attackValue:0;
+        int flatAttackBonus=0;
+        int flatDefenseBonus=0;
+        int armourDefenseSum=0;
+
+        for(Entity e:getEquippedItems()){
+            totalStrength+=e.strengthBonus;
+            totalDexterity+=e.dexterityBonus;
+            flatAttackBonus+=e.attackFlatBonus;
+            armourDefenseSum+=e.defenseValue;
+            flatDefenseBonus+=e.defenseFlatBonus;
+
+        }
+        strength=totalStrength;
+        dexterity=totalDexterity;
+
+        attack=(strength*weaponScale)+flatAttackBonus;
+        defense=(dexterity*armourDefenseSum)+flatDefenseBonus;
+        if(attack<0) attack=0;
+        if(defense<0) defense=0;
     }
 
     private void updateDrunkFromPercent(){
@@ -101,15 +135,10 @@ public class Player extends Entity {
             if(drinkPercent>maxDrinkPercent) drinkPercent=maxDrinkPercent;
             updateDrunkFromPercent();
             inventory.remove(drink);
-            gp.playSE(20);
+            gp.sound.playSE(20);
             gp.ui.addMessage("Alcohol +" + drink.alcohol + "% (" + drinkPercent + "%)");
         }
     }
-
-    public int getDrinkPercent(){
-        return drinkPercent;
-    }
-
 
     public void setItems(){
         inventory.add(currentWeapon); //wooden Sword
@@ -144,8 +173,8 @@ public class Player extends Entity {
             die1 = setup("player/die1");
             die2 = setup("player/die2");
             die3 = setup("player/die3");
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (NullPointerException e) {
+            e.getStackTrace();
         }
     }
 
@@ -159,8 +188,8 @@ public class Player extends Entity {
             attackLeft2 = setup("player/attack_left_2");
             attackRight1 = setup("player/attack_right_1");
             attackRight2 = setup("player/attack_right_2");
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (NullPointerException e) {
+            e.getStackTrace();
         }
     }
 
@@ -173,9 +202,8 @@ public class Player extends Entity {
             keyHandler.attackClicked = false;
             attackCounter = 0;
             hasHit = false;
-            gp.playSE(17);
+            gp.sound.playSE(17);
         }
-
 
             boolean up = keyHandler.upPressed;
             boolean down = keyHandler.downPressed;
@@ -215,12 +243,18 @@ public class Player extends Entity {
             }
 
             if(moved) {
+                double acceleration = 0.2;
+                double maxSpeed = 4.0;
                 currentSpeed = Math.min(currentSpeed + acceleration, maxSpeed);
             } else {
                 currentSpeed = 0;
             }
 
 
+        double[] wobble={dx,dy};
+        gp.drinkSystem.distortInput(this,wobble);
+        dx=wobble[0];
+        dy=wobble[1];
         // Collision checks
         double futureX = x + dx * currentSpeed;
         double futureY = y + dy * currentSpeed;
@@ -278,8 +312,8 @@ public class Player extends Entity {
 
         // NPC interaction
         collisionOn = false;
-        int npcIndex = gp.collisionCheck.checkEntity(this, gp.npc);
-        interactNPC(npcIndex);
+        gp.collisionCheck.checkEntity(this, gp.npc);
+        interactNPC();
 
         // Monster collision
         int monsterIndex = gp.collisionCheck.checkEntity(this, gp.monster);
@@ -294,8 +328,8 @@ public class Player extends Entity {
 
 
         // Apply movement if allowed
-        if (canMoveX) x += dx * currentSpeed;
-        if (canMoveY) y += dy * currentSpeed;
+        if (canMoveX) x += (int) (dx * currentSpeed);
+        if (canMoveY) y += (int) (dy * currentSpeed);
 
         // Monster contact
 
@@ -335,6 +369,7 @@ public class Player extends Entity {
                 invincibleCounter = 0;
             }
         }
+        updateDrunkFromPercent();
     }
 
     //Attack animation
@@ -423,7 +458,7 @@ public class Player extends Entity {
                 );
 
                 if (attackArea.intersects(monsterArea)) {
-                    gp.playSE(16);
+                    gp.sound.playSE(16);
                     Entity mon = gp.monster[i];
                     int damage=attack-mon.defense;
                     if(damage<0){
@@ -450,20 +485,23 @@ public class Player extends Entity {
 
     public void pickUpObj(int i) {
         if (i != 999) {
-            String text;
-            if(inventory.size()!=maxInventorySize){
-                inventory.add(gp.obj[i]);
-                gp.playSE(2);
-                text=gp.obj[i].name;
-            }else{
-                text="Inventory Full";
-            }
-            gp.ui.addMessage(text);
-            gp.obj[i]=null;
+            if(!gp.obj[i].pickable) {return;}
+                String text;
+                if (inventory.size() != maxInventorySize) {
+                    inventory.add(gp.obj[i]);
+                    gp.sound.playSE(2);
+                    text = "Picked up " + gp.obj[i].name;
+
+                } else {
+                    text = "Inventory Full";
+                }
+                gp.ui.addMessage(text);
+                gp.obj[i] = null;
+
         }
     }
 
-    public void interactNPC(int i) {
+    public void interactNPC() {
         if (gp.keyHandler.ePressed) {
             int nearestNPC = findNearestNPC();
             if (nearestNPC != 999) {
@@ -502,13 +540,15 @@ public class Player extends Entity {
 
     public void contactMonster(int i) {
         if (i != 999 && !invincible) {
-            gp.playSE(18);
+            gp.sound.playSE(18);
             int damage=gp.monster[i].attack-defense;
-            System.out.println(damage);
             if(damage<0){
                 damage=1;
             }
             health -= damage;
+            if(health<=0){
+                health=0;
+            }
             invincible = true;
             damageReaction();
         }
@@ -521,7 +561,6 @@ public class Player extends Entity {
             image = switch (dieFrame) {
                 case 0 -> die1;
                 case 1 -> die2;
-                case 2 -> die3;
                 default -> die3;
             };
             g2d.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
@@ -575,57 +614,119 @@ public class Player extends Entity {
 
     public void checkLevelUp(){
         if(exp>=nextLevelExp){
-            gp.playSE(11);
+            gp.sound.playSE(11);
             level++;
             nextLevelExp=nextLevelExp*2;
-            maxHealth+=2;
-            strength++;
-            dexterity++;
+            maxHealth+=1;
+            health=maxHealth;
+            gp.drinkSystem.soberUp(gp.player);
+            baseStrength++;
+            baseDexterity++;
+            reStats();
             coin+=exp;
-            attack=getAttack();
-            defense=getDefense();
             exp=0;
             gp.gameState=gp.dialogueState;
             gp.ui.currentDialogue="Ahoy, you are at another level,"+level+"!\nStats improved";
         }
     }
 
+    private boolean isEquipped(Entity item){
+        return item!=null && (item==currentWeapon || item==currentShield ||
+                item==currentHelmet || item==currentChest || item==currentBoots);
+    }
+
+    private void unequipItem(Entity item){
+        if(item==null) return;
+        if(item==currentWeapon) currentWeapon=null;
+        else if(item==currentShield) currentShield=null;
+        else if(item==currentHelmet) currentHelmet=null;
+        else if(item==currentChest) currentChest=null;
+        else if(item==currentBoots) currentBoots=null;
+        gp.ui.addMessage(item.name+" unequipped");
+        reStats();
+    }
+
+
+    private void equipItem(Entity item){
+        if(item==null) return;
+        if(item.gearType==0){ // weapon
+            currentWeapon=item;
+        } else if(item.gearType==1){ // shield
+            currentShield=item;
+        } else if(item.armourType==0){
+            currentHelmet=item;
+        } else if(item.armourType==1){
+            currentChest=item;
+        } else if(item.armourType==2){
+            currentBoots=item;
+        } else {
+            return;
+        }
+        gp.ui.addMessage(item.name+" equipped");
+        reStats();
+    }
+
+    private boolean isEquipment(Entity item){
+        return item.gearType==0 || item.gearType==1 || item.armourType>=0;
+    }
+
     public void selectItem(){
         int itemIndex=gp.ui.getItemIndexSlot();
-        if(itemIndex<inventory.size()){
-            Entity selectedItem=inventory.get(itemIndex);
-            if(selectedItem.gearType==0)
-            {
-                currentWeapon=selectedItem;
-                attack=getAttack();
-            }
-            else if(selectedItem.gearType==1)
-            {
-                currentShield=selectedItem;
-                defense=getDefense();
-            }
-            else if(selectedItem.gearType==2)
-            {
-                if(selectedItem.alcohol>0) {
-                    consumeDrunk(selectedItem);
-                }else{
+        if(itemIndex>=inventory.size()) return;
+
+        Entity selectedItem=inventory.get(itemIndex);
+
+        // Consumables (gearType 2) -> use & remove
+        if(selectedItem.gearType==2){
+            if(selectedItem.alcohol>0){
+                consumeDrunk(selectedItem);
+            } else {
                 selectedItem.use(this);
                 inventory.remove(selectedItem);
-                }
+                gp.ui.addMessage(selectedItem.name+" used");
             }
-            else if(selectedItem.armourType==0){
-                currentHelmet=selectedItem;
-                defense=getDefense();
-            }
-            else if(selectedItem.armourType==1){
-                currentChest=selectedItem;
-                defense=getDefense();
-            }
-            else if(selectedItem.armourType==2){
-                currentBoots=selectedItem;
-                defense=getDefense();
-            }
-
+            return;
         }
+
+        // Equipment toggle
+        if(isEquipment(selectedItem)){
+            if(isEquipped(selectedItem)){
+                unequipItem(selectedItem);
+            } else {
+                // Equip (replacing old item in that slot automatically)
+                equipItem(selectedItem);
+            }
+        }
+    }
+
+
+    public BufferedImage getCurrentFrame() {
+        if (dead) return die3;
+        if (attacking) {
+            return switch (facingDirection) {
+                case "up", "up_left", "up_right" -> (spriteNum == 1) ? attackUp1 : attackUp2;
+                case "down", "down_left", "down_right" -> (spriteNum == 1) ? attackUDown1 : attackDown2;
+                case "left" -> (spriteNum == 1) ? attackLeft1 : attackLeft2;
+                case "right" -> (spriteNum == 1) ? attackRight1 : attackRight2;
+                default -> down1;
+            };
+        }
+        BufferedImage img = switch (moveDirection) {
+            case "up" -> (spriteNum == 1) ? up1 : up2;
+            case "down" -> (spriteNum == 1) ? down1 : down2;
+            case "left", "up_left", "down_left" -> (spriteNum == 1) ? left1 : left2;
+            case "right", "up_right", "down_right" -> (spriteNum == 1) ? right1 : right2;
+            default -> down1;
+        };
+        if (currentSpeed == 0) {
+            img = switch (facingDirection) {
+                case "up", "up_left", "up_right" -> idle_up;
+                case "down", "down_left", "down_right" -> idle_down;
+                case "left" -> idle_left;
+                case "right" -> idle_right;
+                default -> img;
+            };
+        }
+        return img;
     }
 }

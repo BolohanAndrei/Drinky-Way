@@ -2,7 +2,6 @@ package Main;
 
 import Entity.Entity;
 
-import java.awt.*;
 
 public class CollisionCheck {
     GamePanel gp;
