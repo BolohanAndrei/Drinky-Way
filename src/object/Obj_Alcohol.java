@@ -3,7 +3,6 @@ package object;
 import Entity.Entity;
 import Main.GamePanel;
 
-import javax.imageio.ImageIO;
 
 public class Obj_Alcohol extends Entity {
 

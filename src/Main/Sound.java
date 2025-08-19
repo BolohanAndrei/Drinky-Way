@@ -1,8 +1,7 @@
 package Main;
 
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
+import javax.sound.sampled.*;
+import java.io.IOException;
 import java.net.URL;
 
 public class Sound {
@@ -42,8 +41,8 @@ public class Sound {
             clip=AudioSystem.getClip();
             clip.open(ais);
         }
-        catch(Exception e){
-            e.printStackTrace();
+        catch(IOException | UnsupportedAudioFileException | LineUnavailableException e){
+            e.getStackTrace();
         }
     }
 
@@ -58,25 +57,21 @@ public class Sound {
     public void loop(){
         clip.loop(Clip.LOOP_CONTINUOUSLY);
     }
-    public void playAlternatingLoop(int i, int j,int k,int l) {
-        new Thread(() -> {
-            while (true) {
-                playAndWait(i);
-                playAndWait(j);
-                playAndWait(k);
-                playAndWait(l);
-            }
-        }).start();
+
+    public void playMusic(int i) {
+        setFile(i);
+        play();
+        loop();
     }
 
-    private void playAndWait(int i) {
-        setFile(i);
-        clip.start();
-        try {
-            Thread.sleep(clip.getMicrosecondLength() / 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+    public void stopMusic() {
+        if(clip != null) {
+            stop();
         }
-        clip.stop();
+    }
+
+    public void playSE(int i) {
+        setFile(i);
+        play();
     }
 }
