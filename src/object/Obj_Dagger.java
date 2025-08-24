@@ -19,14 +19,14 @@ public class Obj_Dagger extends Projectile {
     }
 
     public void getImage(){
-        up1=setup("objects/dagger_up");
-        up2=setup("objects/dagger_up");
-        down1=setup("objects/dagger_down");
-        down2=setup("objects/dagger_down");
-        left1=setup("objects/dagger_left");
-        left2=setup("objects/dagger_left");
-        right1=setup("objects/dagger_right");
-        right2=setup("objects/dagger_right");
+        up1=setup("projectiles/dagger_up1");
+        up2=setup("projectiles/dagger_up2");
+        down1=setup("projectiles/dagger_down1");
+        down2=setup("projectiles/dagger_down2");
+        left1=setup("projectiles/dagger_left1");
+        left2=setup("projectiles/dagger_left2");
+        right1=setup("projectiles/dagger_right1");
+        right2=setup("projectiles/dagger_right2");
 
     }
 }
