@@ -24,6 +24,9 @@ public class Player extends Entity {
     private boolean hasHit = false;
     private int attackCounter = 0;
 
+    private final int meleeReach;
+    private final int meleeSideInflate;
+
 
     public int maxDrunk;
     public int drunk;
@@ -45,6 +48,8 @@ public class Player extends Entity {
         screenX = gp.screenWidth / 2 - (gp.tileSize / 2);
         screenY = gp.screenHeight / 2 - (gp.tileSize / 2);
 
+        meleeReach= (int) (gp.tileSize*1.5);
+        meleeSideInflate=gp.tileSize/2;
         solidArea = new Rectangle(8, 16, 16, 16);
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;
@@ -83,6 +88,7 @@ public class Player extends Entity {
         currentHelmet=new Obj_Armour_Helmet_Crusty(gp);
         currentChest=new Obj_Armour_Chest_Crusty(gp);
         currentBoots=new Obj_Armour_Boots_Crusty(gp);
+        projectile=new Obj_Dagger(gp);
         reStats();
 
     }
@@ -361,13 +367,26 @@ public class Player extends Entity {
         // Attack handling
         if (attacking) attacking();
 
+        if(gp.keyHandler.shotKeyPressed && !projectile.alive && shotAvailableCounter==60){
+            projectile.set(x,y,facingDirection,true,this);
+            gp.projectiles.add(projectile);
+
+            shotAvailableCounter=0;
+
+            gp.sound.playSE(21);
+        }
+
         // Invincibility handling
         if (invincible) {
             invincibleCounter++;
-            if (invincibleCounter > 120) {
+            if (invincibleCounter > 60) {
                 invincible = false;
                 invincibleCounter = 0;
             }
+        }
+
+        if(shotAvailableCounter<60){
+            shotAvailableCounter++;
         }
         updateDrunkFromPercent();
     }
@@ -392,93 +411,126 @@ public class Player extends Entity {
         }
     }
 
-    //Damage Monster
-    public void checkAttackHit() {
-        Rectangle attackArea = new Rectangle(x, y, 36, 36);
-        int attackRange = gp.tileSize;
+    private Rectangle buildAttackArea(){
+        int range = meleeReach;
+        int baseX = x + solidArea.x;
+        int baseY = y + solidArea.y;
+        int w = solidArea.width;
+        int h = solidArea.height;
+        Rectangle r = new Rectangle();
+
+        int leftInflate = meleeSideInflate;
+        int rightInflate = meleeSideInflate;
+        int topInflate = meleeSideInflate;
+        int bottomInflate = meleeSideInflate;
 
         switch (facingDirection) {
             case "up":
-                attackArea.x = x - (attackRange / 2);
-                attackArea.y = y - attackRange;
-                attackArea.width = gp.tileSize + attackRange;
-                attackArea.height = attackRange;
-                break;
-            case "down":
-                attackArea.x = x - (attackRange / 2);
-                attackArea.y = y + gp.tileSize;
-                attackArea.width = gp.tileSize + attackRange;
-                attackArea.height = attackRange;
+                r.setBounds(
+                        baseX - leftInflate,
+                        baseY - range,
+                        w + leftInflate + rightInflate,
+                        range + topInflate
+                );
                 break;
             case "left":
-                attackArea.x = x - attackRange;
-                attackArea.y = y;
-                attackArea.width = attackRange;
-                attackArea.height = gp.tileSize;
+                r.setBounds(
+                        baseX - range,
+                        baseY - topInflate,
+                        range + leftInflate,
+                        h + topInflate + bottomInflate
+                );
                 break;
             case "right":
-                attackArea.x = x + gp.tileSize;
-                attackArea.y = y;
-                attackArea.width = attackRange;
-                attackArea.height = gp.tileSize;
+                r.setBounds(
+                        baseX + w - rightInflate,
+                        baseY - topInflate,
+                        range + rightInflate,
+                        h + topInflate + bottomInflate
+                );
                 break;
             case "up_left":
-                attackArea.x = x - attackRange;
-                attackArea.y = y - attackRange;
-                attackArea.width = attackRange;
-                attackArea.height = attackRange;
+                r.setBounds(
+                        baseX - range,
+                        baseY - range,
+                        range + w/2 + leftInflate,
+                        range + h/2 + topInflate
+                );
                 break;
             case "up_right":
-                attackArea.x = x + gp.tileSize;
-                attackArea.y = y - attackRange;
-                attackArea.width = attackRange;
-                attackArea.height = attackRange;
+                r.setBounds(
+                        baseX + w/2 - rightInflate,
+                        baseY - range,
+                        range + w/2 + rightInflate,
+                        range + h/2 + topInflate
+                );
                 break;
             case "down_left":
-                attackArea.x = x - attackRange;
-                attackArea.y = y + gp.tileSize;
-                attackArea.width = attackRange;
-                attackArea.height = attackRange;
+                r.setBounds(
+                        baseX - range,
+                        baseY + h/2 - topInflate,
+                        range + w/2 + leftInflate,
+                        range + h/2 + bottomInflate
+                );
                 break;
             case "down_right":
-                attackArea.x = x + gp.tileSize;
-                attackArea.y = y + gp.tileSize;
-                attackArea.width = attackRange;
-                attackArea.height = attackRange;
-                break;
-        }
-
-        for (int i = 0; i < gp.monster.length; i++) {
-            if (gp.monster[i] != null) {
-                Rectangle monsterArea = new Rectangle(
-                        gp.monster[i].x,
-                        gp.monster[i].y,
-                        gp.tileSize,
-                        gp.tileSize
+                r.setBounds(
+                        baseX + w/2 - rightInflate,
+                        baseY + h/2 - topInflate,
+                        range + w/2 + rightInflate,
+                        range + h/2 + bottomInflate
                 );
+                break;
+            case "down":
+            default:
+                r.setBounds(baseX - leftInflate, baseY + h - topInflate,
+                        w + leftInflate + rightInflate, range + bottomInflate);
+        }
+        return r;
+    }
 
-                if (attackArea.intersects(monsterArea)) {
-                    gp.sound.playSE(16);
-                    Entity mon = gp.monster[i];
-                    int damage=attack-mon.defense;
-                    if(damage<0){
-                        damage=0;
-                    }
-                    mon.health-=damage;
+    //Damage Monster
+    public void checkAttackHit() {
 
-                    mon.hpBarOn = true;
-                    mon.hpBarCounter = 0;
-                    mon.invincible = true;
-                    mon.invincibleCounter = 0;
-                    mon.damageReaction();
-                    if (mon.health <= 0) {
+        Rectangle area = buildAttackArea();
+        checkAttackHit(area,attack,false);
+    }
 
-                        gp.ui.addMessage(mon.exp+" EXP");
-                        exp+=mon.exp;
-                        checkLevelUp();
-                        mon.dying = true;
-                    }
-                }
+    public void checkAttackHit(Rectangle area,int damageValue, boolean fromProjectile){
+        for (int i = 0; i < gp.monster.length; i++) {
+            Entity mon = gp.monster[i];
+            if (mon == null || mon.dying || !mon.alive) continue;
+
+            Rectangle monBox = new Rectangle(mon.x + mon.solidArea.x,
+                    mon.y + mon.solidArea.y,
+                    mon.solidArea.width,
+                    mon.solidArea.height);
+            if (!area.intersects(monBox)) continue;
+
+            gp.sound.playSE(16);
+
+            int damage;
+            damage=damageValue-mon.defense;
+            if(damage<0){
+                damage=0;
+            }
+            mon.health -= damage;
+
+            mon.hpBarOn = true;
+            mon.hpBarCounter = 0;
+            mon.invincible = true;
+            mon.invincibleCounter = 0;
+            mon.damageReaction();
+
+            if (mon.health <= 0) {
+                gp.ui.addMessage(mon.exp + " EXP");
+                exp += mon.exp;
+                checkLevelUp();
+                mon.dying = true;
+            }
+
+            if (!fromProjectile) {
+                break;
             }
         }
     }
@@ -539,7 +591,7 @@ public class Player extends Entity {
     }
 
     public void contactMonster(int i) {
-        if (i != 999 && !invincible) {
+        if (i != 999 && !invincible && !gp.monster[i].dying) {
             gp.sound.playSE(18);
             int damage=gp.monster[i].attack-defense;
             if(damage<0){
