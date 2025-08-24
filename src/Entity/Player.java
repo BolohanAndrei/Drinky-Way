@@ -337,9 +337,6 @@ public class Player extends Entity {
         if (canMoveX) x += (int) (dx * currentSpeed);
         if (canMoveY) y += (int) (dy * currentSpeed);
 
-        // Monster contact
-
-
         // Death check
         if (gp.deadCheck.check(this)) {
             dead = true;

@@ -30,6 +30,10 @@ public class AssetManager {
         gp.obj[i].x = 33 * gp.tileSize;
         gp.obj[i].y = 21 * gp.tileSize;
         i++;
+        gp.obj[i]=new Obj_Axe(gp);
+        gp.obj[i].x = 37 * gp.tileSize;
+        gp.obj[i].y = 21 * gp.tileSize;
+        i++;
         gp.obj[i]=new Obj_Hook(gp);
         gp.obj[i].x = 35 * gp.tileSize;
         gp.obj[i].y = 21 * gp.tileSize;
