@@ -13,43 +13,61 @@ public class Entity {
 
  protected GamePanel gp;
 
-    // Position and movement
+    // ========== 1. Identity & Classification ==========
+    public String name;
+    public int entityType = -1; // 0 player, 1 npc, 2 monster
+
+    // ========== 2. Position & Movement ==========
     public int x, y;
     public int speed;
+    public String direction = "down";
     public int actionLockCounter = 0;
+    public boolean attacking = false;
 
-    public BufferedImage up1, up2, down1, down2, left1, left2, right1, right2, idle_up, idle_down, idle_left, idle_right, die1, die2, die3, idle_1, idle_2, idle_3, idle_4;
-    public BufferedImage attackUp1,attackUp2,attackUDown1,attackDown2,attackLeft1,attackLeft2,attackRight1,attackRight2;
-    public String direction="down";
-    public boolean attacking=false;
+    // ========== 3. Rendering Assets ==========
+    // --- 3.1 Movement Sprites ---
+    public BufferedImage up1, up2, down1, down2, left1, left2, right1, right2;
 
-    // Dialogue system
-    String[] dialogue = new String[20];
-    public int dialogueIndex = 0;
+    // --- 3.2 Attack Sprites ---
+    public BufferedImage attackUp1, attackUp2, attackUDown1, attackDown2,
+            attackLeft1, attackLeft2, attackRight1, attackRight2;
 
-    // Animation control
+    // --- 3.3 Idle / Death / Extra Sprites ---
+    public BufferedImage idle_up, idle_down, idle_left, idle_right;
+    public BufferedImage die1, die2, die3;
+    public BufferedImage idle_1, idle_2, idle_3, idle_4;
+    public BufferedImage image1, image2, image3;
+
+    // ========== 4. Animation State ==========
     public int spriteCounter = 0;
     public int spriteNum = 1;
 
-    // Collision detection
+    // ========== 5. Dialogue System ==========
+    String[] dialogue = new String[20];
+    public int dialogueIndex = 0;
+
+    // ========== 6. Collision & Spatial Bounds ==========
     public Rectangle solidArea = new Rectangle(0, 0, 48, 48);
     public int solidAreaDefaultX, solidAreaDefaultY;
     public boolean collisionOn = false;
+    public boolean collision = false;
 
-    //Dead state
+    // ========== 7. Life / Existence State ==========
+    public boolean alive = true;
     public boolean dead = false;
+    public boolean dying = false;
     public int dieFrame = 0;
-   public boolean alive=true;
-   public boolean dying=false;
+    int dyingCounter = 0;
 
-    //Character status
+    // ========== 8. Health & Damage Feedback ==========
     public int maxHealth;
     public int health;
-    public boolean invincible=false;
-    public int invincibleCounter=0;
-    int dyingCounter=0;
-    public boolean hpBarOn=false;
-    public int hpBarCounter=0;
+    public boolean invincible = false;
+    public int invincibleCounter = 0;
+    public boolean hpBarOn = false;
+    public int hpBarCounter = 0;
+
+    // ========== 9. Progression & Core Stats ==========
     public int level;
     public int strength;
     public int dexterity;
@@ -59,33 +77,35 @@ public class Entity {
     public int nextLevelExp;
     public int coin;
     public int alcohol;
+
+    // ========== 10. Equipment References ==========
     public Entity currentWeapon;
     public Entity currentShield;
     public Entity currentHelmet;
     public Entity currentChest;
     public Entity currentBoots;
 
-    //item status
+    // ========== 11. Active Projectile ==========
+    public Projectile projectile;
+    public int shotAvailableCounter=0;
+
+    // ========== 12. Item Metadata & Gear Attributes ==========
     public int attackValue;
     public int defenseValue;
     public int strengthBonus;
     public int dexterityBonus;
     public int attackFlatBonus;
     public int defenseFlatBonus;
-    public String itemDescription="";
-    public int gearType=-1; //0 sword 1 shield 2 consumable
-    public int armourType=-1; //0 helmet 1 chest 2 boots
-    public boolean pickable=true;
+    public int useCost;
+    public String itemDescription = "";
+    public int gearType = -1;   // 0 sword, 1 shield, 2 consumable
+    public int armourType = -1; // 0 helmet, 1 chest, 2 boots
+    public boolean pickable = true;
 
-    //NPC
-    public BufferedImage image1, image2, image3;
-    public String name;
+    // ========== 13. NPC Idle Behavior ==========
     boolean isIdle = false;
     int idleCounter = 0;
     int idleDuration = 120;
-    public boolean collision = false;
-    public int entityType=-1; //0 player 1 npc 2 monster
-
     public Entity(GamePanel gp) {
         this.gp = gp;
 
@@ -167,6 +187,14 @@ public class Entity {
             }
             spriteCounter = 0;
         }
+        // Added: handle invincibility countdown for non-player entities
+        if(entityType != 0 && invincible){
+            invincibleCounter++;
+            if(invincibleCounter > 60){ // 2 seconds at 60 FPS
+                invincible = false;
+                invincibleCounter = 0;
+            }
+        }
     }
 
     private BufferedImage fallbackImage() {
@@ -227,13 +255,14 @@ public class Entity {
                 }
             }
 
-
-
             Composite originalComposite = g.getComposite();
             if(invincible){
                 hpBarOn=true;
                 hpBarCounter=0;
                 changeAlpha(g,0.5f);
+            } else if (!dying) {
+                // Reset alpha if not invincible or dying
+                changeAlpha(g, 1f);
             }
             if(dying){
                 dyingAnimation(g);
@@ -275,7 +304,6 @@ public class Entity {
             changeAlpha(g,1f);
         }
         if (dyingCounter > i*8) {
-            dying = false;
             alive = false;
         }
     }

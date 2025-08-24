@@ -1,61 +1,76 @@
 package Main;
 
+
 import javax.sound.sampled.*;
 import java.io.IOException;
 import java.net.URL;
 
 public class Sound {
-    Clip clip;
-    URL[] soundURL =new URL[30];
+    private Clip clip;
+    private final URL[] soundURL = new URL[30];
 
-    // Sound array
-    public Sound(){
-        soundURL[0]=getClass().getResource("/res/sound/background_1.wav"); // Background music 1
-        soundURL[1]=getClass().getResource("/res/sound/background_2.wav"); // Background music 2
-        soundURL[2]=getClass().getResource("/res/sound/key_pick_up.wav"); // Key sound
-        soundURL[3]=getClass().getResource("/res/sound/door.wav"); // Door open sound
-        soundURL[4]=getClass().getResource("/res/sound/chest.wav"); // Chest sound
-        soundURL[5]=getClass().getResource("/res/sound/power_up.wav"); // power up sound
-        soundURL[6]=getClass().getResource("/res/sound/pirate_jokes_male_voice.wav"); // pirate_jokes_male_voice sound
-        soundURL[7]=getClass().getResource("/res/sound/pirate_jokes_male_voice2.wav"); // pirate_jokes_male_voice_2 sound
-        soundURL[8]=getClass().getResource("/res/sound/matey.wav"); // matey sound
-        soundURL[9]=getClass().getResource("/res/sound/ghost_ship_ambience.wav"); // ghost ship ambience sound
-        soundURL[10]=getClass().getResource("/res/sound/bottle_caps.wav"); // bottle caps sound
-        soundURL[11]=getClass().getResource("/res/sound/level_up.wav"); // level up sound
-        soundURL[12]=getClass().getResource("/res/sound/power_up_regeneration.wav"); // power up regeneration sound
-        soundURL[13]=getClass().getResource("/res/sound/background_3.wav"); // Background music 3
-        soundURL[14]=getClass().getResource("/res/sound/background_4.wav"); // Background music 4
-        soundURL[15]=getClass().getResource("/res/sound/background_5.wav"); // Background music 5
-        soundURL[16]=getClass().getResource("/res/sound/hit.wav"); // hit sound
-        soundURL[17]=getClass().getResource("/res/sound/swing.wav"); // sword swing sound
-        soundURL[18]=getClass().getResource("/res/sound/take_damage.wav"); // take damage sound
-        soundURL[19]=getClass().getResource("/res/sound/cursor.wav"); // cursor sound
-        soundURL[20]=getClass().getResource("/res/sound/drink.wav"); // drink sound
-
-
+    public Sound() {
+        String base = "/sound/";
+        soundURL[0]  = load(base + "background_1.wav");
+        soundURL[1]  = load(base + "background_2.wav");
+        soundURL[2]  = load(base + "key_pick_up.wav");
+        soundURL[3]  = load(base + "door.wav");
+        soundURL[4]  = load(base + "chest.wav");
+        soundURL[5]  = load(base + "power_up.wav");
+        soundURL[6]  = load(base + "pirate_jokes_male_voice.wav");
+        soundURL[7]  = load(base + "pirate_jokes_male_voice_2.wav");
+        soundURL[8]  = load(base + "matey.wav");
+        soundURL[9]  = load(base + "ghost_ship_ambience.wav");
+        soundURL[10] = load(base + "bottle_caps.wav");
+        soundURL[11] = load(base + "level_up.wav");
+        soundURL[12] = load(base + "power_up_regeneration.wav");
+        soundURL[13] = load(base + "background_3.wav");
+        soundURL[14] = load(base + "background_4.wav");
+        soundURL[15] = load(base + "background_5.wav");
+        soundURL[16] = load(base + "hit.wav");
+        soundURL[17] = load(base + "swing.wav");
+        soundURL[18] = load(base + "take_damage.wav");
+        soundURL[19] = load(base + "cursor.wav");
+        soundURL[20] = load(base + "drink.wav");
+        soundURL[21] = load(base + "throw.wav");
     }
 
-    public void setFile(int i){
-        try{
-            AudioInputStream ais= AudioSystem.getAudioInputStream(soundURL[i]);
-            clip=AudioSystem.getClip();
+    private URL load(String path) {
+        URL u = getClass().getResource(path);
+        if (u == null) {
+            System.err.println("Missing audio resource: " + path);
+        }
+        return u;
+    }
+
+    private void setFile(int i) {
+        if (i < 0 || i >= soundURL.length) {
+            System.err.println("Sound index out of range: " + i);
+            return;
+        }
+        URL url = soundURL[i];
+        if (url == null) {
+            System.err.println("Sound not loaded (null URL) at index: " + i);
+            return;
+        }
+        try (AudioInputStream ais = AudioSystem.getAudioInputStream(url)) {
+            clip = AudioSystem.getClip();
             clip.open(ais);
+        } catch (IOException | UnsupportedAudioFileException | LineUnavailableException e) {
+            System.err.println("Failed to load sound index " + i + ": " + e.getMessage());
         }
-        catch(IOException | UnsupportedAudioFileException | LineUnavailableException e){
-            e.getStackTrace();
-        }
     }
 
-    public void play(){
-        clip.start();
+    public void play() {
+        if (clip != null) clip.start();
     }
 
-    public void stop(){
-      clip.stop();
+    public void stop() {
+        if (clip != null && clip.isRunning()) clip.stop();
     }
 
-    public void loop(){
-        clip.loop(Clip.LOOP_CONTINUOUSLY);
+    public void loop() {
+        if (clip != null) clip.loop(Clip.LOOP_CONTINUOUSLY);
     }
 
     public void playMusic(int i) {
@@ -65,9 +80,7 @@ public class Sound {
     }
 
     public void stopMusic() {
-        if(clip != null) {
-            stop();
-        }
+        stop();
     }
 
     public void playSE(int i) {

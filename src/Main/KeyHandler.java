@@ -7,7 +7,7 @@ import java.awt.event.MouseListener;
 
 public class KeyHandler implements KeyListener, MouseListener {
     public boolean upPressed, downPressed, leftPressed, rightPressed,enterPressed,ePressed;
-    public boolean attackClicked;
+    public boolean attackClicked,shotKeyPressed;
     GamePanel gp;
 
     public KeyHandler(GamePanel gp) {
@@ -184,14 +184,22 @@ public class KeyHandler implements KeyListener, MouseListener {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if(gp.gameState==gp.playState){
-            attackClicked=true;
+        if (gp.gameState == gp.playState) {
+            if (e.getButton() == MouseEvent.BUTTON1) {
+                attackClicked = true; // left click
+            } else if (e.getButton() == MouseEvent.BUTTON3) {
+                shotKeyPressed = true; // right click
+            }
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        attackClicked=false;
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            attackClicked = false;
+        } else if (e.getButton() == MouseEvent.BUTTON3) {
+            shotKeyPressed = false;
+        }
     }
 
     @Override
