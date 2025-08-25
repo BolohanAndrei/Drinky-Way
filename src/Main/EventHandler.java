@@ -67,7 +67,6 @@ public class EventHandler {
             }
         }
 
-        // Reset the solid area position
         gp.player.solidArea.x =  gp.player.solidAreaDefaultX;
         gp.player.solidArea.y =  gp.player.solidAreaDefaultY;
         eventRect[col][row].x = eventRect[col][row].eventRectDefaultX;

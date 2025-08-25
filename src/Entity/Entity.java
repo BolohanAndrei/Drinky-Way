@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Random;
 
 public class Entity {
 
@@ -96,11 +97,11 @@ public class Entity {
     public int dexterityBonus;
     public int attackFlatBonus;
     public int defenseFlatBonus;
-    public int useCost;
     public String itemDescription = "";
-    public int gearType = -1;   // 0 sword, 1 shield, 2 consumable
+    public int gearType = -1;   // 0 sword, 1 shield, 2 consumable 3 pickUp(goods)
     public int armourType = -1; // 0 helmet, 1 chest, 2 boots
     public boolean pickable = true;
+    public int value;
 
     // ========== 13. NPC Idle Behavior ==========
     boolean isIdle = false;
@@ -108,11 +109,9 @@ public class Entity {
     int idleDuration = 120;
     public Entity(GamePanel gp) {
         this.gp = gp;
-
     }
 
     public void setAction(){
-
     }
 
     public void damageReaction(){
@@ -129,7 +128,6 @@ public class Entity {
         if(dialogueIndex<0 || dialogueIndex>dialogue.length-1 || dialogue[dialogueIndex]==null){
             dialogueIndex = 0;
         }
-
         facePlayer();
 
     }
@@ -143,6 +141,17 @@ public class Entity {
     }
 
     public void use(Entity e){}
+    public void checkDrop(){}
+    public void dropItem(Entity droppedItem){
+        for(int i=0;i<gp.obj.length;i++){
+            if(gp.obj[i]==null){
+                gp.obj[i]=droppedItem;
+                gp.obj[i].x=x;
+                gp.obj[i].y=y;
+                break;
+            }
+        }
+    }
 
     public void update(){
 
@@ -151,22 +160,11 @@ public class Entity {
         gp.collisionCheck.checkObj(this, false);
         gp.collisionCheck.checkEntity(this,gp.npc);
         gp.collisionCheck.checkEntity(this,gp.monster);
+        gp.collisionCheck.checkEntity(this,gp.iTile);
        boolean contactPlayer= gp.collisionCheck.checkPlayer(this);
 
        if(this.entityType==2 && contactPlayer){
-           if(!gp.player.invincible){
-               gp.sound.playSE(18);
-
-               int damage=attack-gp.player.defense;
-               if(damage<0){
-                   damage=1;
-               }
-               gp.player.health-=damage;
-               if(gp.player.health<0){
-                   gp.player.health=0;
-               }
-               gp.player.invincible=true;
-           }
+           damagePlayer(attack);
        }
         setAction();
 
@@ -187,13 +185,31 @@ public class Entity {
             }
             spriteCounter = 0;
         }
-        // Added: handle invincibility countdown for non-player entities
         if(entityType != 0 && invincible){
             invincibleCounter++;
             if(invincibleCounter > 60){ // 2 seconds at 60 FPS
                 invincible = false;
                 invincibleCounter = 0;
             }
+        }
+        if(shotAvailableCounter<60){
+            shotAvailableCounter++;
+        }
+    }
+
+    public void damagePlayer(int attack){
+        if(!gp.player.invincible){
+            gp.sound.playSE(18);
+
+            int damage=attack-gp.player.defense;
+            if(damage<0){
+                damage=1;
+            }
+            gp.player.health-=damage;
+            if(gp.player.health<0){
+                gp.player.health=0;
+            }
+            gp.player.invincible=true;
         }
     }
 
@@ -261,7 +277,6 @@ public class Entity {
                 hpBarCounter=0;
                 changeAlpha(g,0.5f);
             } else if (!dying) {
-                // Reset alpha if not invincible or dying
                 changeAlpha(g, 1f);
             }
             if(dying){
@@ -322,5 +337,95 @@ public class Entity {
             e.getStackTrace();
         }
         return scale;
+    }
+
+    public Color getParticleColor(){
+        return null;
+    }
+
+    public int getParticleSize(){
+        return 0;
+    }
+
+    public int getParticleSpeed()
+    {
+        return 0;
+    }
+
+    public int getParticleMaxHealth(){
+        return 0;
+    }
+
+    public void generateParticle(Entity generator, Entity target) {
+        Color base = generator.getParticleColor();
+        int baseSize = generator.getParticleSize();
+        int baseLife = generator.getParticleMaxHealth();
+        int baseSpeed = generator.getParticleSpeed();
+
+        Random rnd = new Random();
+
+        double outwardAngle;
+        if (target != null) {
+            double dx = (target.x + target.solidArea.x + target.solidArea.width / 2.0)
+                    - (generator.x + generator.solidArea.x + generator.solidArea.width / 2.0);
+            double dy = (target.y + target.solidArea.y + target.solidArea.height / 2.0)
+                    - (generator.y + generator.solidArea.y + generator.solidArea.height / 2.0);
+            outwardAngle = Math.atan2(dy, dx);
+        } else {
+            outwardAngle = rnd.nextDouble() * Math.PI * 2;
+        }
+
+        int dustCount = 10 + rnd.nextInt(8);
+        int chunkCount = 3 + rnd.nextInt(3);
+
+        java.util.function.Function<Color, Color> varyColor = (c) -> {
+            float[] hsb = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), null);
+            float sat = Math.min(1f, Math.max(0f, hsb[1] * (0.85f + rnd.nextFloat() * 0.3f)));
+            float bri = Math.min(1f, Math.max(0f, hsb[2] * (0.80f + rnd.nextFloat() * 0.4f)));
+            int rgb = Color.HSBtoRGB(hsb[0], sat, bri);
+            return new Color((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
+        };
+
+        for (int i = 0; i < dustCount; i++) {
+            double angleSpread = outwardAngle + (rnd.nextDouble() - 0.5) * Math.toRadians(160);
+            int vx = (int) Math.round(Math.cos(angleSpread) * (1 + rnd.nextInt(3)));
+            int vy = (int) Math.round(Math.sin(angleSpread) * (1 + rnd.nextInt(3)));
+            vy -= rnd.nextInt(2);
+            if (vx == 0 && vy == 0) vx = 1;
+
+            int size = Math.max(2, baseSize - 2 + rnd.nextInt(3));
+            int speed = Math.max(1, baseSpeed + rnd.nextInt(2));
+            int life = Math.max(8, baseLife - 5 + rnd.nextInt(6));
+            Color c = varyColor.apply(base);
+
+            gp.particles.add(new Particle(gp, generator, c, vx, vy, size, speed, life));
+        }
+
+        for (int i = 0; i < chunkCount; i++) {
+            double angleSpread = outwardAngle + (rnd.nextDouble() - 0.5) * Math.toRadians(90);
+            int mag = 2 + rnd.nextInt(3);
+            int vx = (int) Math.round(Math.cos(angleSpread) * mag);
+            int vy = (int) Math.round(Math.sin(angleSpread) * mag) - 1;
+            if (vx == 0 && vy == 0) vy = -1;
+
+            int size = baseSize + rnd.nextInt(3);
+            int speed = Math.max(1, baseSpeed);
+            int life = baseLife + 5 + rnd.nextInt(8);
+            Color c = varyColor.apply(base);
+
+            gp.particles.add(new Particle(gp, generator, c, vx, vy, size, speed, life));
+        }
+
+        if (rnd.nextInt(100) < 15) {
+            double sparkleAngle = outwardAngle + (rnd.nextDouble() - 0.5) * Math.toRadians(45);
+            int vx = (int) Math.round(Math.cos(sparkleAngle) * 3);
+            int vy = (int) Math.round(Math.sin(sparkleAngle) * 3) - 1;
+            Color sparkle = new Color(
+                    Math.min(255, base.getRed() + 40),
+                    Math.min(255, base.getGreen() + 40),
+                    Math.min(255, base.getBlue() + 40)
+            );
+            gp.particles.add(new Particle(gp, generator, sparkle, vx, vy, Math.max(2, baseSize - 1), baseSpeed + 1, baseLife));
+        }
     }
 }

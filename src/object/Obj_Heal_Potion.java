@@ -5,11 +5,11 @@ import Main.GamePanel;
 
 public class Obj_Heal_Potion extends Entity {
     GamePanel gp;
-    int value=2;
     public Obj_Heal_Potion(GamePanel gp) {
         super(gp);
         this.gp=gp;
         gearType=2;
+        value=2;
         name="Heal Potion";
         down1=setup("objects/heal_potion");
         itemDescription = "["+name+"] HP +"+value+"\nLiquid bandage for the soul. Restores health, dignity sold separately.";

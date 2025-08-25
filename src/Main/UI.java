@@ -51,6 +51,7 @@ public class UI {
         heartHalf = heart.image2;
         heartEmpty = heart.image3;
 
+        //ALCOHOL
         Entity bottle = new Obj_Alcohol(gp);
         bottleFull = bottle.image1;
         bottleHalf = bottle.image2;
@@ -80,13 +81,6 @@ public class UI {
             drawMessage();
         }
 
-        //PAUSE STATE
-        if (gp.gameState == gp.pauseState) {
-            drawPlayerLife();
-            drawDrunkLevel();
-            drawPauseScreen();
-        }
-
         //DIALOGUE STATE
         if (gp.gameState == gp.dialogueState) {
             drawPlayerLife();
@@ -100,15 +94,6 @@ public class UI {
             drawCharacterScreen();
             drawInventory();
         }
-    }
-
-    public void drawPauseScreen() {
-        g2.setFont(getPublicPixel().deriveFont(48F));
-        g2.setColor(Color.white);
-        String text = "PAUSED";
-        int x = getXforCenteredText(text);
-        int y = gp.screenHeight / 2;
-        g2.drawString(text, x, y);
     }
 
     public void drawDialogueScreen() {
@@ -188,9 +173,9 @@ public class UI {
     }
 
     public void drawCharacterScreen(){
-        final int frameX=gp.tileSize;
+        final int frameX=gp.tileSize*2;
         final int frameY=gp.tileSize;
-        final int frameWidth=gp.tileSize*5;
+        final int frameWidth=gp.tileSize*6;
         final int frameHeight=gp.tileSize*10;
         drawSubWindow(frameX,frameY,frameWidth,frameHeight);
 
@@ -255,7 +240,7 @@ public class UI {
 
     public void drawInventory(){
         //frame
-         int frameX=gp.tileSize*9;
+         int frameX=gp.tileSize*13;
          int frameY=gp.tileSize;
          int frameWidth=gp.tileSize*6;
          int frameHeight=gp.tileSize*5;

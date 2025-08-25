@@ -33,6 +33,12 @@ public class Sound {
         soundURL[19] = load(base + "cursor.wav");
         soundURL[20] = load(base + "drink.wav");
         soundURL[21] = load(base + "throw.wav");
+        soundURL[22] = load(base + "slime_walk.wav");
+        soundURL[23] = load(base + "slime_death.wav");
+        soundURL[24] = load(base + "slime_atk.wav");
+        soundURL[25] = load(base + "coin.wav");
+        soundURL[26] = load(base + "axe_cut.wav");
+        soundURL[27] = load(base + "wrong_choice.wav");
     }
 
     private URL load(String path) {

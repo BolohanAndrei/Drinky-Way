@@ -3,6 +3,8 @@ package object;
 import Entity.Projectile;
 import Main.GamePanel;
 
+import java.awt.*;
+
 public class Obj_Dagger extends Projectile {
     GamePanel gp;
     public Obj_Dagger(GamePanel gp) {
@@ -12,8 +14,7 @@ public class Obj_Dagger extends Projectile {
         speed=8;
         maxHealth=30;
         health=maxHealth;
-        attackValue=2;
-        useCost=1;
+        attackValue=1;
         alive=false;
         getImage();
     }
@@ -28,5 +29,22 @@ public class Obj_Dagger extends Projectile {
         right1=setup("projectiles/dagger_right1");
         right2=setup("projectiles/dagger_right2");
 
+    }
+
+    public Color getParticleColor(){
+        return new Color(81, 79, 79, 255);
+    }
+
+    public int getParticleSize(){
+        return 10;
+    }
+
+    public int getParticleSpeed()
+    {
+        return 1;
+    }
+
+    public int getParticleMaxHealth(){
+        return 20;
     }
 }

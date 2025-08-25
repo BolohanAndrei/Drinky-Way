@@ -17,12 +17,16 @@ public class KeyHandler implements KeyListener, MouseListener {
 
     @Override
     public void keyTyped(KeyEvent e) {
-
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
         int code= e.getKeyCode();
+
+        // Global ESC quits
+        if(code == KeyEvent.VK_ESCAPE){
+            System.exit(0);
+        }
 
         //Title state
         if(gp.gameState==gp.titleState){
@@ -31,10 +35,6 @@ public class KeyHandler implements KeyListener, MouseListener {
         //Play state
         if(gp.gameState==gp.playState){
             playState(code);
-        }
-        //Pause state
-      else if(gp.gameState==gp.pauseState) {
-            pauseState(code);
         }
         //Dialogue state
        else if(gp.gameState==gp.dialogueState){
@@ -82,9 +82,6 @@ public class KeyHandler implements KeyListener, MouseListener {
         if(code==KeyEvent.VK_D) {
             rightPressed=true;
         }
-        if(code==KeyEvent.VK_ESCAPE) {
-            gp.gameState=gp.pauseState;
-        }
         if(code==KeyEvent.VK_ENTER) {
             enterPressed=true;
         }
@@ -95,11 +92,7 @@ public class KeyHandler implements KeyListener, MouseListener {
             gp.gameState=gp.characterState;
         }
     }
-    public void pauseState(int code){
-        if (code == KeyEvent.VK_ESCAPE) {
-            gp.gameState = gp.playState;
-        }
-    }
+
     public void dialogueState(int code){
         if(code==KeyEvent.VK_E) {
             gp.gameState = gp.playState;
@@ -178,8 +171,6 @@ public class KeyHandler implements KeyListener, MouseListener {
 
     @Override
     public void mouseClicked(MouseEvent e) {
-
-
     }
 
     @Override

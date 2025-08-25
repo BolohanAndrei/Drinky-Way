@@ -1,27 +1,39 @@
 package Main;
 
 import javax.swing.*;
+import java.awt.*;
 import java.net.URL;
 
 public class Main {
+    public static JFrame window;
+    private static GamePanel gamePanel;
+
     public static void main(String[] args) {
-        JFrame window = new JFrame();
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setResizable(false);
-        window.setTitle("Drinky Way");
-        URL iconURL = Main.class.getResource("/res/icon/icon.png");
-        assert iconURL != null;
-        ImageIcon icon = new ImageIcon(iconURL);
-        window.setIconImage(icon.getImage());
-        GamePanel gamePanel = new GamePanel();
-        window.add(gamePanel);
-        window.pack();
-        window.setResizable(true);
-        window.setLocationRelativeTo(null);
-        window.setVisible(true);
+        SwingUtilities.invokeLater(() -> {
+            gamePanel = new GamePanel();
 
-        gamePanel.setupGame();
-        gamePanel.startGameThread();
+            window = new JFrame();
+            window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            window.setTitle("Drinky Way");
+            URL iconURL = Main.class.getResource("/res/icon/icon.png");
+            if (iconURL != null) window.setIconImage(new ImageIcon(iconURL).getImage());
 
+            window.setUndecorated(true);
+            window.setContentPane(gamePanel);
+            GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+            gd.setFullScreenWindow(window);
+            window.setVisible(true);
+
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    window.createBufferStrategy(3);
+                    gamePanel.attachBufferStrategy(window.getBufferStrategy());
+                } catch (IllegalStateException ignored) {}
+            });
+
+            gamePanel.setupGame();
+            gamePanel.requestFocusInWindow();
+            gamePanel.startGameThread();
+        });
     }
 }
