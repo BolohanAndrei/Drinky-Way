@@ -12,10 +12,8 @@ public class DeadCheck {
     }
 
     public boolean check(Entity entity) {
-        // Calculate the tile the entity is on
         int entityCol = (entity.x + entity.solidArea.x+entity.solidArea.width/2) / gp.tileSize;
         int entityRow = (entity.y + entity.solidArea.y+entity.solidArea.height/2) / gp.tileSize;
-        // Check bounds
         if (entityCol >= 0 && entityCol < gp.maxScreenCol && entityRow >= 0 && entityRow < gp.maxScreenRow) {
             int tileNum = gp.tileManager.mapTileNum[entityCol][entityRow];
             if (gp.tileManager.tiles[tileNum].deadly) {

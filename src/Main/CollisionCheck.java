@@ -10,7 +10,6 @@ public class CollisionCheck {
         this.gp = gp;
     }
 
-    // Check collision with tiles
     public void checkTile(Entity entity) {
         int entityLeftWorldX = entity.x + entity.solidArea.x;
         int entityRightWorldX = entity.x + entity.solidArea.x + entity.solidArea.width;
@@ -201,7 +200,6 @@ public class CollisionCheck {
                         break;
                 }
 
-                // Reset solidArea position
                 entity.solidArea.x = entity.solidAreaDefaultX;
                 entity.solidArea.y = entity.solidAreaDefaultY;
                 gp.obj[i].solidArea.x = gp.obj[i].solidAreaDefaultX;
@@ -211,7 +209,6 @@ public class CollisionCheck {
         return index;
     }
 
-    //NPC and MONSTER collision check
     public int checkEntity(Entity entity, Entity[] target) {
         int index = 999;
 
@@ -260,7 +257,6 @@ public class CollisionCheck {
                     }
                 }
 
-                // Reset solidArea position
                 entity.solidArea.x = entity.solidAreaDefaultX;
                 entity.solidArea.y = entity.solidAreaDefaultY;
                 target[i].solidArea.x = target[i].solidAreaDefaultX;
@@ -313,7 +309,6 @@ public class CollisionCheck {
             contactPlayer=true;
         }
 
-        // Reset solidArea position
         entity.solidArea.x = entity.solidAreaDefaultX;
         entity.solidArea.y = entity.solidAreaDefaultY;
         gp.player.solidArea.x = gp.player.solidAreaDefaultX;

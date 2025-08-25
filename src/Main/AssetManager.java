@@ -5,30 +5,15 @@ import Entity.DrunkNPC;
 import Entity.DrunkNPC1;
 import Monster.MON_GSlime;
 import object.*;
+import tiles_interactive.IT_DryTree;
 
 public class AssetManager {
     GamePanel gp;
     public AssetManager(GamePanel gp) {
         this.gp = gp;
     }
-    //initializes the objects in the game
     public void setObj(){
     int i=0;
-        gp.obj[i]=new Obj_Gold_Key(gp);
-        gp.obj[i].x = 25 * gp.tileSize;
-        gp.obj[i].y = 23 * gp.tileSize;
-        i++;
-        gp.obj[i]=new Obj_Gold_Key(gp);
-        gp.obj[i].x = 21 * gp.tileSize;
-        gp.obj[i].y = 19 * gp.tileSize;
-        i++;
-        gp.obj[i]=new Obj_Gold_Key(gp);
-        gp.obj[i].x = 26 * gp.tileSize;
-        gp.obj[i].y = 21 * gp.tileSize;
-        i++;
-        gp.obj[i]=new Obj_Iron_Sword(gp);
-        gp.obj[i].x = 33 * gp.tileSize;
-        gp.obj[i].y = 21 * gp.tileSize;
         i++;
         gp.obj[i]=new Obj_Axe(gp);
         gp.obj[i].x = 37 * gp.tileSize;
@@ -37,10 +22,6 @@ public class AssetManager {
         gp.obj[i]=new Obj_Hook(gp);
         gp.obj[i].x = 35 * gp.tileSize;
         gp.obj[i].y = 21 * gp.tileSize;
-        i++;
-        gp.obj[i]=new Obj_Heal_Potion(gp);
-        gp.obj[i].x = 22 * gp.tileSize;
-        gp.obj[i].y = 27 * gp.tileSize;
         i++;
         gp.obj[i]=new Obj_Damage_Pit(gp);
         gp.obj[i].x = 27 * gp.tileSize;
@@ -96,6 +77,25 @@ public class AssetManager {
         gp.monster[i]=new MON_GSlime(gp);
         gp.monster[i].x = 22 * gp.tileSize;
         gp.monster[i].y = 36 * gp.tileSize;
+
+    }
+
+    public void setInteractiveTile(){
+        int i=0;
+        gp.iTile[i]=new IT_DryTree(gp,27,12);
+        i++;
+        gp.iTile[i]=new IT_DryTree(gp,28,12);
+        i++;
+        gp.iTile[i]=new IT_DryTree(gp,29,12);
+        i++;
+        gp.iTile[i]=new IT_DryTree(gp,30,12);
+        i++;
+        gp.iTile[i]=new IT_DryTree(gp,31,12);
+        i++;
+        gp.iTile[i]=new IT_DryTree(gp,32,12);
+        i++;
+        gp.iTile[i]=new IT_DryTree(gp,33,12);
+        i++;
 
     }
 }

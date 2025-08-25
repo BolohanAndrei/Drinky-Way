@@ -2,9 +2,7 @@ package Entity;
 
 import Main.GamePanel;
 
-
 public class DrunkNPC extends MovementNPC {
-
 
     public DrunkNPC(GamePanel gp) {
         super(gp);
@@ -47,11 +45,9 @@ public class DrunkNPC extends MovementNPC {
         super.setAction();
     }
 
-
     public void speak(){
         super.speak();
 
     }
-
 }
 

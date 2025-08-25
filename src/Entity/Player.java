@@ -13,8 +13,8 @@ import java.util.List;
 public class Player extends Entity {
     KeyHandler keyHandler;
 
-    public final int screenX;
-    public final int screenY;
+    public int screenX;
+    public int screenY;
 
     public double currentSpeed = 0;
 
@@ -24,8 +24,8 @@ public class Player extends Entity {
     private boolean hasHit = false;
     private int attackCounter = 0;
 
-    private final int meleeReach;
-    private final int meleeSideInflate;
+    public final int meleeReach;
+    public final int meleeSideInflate;
 
 
     public int maxDrunk;
@@ -49,7 +49,7 @@ public class Player extends Entity {
         screenY = gp.screenHeight / 2 - (gp.tileSize / 2);
 
         meleeReach= (int) (gp.tileSize*1.5);
-        meleeSideInflate=gp.tileSize/2;
+        meleeSideInflate=gp.tileSize;
         solidArea = new Rectangle(8, 16, 16, 16);
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;
@@ -85,12 +85,9 @@ public class Player extends Entity {
 
         currentWeapon=new Obj_Wooden_Sword(gp);
         currentShield=new Obj_Shield(gp);
-        currentHelmet=new Obj_Armour_Helmet_Crusty(gp);
-        currentChest=new Obj_Armour_Chest_Crusty(gp);
-        currentBoots=new Obj_Armour_Boots_Crusty(gp);
         projectile=new Obj_Dagger(gp);
-        reStats();
 
+        reStats();
     }
 
     private List<Entity> getEquippedItems(){
@@ -149,15 +146,6 @@ public class Player extends Entity {
     public void setItems(){
         inventory.add(currentWeapon); //wooden Sword
         inventory.add(currentShield); //wooden Shield
-        inventory.add(currentChest);
-        inventory.add(currentBoots);
-        inventory.add(currentHelmet);
-        inventory.add(new Obj_Rum(gp));
-        inventory.add(new Obj_Tequila(gp));
-        inventory.add(new Obj_Whiskey(gp));
-        inventory.add(new Obj_Beer(gp));
-        inventory.add(new Obj_Drugs(gp));
-        inventory.add(new Obj_Cigarette(gp));
     }
 
     public void getPlayerImage() {
@@ -197,6 +185,11 @@ public class Player extends Entity {
         } catch (NullPointerException e) {
             e.getStackTrace();
         }
+    }
+
+    public void recenter() {
+        screenX = gp.screenWidth / 2 - (gp.tileSize / 2);
+        screenY = gp.screenHeight / 2 - (gp.tileSize / 2);
     }
 
     public void update() {
@@ -299,6 +292,16 @@ public class Player extends Entity {
             x = (int) tempX;
         }
 
+        //InteractiveTiles check for X movement
+        if (dx != 0 && canMoveX) {
+            double tempX = x;
+            x = (int) futureX;
+            direction = dx > 0 ? "right" : "left";
+            int iTileIndexX = gp.collisionCheck.checkEntity(this, gp.iTile);
+            if (iTileIndexX != 999) canMoveX = false;
+            x = (int) tempX;
+        }
+
         // NPC collision check for Y movement
         if (dy != 0 && canMoveY) {
             double tempY = y;
@@ -306,6 +309,16 @@ public class Player extends Entity {
             direction = dy > 0 ? "down" : "up";
             int npcIndexY = gp.collisionCheck.checkEntity(this, gp.npc);
             if (npcIndexY != 999) canMoveY = false;
+            y = (int) tempY;
+        }
+
+        //InteractiveTiles check for Y movement
+        if (dy != 0 && canMoveY) {
+            double tempY = y;
+            y = (int) futureY;
+            direction = dy > 0 ? "down" : "up";
+            int iTileIndexY = gp.collisionCheck.checkEntity(this, gp.iTile);
+            if (iTileIndexY != 999) canMoveY = false;
             y = (int) tempY;
         }
 
@@ -325,13 +338,12 @@ public class Player extends Entity {
         int monsterIndex = gp.collisionCheck.checkEntity(this, gp.monster);
         contactMonster(monsterIndex);
 
+        gp.collisionCheck.checkEntity(this, gp.iTile);
+
         // Check events
         gp.eventHandler.checkEvent();
 
-
         gp.keyHandler.ePressed=false;
-
-
 
         // Apply movement if allowed
         if (canMoveX) x += (int) (dx * currentSpeed);
@@ -397,7 +409,9 @@ public class Player extends Entity {
         } else if (attackCounter <= 25) {
             spriteNum = 2;
             if (attackCounter == 15 && !hasHit) {
-                checkAttackHit();
+                Rectangle area = buildAttackArea();
+                checkAttackHit(area, attack, false);
+                damageInteractiveTile(area);
                 hasHit = true;
             }
         } else {
@@ -486,13 +500,7 @@ public class Player extends Entity {
         return r;
     }
 
-    //Damage Monster
-    public void checkAttackHit() {
-
-        Rectangle area = buildAttackArea();
-        checkAttackHit(area,attack,false);
-    }
-
+    //Damage Monster Melee and Range
     public void checkAttackHit(Rectangle area,int damageValue, boolean fromProjectile){
         for (int i = 0; i < gp.monster.length; i++) {
             Entity mon = gp.monster[i];
@@ -509,7 +517,7 @@ public class Player extends Entity {
             int damage;
             damage=damageValue-mon.defense;
             if(damage<0){
-                damage=0;
+                damage=1;
             }
             mon.health -= damage;
 
@@ -520,6 +528,7 @@ public class Player extends Entity {
             mon.damageReaction();
 
             if (mon.health <= 0) {
+                gp.sound.playSE(23);
                 gp.ui.addMessage(mon.exp + " EXP");
                 exp += mon.exp;
                 checkLevelUp();
@@ -532,9 +541,70 @@ public class Player extends Entity {
         }
     }
 
+    public void damageInteractiveTile(Rectangle attackArea){
+        int playerCenterX = x + solidArea.x + solidArea.width/2;
+        int playerCenterY = y + solidArea.y + solidArea.height/2;
+
+        List<Integer> hits = new ArrayList<>();
+        for(int i=0;i<gp.iTile.length;i++){
+            if(gp.iTile[i]==null) continue;
+            if(!gp.iTile[i].destructible) continue;
+            if(gp.iTile[i].invincible) continue;
+
+            Rectangle tileBox = new Rectangle(
+                    gp.iTile[i].x + gp.iTile[i].solidArea.x,
+                    gp.iTile[i].y + gp.iTile[i].solidArea.y,
+                    gp.iTile[i].solidArea.width,
+                    gp.iTile[i].solidArea.height
+            );
+            if(attackArea.intersects(tileBox)){
+                hits.add(i);
+            }
+        }
+
+        if(hits.isEmpty()) return;
+
+        int chosenIndex = hits.getFirst();
+        long bestDist = Long.MAX_VALUE;
+        for(int idx : hits){
+            Entity t = gp.iTile[idx];
+            int cx = t.x + t.solidArea.x + t.solidArea.width/2;
+            int cy = t.y + t.solidArea.y + t.solidArea.height/2;
+            long dx = cx - playerCenterX;
+            long dy = cy - playerCenterY;
+            long d2 = dx*dx + dy*dy;
+            if(d2 < bestDist){
+                bestDist = d2;
+                chosenIndex = idx;
+            }
+        }
+
+        if(!gp.iTile[chosenIndex].isCorrectItem(this)){
+            gp.sound.playSE(27);
+            gp.ui.addMessage("Need an Axe");
+            return;
+        }
+
+        gp.sound.playSE(26);
+        gp.iTile[chosenIndex].health--;
+        gp.iTile[chosenIndex].invincible = true;
+        generateParticle(gp.iTile[chosenIndex],gp.iTile[chosenIndex]);
+        if(gp.iTile[chosenIndex].health<=0){
+            gp.iTile[chosenIndex].health=0;
+            gp.ui.addMessage("Tree felled");
+            gp.iTile[chosenIndex] = gp.iTile[chosenIndex].getDestroyedFrom();
+        }
+
+    }
+
     public void pickUpObj(int i) {
         if (i != 999) {
-            if(!gp.obj[i].pickable) {return;}
+            if (!gp.obj[i].pickable) {
+                return;
+            }
+            if (gp.obj[i].gearType == 3) {
+                gp.obj[i].use(this);
+            } else {
                 String text;
                 if (inventory.size() != maxInventorySize) {
                     inventory.add(gp.obj[i]);
@@ -545,8 +615,9 @@ public class Player extends Entity {
                     text = "Inventory Full";
                 }
                 gp.ui.addMessage(text);
-                gp.obj[i] = null;
 
+            }
+            gp.obj[i]=null;
         }
     }
 
@@ -604,6 +675,7 @@ public class Player extends Entity {
     }
 
     public void draw(Graphics2D g2d) {
+        recenter();
         BufferedImage image = null;
 
         if (dead) {
@@ -695,7 +767,6 @@ public class Player extends Entity {
         reStats();
     }
 
-
     private void equipItem(Entity item){
         if(item==null) return;
         if(item.gearType==0){ // weapon
@@ -725,7 +796,6 @@ public class Player extends Entity {
 
         Entity selectedItem=inventory.get(itemIndex);
 
-        // Consumables (gearType 2) -> use & remove
         if(selectedItem.gearType==2){
             if(selectedItem.alcohol>0){
                 consumeDrunk(selectedItem);
@@ -737,17 +807,14 @@ public class Player extends Entity {
             return;
         }
 
-        // Equipment toggle
         if(isEquipment(selectedItem)){
             if(isEquipped(selectedItem)){
                 unequipItem(selectedItem);
             } else {
-                // Equip (replacing old item in that slot automatically)
                 equipItem(selectedItem);
             }
         }
     }
-
 
     public BufferedImage getCurrentFrame() {
         if (dead) return die3;
@@ -779,3 +846,4 @@ public class Player extends Entity {
         return img;
     }
 }
+

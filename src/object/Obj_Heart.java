@@ -3,8 +3,6 @@ package object;
 import Entity.Entity;
 import Main.GamePanel;
 
-import javax.imageio.ImageIO;
-
 public class Obj_Heart extends Entity {
     public Obj_Heart(GamePanel gp)
     {
