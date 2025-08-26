@@ -32,19 +32,21 @@ public class GamePanel extends JPanel implements Runnable {
     public int gameState;
     public final int titleState = 0;
     public final int playState = 1;
-    public final int pauseState = 2;
+    public final int optionState = 2;
     public final int dialogueState = 3;
     public final int characterState = 4;
+    public final int gameOverState = 5;
 
     public KeyHandler keyHandler = new KeyHandler(this);
     tileManager tileManager = new tileManager(this);
     public CollisionCheck collisionCheck = new CollisionCheck(this);
     public AssetManager assetManager = new AssetManager(this);
-    public DeadCheck deadCheck = new DeadCheck(this);
     public EventHandler eventHandler = new EventHandler(this);
     public DrinkSystem drinkSystem = new DrinkSystem(this);
-    public Sound sound = new Sound();
+    public Sound music = new Sound();
+    public Sound se=new Sound();
     public UI ui = new UI(this);
+    Config config=new Config(this);
 
     public Entity[] obj = new Entity[100];
     public Player player = new Player(this, keyHandler);
@@ -85,7 +87,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void setupGame() {
         assetManager.setObj();
-        sound.playMusic(0);
+        music.playMusic(0);
         assetManager.setNPC();
         assetManager.setMonster();
         assetManager.setInteractiveTile();
@@ -96,6 +98,24 @@ public class GamePanel extends JPanel implements Runnable {
         drawToTempScreen();
         if (useStrategy) renderFrameStrategy();
     }
+
+    public void retry(){
+        player.setDefaultPosition();
+        player.setDefaultLife();
+        assetManager.setNPC();
+        assetManager.setMonster();
+    }
+
+    public void restart(){
+        gameState=titleState;
+        player.setDefaultValues();
+        player.setItems();
+        assetManager.setObj();
+        assetManager.setNPC();
+        assetManager.setMonster();
+        assetManager.setInteractiveTile();
+    }
+
 
     public void startGameThread() {
         if (gameThread != null) return;
@@ -129,7 +149,7 @@ public class GamePanel extends JPanel implements Runnable {
             long frameTime = System.nanoTime() - loopStart;
             long sleepNanos = (long) drawInterval - frameTime;
             if (sleepNanos > 0) {
-                try { Thread.sleep(sleepNanos / 1_000_000L, (int) (sleepNanos % 1_000_000L)); } catch (InterruptedException ignored) {}
+                try { Thread.sleep(1); } catch (InterruptedException ignored) {}
             } else Thread.yield();
         }
     }
@@ -166,7 +186,12 @@ public class GamePanel extends JPanel implements Runnable {
             Graphics2D g2d = tempScreen.createGraphics();
             g2d.setColor(Color.black);
             g2d.fillRect(0, 0, screenWidth, screenHeight);
-            if (gameState == titleState) { ui.draw(g2d); drawFps(g2d); g2d.dispose(); return; }
+            if (gameState == titleState || gameState==optionState) {
+                ui.draw(g2d);
+                drawFps(g2d);
+                g2d.dispose();
+                return;
+            }
             boolean useBuffer = player.drinkPercent >= 40;
             Graphics2D worldG = useBuffer ? drinkSystem.beginWorldBuffer() : g2d;
             drinkSystem.preWorldTransform(worldG);

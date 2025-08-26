@@ -32,14 +32,22 @@ public class MON_GSlime extends Entity {
 
     }
     public void getImage(){
-        up1=setup("monsters/Slime_1");
-        up2=setup("monsters/Slime_2");
-        down1=setup("monsters/Slime_1");
-        down2=setup("monsters/Slime_2");
-        left1=setup("monsters/Slime_1");
-        left2=setup("monsters/Slime_2");
-        right1=setup("monsters/Slime_1");
-        right2=setup("monsters/Slime_2");
+        up1=setup("monsters/Slime_left1");
+        up2=setup("monsters/Slime_right1");
+        down1=setup("monsters/Slime_left1");
+        down2=setup("monsters/Slime_right1");
+        left1=setup("monsters/Slime_left1");
+        left2=setup("monsters/Slime_left2");
+        right1=setup("monsters/Slime_right1");
+        right2=setup("monsters/Slime_right2");
+        upLeft1=setup("monsters/Slime_left1");
+        upLeft2=setup("monsters/Slime_left2");
+        upRight1=setup("monsters/Slime_right1");
+        upRight1=setup("monsters/Slime_right2");
+        downLeft1=setup("monsters/Slime_left1");
+        downLeft2=setup("monsters/Slime_left2");
+        downRight1=setup("monsters/Slime_right1");
+        downRight1=setup("monsters/Slime_right2");
     }
 
     public void setAction() {

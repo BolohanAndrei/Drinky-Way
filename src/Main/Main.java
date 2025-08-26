@@ -20,6 +20,7 @@ public class Main {
 
             window.setUndecorated(true);
             window.setContentPane(gamePanel);
+            gamePanel.config.loadConfig();
             GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
             gd.setFullScreenWindow(window);
             window.setVisible(true);

@@ -16,7 +16,7 @@ public class Obj_Quartz extends Entity {
     }
     public void use(Entity e){
 
-        gp.sound.playSE(25);
+        gp.se.playSE(25);
         gp.ui.addMessage("Coin"+" +" + value);
         gp.player.coin+=value;
     }

@@ -79,7 +79,7 @@ public class EventHandler {
     public void damagePit(int gameState) {
         if(gp.keyHandler.ePressed) {
             gp.gameState = gameState;
-            gp.sound.playSE(18);
+            gp.se.playSE(18);
             gp.ui.currentDialogue = "Arr! You fell into a pit!";
             gp.player.health -= 2;
             if (gp.player.health <= 0) {
@@ -98,7 +98,7 @@ public class EventHandler {
 
     public void healingEvent(int gameState) {
         if(gp.keyHandler.ePressed){
-            gp.sound.playSE(12);
+            gp.se.playSE(12);
         gp.gameState = gameState;
         gp.ui.currentDialogue = "Arrr! You found a healing drink!";
         gp.player.health =gp.player.maxHealth;

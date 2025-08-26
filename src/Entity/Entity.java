@@ -27,15 +27,13 @@ public class Entity {
 
     // ========== 3. Rendering Assets ==========
     // --- 3.1 Movement Sprites ---
-    public BufferedImage up1, up2, down1, down2, left1, left2, right1, right2;
+    public BufferedImage up1, up2, down1, down2, left1, left2, right1, right2,upLeft1, upLeft2, upRight1, upRight2, downLeft1, downLeft2, downRight1, downRight2;
 
     // --- 3.2 Attack Sprites ---
-    public BufferedImage attackUp1, attackUp2, attackUDown1, attackDown2,
-            attackLeft1, attackLeft2, attackRight1, attackRight2;
 
     // --- 3.3 Idle / Death / Extra Sprites ---
     public BufferedImage idle_up, idle_down, idle_left, idle_right;
-    public BufferedImage die1, die2, die3;
+    //public BufferedImage die1, die2, die3; in PROGRESS
     public BufferedImage idle_1, idle_2, idle_3, idle_4;
     public BufferedImage image1, image2, image3;
 
@@ -187,7 +185,7 @@ public class Entity {
         }
         if(entityType != 0 && invincible){
             invincibleCounter++;
-            if(invincibleCounter > 60){ // 2 seconds at 60 FPS
+            if(invincibleCounter > 60){
                 invincible = false;
                 invincibleCounter = 0;
             }
@@ -199,14 +197,14 @@ public class Entity {
 
     public void damagePlayer(int attack){
         if(!gp.player.invincible){
-            gp.sound.playSE(18);
+            gp.se.playSE(18);
 
             int damage=attack-gp.player.defense;
-            if(damage<0){
+            if(damage<=0){
                 damage=1;
             }
             gp.player.health-=damage;
-            if(gp.player.health<0){
+            if(gp.player.health<=0){
                 gp.player.health=0;
             }
             gp.player.invincible=true;
@@ -215,10 +213,14 @@ public class Entity {
 
     private BufferedImage fallbackImage() {
         if (down1 != null) return down1;
+        if(down2 != null) return down2;
         if (idle_down != null) return idle_down;
         if (up1 != null) return up1;
+        if (up2 != null) return up2;
         if (left1 != null) return left1;
+        if(left2 != null) return left2;
         if (right1 != null) return right1;
+        if(right2 != null) return right2;
         if (idle_1 != null) return idle_1;
         return new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB);
     }
@@ -235,9 +237,13 @@ public class Entity {
 
             image = switch (direction) {
                 case "up" -> (spriteNum == 1) ? up1 : up2;
-                case "up_left", "left", "down_left" -> (spriteNum == 1) ? left1 : left2;
-                case "up_right", "right", "down_right" -> (spriteNum == 1) ? right1 : right2;
+                case "up_left" -> (spriteNum == 1) ? upLeft1 : upLeft2;
+                case "up_right"-> (spriteNum == 1) ? upRight1 : upRight2;
+                case "left"-> (spriteNum == 1) ? left1 : left2;
+                case "right" -> (spriteNum == 1) ? right1 : right2;
                 case "down" -> (spriteNum == 1) ? down1 : down2;
+                case "down_left"-> (spriteNum == 1) ? downLeft1 : downLeft2;
+                case "down_right"-> (spriteNum == 1) ? downRight1 : downRight2;
                 case "idle_up", "idle_up_left", "idle_up_right" -> idle_up;
                 case "idle_down", "idle_down_left", "idle_down_right" -> idle_down;
                 case "idle_left" -> idle_left;

@@ -23,6 +23,6 @@ public class Obj_Heal_Potion extends Entity {
             gp.player.health=gp.player.maxHealth;
         }
         gp.drinkSystem.soberUp(gp.player);
-        gp.sound.playSE(20);
+        gp.se.playSE(20);
     }
 }

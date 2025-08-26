@@ -55,10 +55,10 @@ public class DrinkSystem {
 
             if(p.drinkPercent>=95){
                 if(rand.nextInt(10)<=5){
-                    gp.sound.playSE(6);
+                    gp.music.playSE(6);
                 }
                 else {
-                    gp.sound.playSE(7);
+                    gp.music.playSE(7);
                 }
             }
 

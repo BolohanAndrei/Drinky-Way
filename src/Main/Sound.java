@@ -8,6 +8,9 @@ import java.net.URL;
 public class Sound {
     private Clip clip;
     private final URL[] soundURL = new URL[30];
+    FloatControl fc;
+    int volumeScale=3;
+    float volume;
 
     public Sound() {
         String base = "/sound/";
@@ -39,6 +42,7 @@ public class Sound {
         soundURL[25] = load(base + "coin.wav");
         soundURL[26] = load(base + "axe_cut.wav");
         soundURL[27] = load(base + "wrong_choice.wav");
+        soundURL[28] = load(base + "game_over.wav");
     }
 
     private URL load(String path) {
@@ -62,6 +66,8 @@ public class Sound {
         try (AudioInputStream ais = AudioSystem.getAudioInputStream(url)) {
             clip = AudioSystem.getClip();
             clip.open(ais);
+            fc=(FloatControl)clip.getControl(FloatControl.Type.MASTER_GAIN);
+            checkVolume();
         } catch (IOException | UnsupportedAudioFileException | LineUnavailableException e) {
             System.err.println("Failed to load sound index " + i + ": " + e.getMessage());
         }
@@ -93,4 +99,17 @@ public class Sound {
         setFile(i);
         play();
     }
+
+    public void checkVolume(){
+        switch (volumeScale){
+            case 0: volume=-80f; break;
+            case 1: volume=-40f; break;
+            case 2: volume=-30f; break;
+            case 3: volume=-20f; break;
+            case 4: volume=-10f; break;
+            case 5: volume=0f; break;
+        }
+        fc.setValue(volume);
+    }
+
 }

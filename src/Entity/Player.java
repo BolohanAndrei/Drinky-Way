@@ -27,7 +27,6 @@ public class Player extends Entity {
     public final int meleeReach;
     public final int meleeSideInflate;
 
-
     public int maxDrunk;
     public int drunk;
     public int drinkPercent;
@@ -40,6 +39,23 @@ public class Player extends Entity {
     private int baseDexterity;
 
     public AffineTransform drunkOriginalTx;
+
+    private int walkAnimationFrame = 0;
+    private int attackAnimationFrame = 0;
+
+    public BufferedImage[] upImages = new BufferedImage[10];
+    public BufferedImage[] downImages = new BufferedImage[10];
+    public BufferedImage[] leftImages = new BufferedImage[10];
+    public BufferedImage[] rightImages = new BufferedImage[10];
+
+    public BufferedImage idle_up, idle_down, idle_left, idle_right;
+
+    public BufferedImage[] attackUpImages = new BufferedImage[5];
+    public BufferedImage[] attackDownImages = new BufferedImage[5];
+    public BufferedImage[] attackLeftImages = new BufferedImage[5];
+    public BufferedImage[] attackRightImages = new BufferedImage[5];
+
+    public BufferedImage[] dieImages = new BufferedImage[36];
 
     public Player(GamePanel gp, KeyHandler kh) {
         super(gp);
@@ -60,13 +76,12 @@ public class Player extends Entity {
     }
 
     public void setDefaultValues() {
-        x = gp.tileSize * 23;
-        y = gp.tileSize * 23;
+
+        setDefaultPosition();
+
+        dieFrame=0;
 
         speed = 4;
-        moveDirection = "down";
-        facingDirection = "down";
-
         maxHealth = 6;
         health = maxHealth;
 
@@ -88,6 +103,19 @@ public class Player extends Entity {
         projectile=new Obj_Dagger(gp);
 
         reStats();
+    }
+
+    public void setDefaultPosition(){
+        x = gp.tileSize * 23;
+        y = gp.tileSize * 23;
+        moveDirection = "down";
+        facingDirection = "down";
+        invincible=false;
+    }
+
+    public void setDefaultLife(){
+        health = 6;
+        invincible=false;
     }
 
     private List<Entity> getEquippedItems(){
@@ -138,52 +166,50 @@ public class Player extends Entity {
             if(drinkPercent>maxDrinkPercent) drinkPercent=maxDrinkPercent;
             updateDrunkFromPercent();
             inventory.remove(drink);
-            gp.sound.playSE(20);
+            gp.se.playSE(20);
             gp.ui.addMessage("Alcohol +" + drink.alcohol + "% (" + drinkPercent + "%)");
         }
     }
 
     public void setItems(){
-        inventory.add(currentWeapon); //wooden Sword
-        inventory.add(currentShield); //wooden Shield
+        inventory.clear();
+        inventory.add(currentWeapon);
+        inventory.add(currentShield);
     }
 
     public void getPlayerImage() {
         try {
-            up1 = setup("player/pirate_up_1");
-            up2 = setup("player/pirate_up_2");
-            down1 = setup("player/pirate_down_1");
-            down2 = setup("player/pirate_down_2");
-            left1 = setup("player/pirate_left_1");
-            left2 = setup("player/pirate_left_2");
-            right1 = setup("player/pirate_right_1");
-            right2 = setup("player/pirate_right_2");
+            for (int i = 0; i < 10; i++) {
+                upImages[i] = setup("player/pirate_walk_up" + (i + 1));
+                downImages[i] = setup("player/pirate_walk_down" + (i + 1));
+                leftImages[i] = setup("player/pirate_walk_left" + (i + 1));
+                rightImages[i] = setup("player/pirate_walk_right" + (i + 1));
+            }
 
-            idle_up = setup("player/pirate_up_idle");
-            idle_down = setup("player/pirate_down_idle");
-            idle_left = setup("player/pirate_left_idle");
-            idle_right = setup("player/pirate_right_idle");
+            idle_up = setup("player/pirate_walk_up1");
+            idle_down = setup("player/pirate_walk_down1");
+            idle_left = setup("player/pirate_walk_left1");
+            idle_right = setup("player/pirate_walk_right1");
 
-            die1 = setup("player/die1");
-            die2 = setup("player/die2");
-            die3 = setup("player/die3");
+            for (int i = 0; i < 36; i++) {
+                dieImages[i] = setup("player/pirate_die" + (i));
+            }
         } catch (NullPointerException e) {
-            e.getStackTrace();
+            e.getMessage();
         }
     }
 
     public void getPlayerAttackImage() {
         try {
-            attackUp1 = setup("player/attack_up_1");
-            attackUp2 = setup("player/attack_up_2");
-            attackUDown1 = setup("player/attack_down_1");
-            attackDown2 = setup("player/attack_down_2");
-            attackLeft1 = setup("player/attack_left_1");
-            attackLeft2 = setup("player/attack_left_2");
-            attackRight1 = setup("player/attack_right_1");
-            attackRight2 = setup("player/attack_right_2");
+            // Load attack animations (6 frames each direction)
+            for (int i = 0; i < 5; i++) {
+                attackUpImages[i] = setup("player/pirate_attack_up" + (i + 1));
+                attackDownImages[i] = setup("player/pirate_attack_down" + (i + 1));
+                attackLeftImages[i] = setup("player/pirate_attack_left" + (i + 1));
+                attackRightImages[i] = setup("player/pirate_attack_right" + (i + 1));
+            }
         } catch (NullPointerException e) {
-            e.getStackTrace();
+            e.getMessage();
         }
     }
 
@@ -193,6 +219,30 @@ public class Player extends Entity {
     }
 
     public void update() {
+        // Death animation
+        if (health<=0) {
+            if(gp.gameState==gp.gameOverState) return;
+            gp.se.stopMusic();
+            if (dieFrame < 35) {
+                if(spriteCounter%10==0){
+                    dieFrame++;
+                }
+                spriteCounter++;
+            }
+            else{
+                if(spriteCounter>60){
+                    gp.se.playSE(28);
+                    gp.music.stopMusic();
+                    gp.gameState = gp.gameOverState;
+                    gp.music.playMusic(14);
+                    spriteCounter = 0;
+                }else{
+                    spriteCounter++;
+                }
+            }
+            return;
+        }
+
         double dx = 0, dy = 0;
         boolean moved = false;
 
@@ -201,59 +251,59 @@ public class Player extends Entity {
             keyHandler.attackClicked = false;
             attackCounter = 0;
             hasHit = false;
-            gp.sound.playSE(17);
+            gp.se.playSE(17);
         }
 
-            boolean up = keyHandler.upPressed;
-            boolean down = keyHandler.downPressed;
-            boolean left = keyHandler.leftPressed;
-            boolean right = keyHandler.rightPressed;
+        boolean up = keyHandler.upPressed;
+        boolean down = keyHandler.downPressed;
+        boolean left = keyHandler.leftPressed;
+        boolean right = keyHandler.rightPressed;
 
-            if (up && left) {
-                dx = -1; dy = -1;
-                moveDirection = "up_left";
-            } else if (up && right) {
-                dx = 1; dy = -1;
-                moveDirection = "up_right";
-            } else if (down && left) {
-                dx = -1; dy = 1;
-                moveDirection = "down_left";
-            } else if (down && right) {
-                dx = 1; dy = 1;
-                moveDirection = "down_right";
-            } else if (up) {
-                dy = -1; moveDirection = "up";
-            } else if (down) {
-                dy = 1; moveDirection = "down";
-            } else if (left) {
-                dx = -1; moveDirection = "left";
-            } else if (right) {
-                dx = 1; moveDirection = "right";
-            }
+        if (up && left) {
+            dx = -1; dy = -1;
+            moveDirection = "up_left";
+        } else if (up && right) {
+            dx = 1; dy = -1;
+            moveDirection = "up_right";
+        } else if (down && left) {
+            dx = -1; dy = 1;
+            moveDirection = "down_left";
+        } else if (down && right) {
+            dx = 1; dy = 1;
+            moveDirection = "down_right";
+        } else if (up) {
+            dy = -1; moveDirection = "up";
+        } else if (down) {
+            dy = 1; moveDirection = "down";
+        } else if (left) {
+            dx = -1; moveDirection = "left";
+        } else if (right) {
+            dx = 1; moveDirection = "right";
+        }
 
-            if (dx != 0 || dy != 0) {
-                facingDirection = moveDirection;
-                moved = true;
-            }
+        if (dx != 0 || dy != 0) {
+            facingDirection = moveDirection;
+            moved = true;
+        }
 
-            if (dx != 0 && dy != 0) {
-                dx /= Math.sqrt(2);
-                dy /= Math.sqrt(2);
-            }
+        if (dx != 0 && dy != 0) {
+            dx /= Math.sqrt(2);
+            dy /= Math.sqrt(2);
+        }
 
-            if(moved) {
-                double acceleration = 0.2;
-                double maxSpeed = 4.0;
-                currentSpeed = Math.min(currentSpeed + acceleration, maxSpeed);
-            } else {
-                currentSpeed = 0;
-            }
-
+        if(moved) {
+            double acceleration = 0.2;
+            double maxSpeed = 4.0;
+            currentSpeed = Math.min(currentSpeed + acceleration, maxSpeed);
+        } else {
+            currentSpeed = 0;
+        }
 
         double[] wobble={dx,dy};
         gp.drinkSystem.distortInput(this,wobble);
         dx=wobble[0];
         dy=wobble[1];
+
         // Collision checks
         double futureX = x + dx * currentSpeed;
         double futureY = y + dy * currentSpeed;
@@ -349,32 +399,41 @@ public class Player extends Entity {
         if (canMoveX) x += (int) (dx * currentSpeed);
         if (canMoveY) y += (int) (dy * currentSpeed);
 
-        // Death check
-        if (gp.deadCheck.check(this)) {
-            dead = true;
-            dieFrame = 0;
-        }
-
-        // Death animation
-        if (dead) {
-            if (dieFrame == 0) up1 = die1;
-            else if (dieFrame == 1) up1 = die2;
-            else if (dieFrame == 2) up1 = die3;
-            dieFrame++;
-            if (dieFrame > 2) dead = false;
-        }
-
-        // Animation updates
+        // Walking animation updates
         if (!attacking) {
-            spriteCounter++;
-            if (spriteCounter > 10) {
-                spriteNum = (spriteNum == 1) ? 2 : 1;
-                spriteCounter = 0;
+            if (currentSpeed > 0) {
+                spriteCounter++;
+                if (spriteCounter > 5) { // Animation speed - adjust as needed
+                    walkAnimationFrame = (walkAnimationFrame + 1) % 10;
+                    spriteCounter = 0;
+                }
+            } else {
+                walkAnimationFrame = 0; // Reset to first frame when not moving
             }
         }
 
-        // Attack handling
-        if (attacking) attacking();
+        // Attack handling with new animation system
+        if (attacking) {
+            attackCounter++;
+            if (attackCounter <= 5) {
+                attackAnimationFrame = 0;
+            } else if (attackCounter <= 25) { // Extended attack duration for 6 frames
+                int frameIndex = (attackCounter - 5) / 4; // Each frame lasts 4 updates
+                attackAnimationFrame = Math.min(frameIndex, 4);
+
+                if (attackCounter == 15 && !hasHit) {
+                    Rectangle area = buildAttackArea();
+                    checkAttackHit(area, attack, false);
+                    damageInteractiveTile(area);
+                    hasHit = true;
+                }
+            } else {
+                attacking = false;
+                attackCounter = 0;
+                hasHit = false;
+                attackAnimationFrame = 0;
+            }
+        }
 
         if(gp.keyHandler.shotKeyPressed && !projectile.alive && shotAvailableCounter==60){
             projectile.set(x,y,facingDirection,true,this);
@@ -382,7 +441,7 @@ public class Player extends Entity {
 
             shotAvailableCounter=0;
 
-            gp.sound.playSE(21);
+            gp.se.playSE(21);
         }
 
         // Invincibility handling
@@ -398,28 +457,7 @@ public class Player extends Entity {
             shotAvailableCounter++;
         }
         updateDrunkFromPercent();
-    }
 
-    //Attack animation
-    public void attacking() {
-        attackCounter++;
-
-        if (attackCounter <= 5) {
-            spriteNum = 1;
-        } else if (attackCounter <= 25) {
-            spriteNum = 2;
-            if (attackCounter == 15 && !hasHit) {
-                Rectangle area = buildAttackArea();
-                checkAttackHit(area, attack, false);
-                damageInteractiveTile(area);
-                hasHit = true;
-            }
-        } else {
-            spriteNum = 1;
-            attacking = false;
-            attackCounter = 0;
-            hasHit = false;
-        }
     }
 
     private Rectangle buildAttackArea(){
@@ -500,7 +538,6 @@ public class Player extends Entity {
         return r;
     }
 
-    //Damage Monster Melee and Range
     public void checkAttackHit(Rectangle area,int damageValue, boolean fromProjectile){
         for (int i = 0; i < gp.monster.length; i++) {
             Entity mon = gp.monster[i];
@@ -512,11 +549,11 @@ public class Player extends Entity {
                     mon.solidArea.height);
             if (!area.intersects(monBox)) continue;
 
-            gp.sound.playSE(16);
+            gp.se.playSE(16);
 
             int damage;
             damage=damageValue-mon.defense;
-            if(damage<0){
+            if(damage<=0){
                 damage=1;
             }
             mon.health -= damage;
@@ -528,7 +565,7 @@ public class Player extends Entity {
             mon.damageReaction();
 
             if (mon.health <= 0) {
-                gp.sound.playSE(23);
+                gp.se.playSE(23);
                 gp.ui.addMessage(mon.exp + " EXP");
                 exp += mon.exp;
                 checkLevelUp();
@@ -580,12 +617,12 @@ public class Player extends Entity {
         }
 
         if(!gp.iTile[chosenIndex].isCorrectItem(this)){
-            gp.sound.playSE(27);
+            gp.se.playSE(27);
             gp.ui.addMessage("Need an Axe");
             return;
         }
 
-        gp.sound.playSE(26);
+        gp.se.playSE(26);
         gp.iTile[chosenIndex].health--;
         gp.iTile[chosenIndex].invincible = true;
         generateParticle(gp.iTile[chosenIndex],gp.iTile[chosenIndex]);
@@ -594,7 +631,6 @@ public class Player extends Entity {
             gp.ui.addMessage("Tree felled");
             gp.iTile[chosenIndex] = gp.iTile[chosenIndex].getDestroyedFrom();
         }
-
     }
 
     public void pickUpObj(int i) {
@@ -608,7 +644,7 @@ public class Player extends Entity {
                 String text;
                 if (inventory.size() != maxInventorySize) {
                     inventory.add(gp.obj[i]);
-                    gp.sound.playSE(2);
+                    gp.se.playSE(2);
                     text = "Picked up " + gp.obj[i].name;
 
                 } else {
@@ -660,9 +696,9 @@ public class Player extends Entity {
 
     public void contactMonster(int i) {
         if (i != 999 && !invincible && !gp.monster[i].dying) {
-            gp.sound.playSE(18);
+            gp.se.playSE(18);
             int damage=gp.monster[i].attack-defense;
-            if(damage<0){
+            if(damage<=0){
                 damage=1;
             }
             health -= damage;
@@ -678,38 +714,34 @@ public class Player extends Entity {
         recenter();
         BufferedImage image = null;
 
-        if (dead) {
-            image = switch (dieFrame) {
-                case 0 -> die1;
-                case 1 -> die2;
-                default -> die3;
-            };
+        if (health<=0) {
+            image = dieImages[Math.min(dieFrame, 35)];
             g2d.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
             return;
         }
 
         if (attacking) {
             switch (facingDirection) {
-                case "up", "up_left", "up_right" -> image = (spriteNum == 1) ? attackUp1 : attackUp2;
-                case "down", "down_left", "down_right" -> image = (spriteNum == 1) ? attackUDown1 : attackDown2;
-                case "left" -> image = (spriteNum == 1) ? attackLeft1 : attackLeft2;
-                case "right" -> image = (spriteNum == 1) ? attackRight1 : attackRight2;
+                case "up", "up_left", "up_right" -> image = attackUpImages[attackAnimationFrame];
+                case "down", "down_left", "down_right" -> image = attackDownImages[attackAnimationFrame];
+                case "left" -> image = attackLeftImages[attackAnimationFrame];
+                case "right" -> image = attackRightImages[attackAnimationFrame];
             }
         } else {
-            switch (moveDirection) {
-                case "up"-> image = (spriteNum == 1) ? up1 : up2;
-                case "down" -> image = (spriteNum == 1) ? down1 : down2;
-                case "left" ,"up_left","down_left" -> image = (spriteNum == 1) ? left1 : left2;
-                case "right","up_right","down_right" -> image = (spriteNum == 1) ? right1 : right2;
-            }
-
-            if (currentSpeed == 0) {
+            if (currentSpeed > 0) {
+                switch (moveDirection) {
+                    case "up" -> image = upImages[walkAnimationFrame];
+                    case "down" -> image = downImages[walkAnimationFrame];
+                    case "left", "up_left", "down_left" -> image = leftImages[walkAnimationFrame];
+                    case "right", "up_right", "down_right" -> image = rightImages[walkAnimationFrame];
+                }
+            } else {
                 image = switch (facingDirection) {
                     case "up", "up_left", "up_right" -> idle_up;
                     case "down", "down_left", "down_right" -> idle_down;
                     case "left" -> idle_left;
                     case "right" -> idle_right;
-                    default -> image;
+                    default -> idle_down;
                 };
             }
         }
@@ -735,7 +767,7 @@ public class Player extends Entity {
 
     public void checkLevelUp(){
         if(exp>=nextLevelExp){
-            gp.sound.playSE(11);
+            gp.se.playSE(11);
             level++;
             nextLevelExp=nextLevelExp*2;
             maxHealth+=1;
@@ -769,9 +801,9 @@ public class Player extends Entity {
 
     private void equipItem(Entity item){
         if(item==null) return;
-        if(item.gearType==0){ // weapon
+        if(item.gearType==0){
             currentWeapon=item;
-        } else if(item.gearType==1){ // shield
+        } else if(item.gearType==1){
             currentShield=item;
         } else if(item.armourType==0){
             currentHelmet=item;
@@ -817,33 +849,34 @@ public class Player extends Entity {
     }
 
     public BufferedImage getCurrentFrame() {
-        if (dead) return die3;
+        if (dead) return dieImages[Math.min(dieFrame, 2)];
+
         if (attacking) {
             return switch (facingDirection) {
-                case "up", "up_left", "up_right" -> (spriteNum == 1) ? attackUp1 : attackUp2;
-                case "down", "down_left", "down_right" -> (spriteNum == 1) ? attackUDown1 : attackDown2;
-                case "left" -> (spriteNum == 1) ? attackLeft1 : attackLeft2;
-                case "right" -> (spriteNum == 1) ? attackRight1 : attackRight2;
-                default -> down1;
+                case "up", "up_left", "up_right" -> attackUpImages[attackAnimationFrame];
+                case "down", "down_left", "down_right" -> attackDownImages[attackAnimationFrame];
+                case "left" -> attackLeftImages[attackAnimationFrame];
+                case "right" -> attackRightImages[attackAnimationFrame];
+                default -> downImages[0];
             };
         }
-        BufferedImage img = switch (moveDirection) {
-            case "up" -> (spriteNum == 1) ? up1 : up2;
-            case "down" -> (spriteNum == 1) ? down1 : down2;
-            case "left", "up_left", "down_left" -> (spriteNum == 1) ? left1 : left2;
-            case "right", "up_right", "down_right" -> (spriteNum == 1) ? right1 : right2;
-            default -> down1;
+
+        if (currentSpeed > 0) {
+            return switch (moveDirection) {
+                case "up" -> upImages[walkAnimationFrame];
+                case "down" -> downImages[walkAnimationFrame];
+                case "left", "up_left", "down_left" -> leftImages[walkAnimationFrame];
+                case "right", "up_right", "down_right" -> rightImages[walkAnimationFrame];
+                default -> downImages[0];
+            };
+        }
+
+        return switch (facingDirection) {
+            case "up", "up_left", "up_right" -> idle_up;
+            case "down", "down_left", "down_right" -> idle_down;
+            case "left" -> idle_left;
+            case "right" -> idle_right;
+            default -> idle_down;
         };
-        if (currentSpeed == 0) {
-            img = switch (facingDirection) {
-                case "up", "up_left", "up_right" -> idle_up;
-                case "down", "down_left", "down_right" -> idle_down;
-                case "left" -> idle_left;
-                case "right" -> idle_right;
-                default -> img;
-            };
-        }
-        return img;
     }
 }
-

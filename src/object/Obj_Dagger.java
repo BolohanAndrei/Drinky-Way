@@ -28,6 +28,14 @@ public class Obj_Dagger extends Projectile {
         left2=setup("projectiles/dagger_left2");
         right1=setup("projectiles/dagger_right1");
         right2=setup("projectiles/dagger_right2");
+        upLeft1=setup("projectiles/dagger_upLeft1");
+        upLeft2=setup("projectiles/dagger_upLeft2");
+        upRight1=setup("projectiles/dagger_upRight1");
+        upRight2=setup("projectiles/dagger_upRight2");
+        downLeft1=setup("projectiles/dagger_downLeft1");
+        downLeft2=setup("projectiles/dagger_downLeft2");
+        downRight1=setup("projectiles/dagger_downRight1");
+        downRight2=setup("projectiles/dagger_downRight2");
 
     }
 

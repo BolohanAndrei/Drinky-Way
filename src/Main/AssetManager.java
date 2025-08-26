@@ -95,7 +95,6 @@ public class AssetManager {
         gp.iTile[i]=new IT_DryTree(gp,32,12);
         i++;
         gp.iTile[i]=new IT_DryTree(gp,33,12);
-        i++;
 
     }
 }

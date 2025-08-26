@@ -26,7 +26,23 @@ public class Projectile extends Entity {
 
         switch (direction) {
             case "up" -> y -= speed;
+            case "up_left"-> {
+                y-= speed;
+                x-= speed;
+            }
+            case "up_right"-> {
+                y-= speed;
+                x+= speed;
+            }
             case "down" -> y += speed;
+            case "down_left"-> {
+                y+= speed;
+                x-= speed;
+            }
+            case "down_right"-> {
+                y+= speed;
+                x+= speed;
+            }
             case "left" -> x -= speed;
             case "right" -> x += speed;
         }

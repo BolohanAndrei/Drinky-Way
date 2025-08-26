@@ -27,7 +27,7 @@ public class IT_DryTree extends InteractiveTiles{
                 && playerEntity.currentWeapon instanceof Obj_Axe;
     }
     public void playSE(){
-        gp.sound.playSE(26);
+        gp.se.playSE(26);
     }
     public InteractiveTiles getDestroyedFrom(){
         InteractiveTiles tile=new IT_Trunk(gp,x/gp.tileSize,y/gp.tileSize);
