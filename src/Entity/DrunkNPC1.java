@@ -16,18 +16,18 @@ public class DrunkNPC1 extends MovementNPC{
 
     public void getDrunkNPCImage() {
         try {
-            up1 = setup("NPCsprite/up_1");
-            up2 = setup("NPCsprite/up_2");
-            down1 = setup("NPCsprite/down_1");
-            down2 = setup("NPCsprite/down_2");
-            left1 = setup("NPCsprite/left_1");
-            left2 = setup("NPCsprite/left_2");
-            right1 = setup("NPCsprite/right_1");
-            right2 = setup("NPCsprite/right_2");
-            idle_1 = setup("NPCsprite/left_1");
-            idle_2 = setup("NPCsprite/left_2");
-            idle_3 = setup("NPCsprite/right_1");
-            idle_4 = setup("NPCsprite/right_2");
+            up1 = setup("NPC/up_1");
+            up2 = setup("NPC/up_2");
+            down1 = setup("NPC/down_1");
+            down2 = setup("NPC/down_2");
+            left1 = setup("NPC/left_1");
+            left2 = setup("NPC/left_2");
+            right1 = setup("NPC/right_1");
+            right2 = setup("NPC/right_2");
+            idle_1 = setup("NPC/left_1");
+            idle_2 = setup("NPC/left_2");
+            idle_3 = setup("NPC/right_1");
+            idle_4 = setup("NPC/right_2");
         } catch (NullPointerException e) {
             e.getStackTrace();
         }

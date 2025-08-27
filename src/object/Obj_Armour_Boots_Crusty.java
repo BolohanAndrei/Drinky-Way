@@ -10,5 +10,6 @@ public class Obj_Armour_Boots_Crusty extends Entity{
         armourType=2;
        down1=setup("objects/armour_boots_crusty");
        defenseValue=1;
+       value=100;
         itemDescription = "["+name+"] Arm +"+defenseValue+"\nBoots older than the captain’s liver. Smell strong enough to stun enemies.";
     }}

@@ -8,6 +8,8 @@ import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+import static java.lang.Math.round;
+
 public class UI {
 
     GamePanel gp;
@@ -17,6 +19,7 @@ public class UI {
 
     BufferedImage heartFull, heartHalf, heartEmpty;
     BufferedImage bottleFull, bottleHalf, bottleEmpty;
+    BufferedImage coin;
 
     ArrayList<String> message=new ArrayList<>();
     ArrayList<Integer> messageID=new ArrayList<>();
@@ -30,8 +33,13 @@ public class UI {
     public int titleScreenState = 0;
 
     public int slotCol=0;
+    public int tradeSlotCol=0;
     public int slotRow=0;
-    int subState=0;
+    public int tradeSlotRow=0;
+    public int subState=0;
+    int counter=0;
+
+    public Entity trade;
 
     //CONSTRUCTOR
     public UI(GamePanel gp) {
@@ -61,6 +69,10 @@ public class UI {
         bottleFull = bottle.image1;
         bottleHalf = bottle.image2;
         bottleEmpty = bottle.image3;
+
+        //COIN
+        Entity coinI = new Obj_Coin(gp);
+        coin=coinI.down1;
     }
 
     public void addMessage(String text){
@@ -93,21 +105,28 @@ public class UI {
 
         //DIALOGUE STATE
         if (gp.gameState == gp.dialogueState) {
-            drawPlayerLife();
-            drawDrunkLevel();
             drawDialogueScreen();
-
         }
 
         //CHARACTER STATE
         if(gp.gameState == gp.characterState){
             drawCharacterScreen();
-            drawInventory();
+            drawInventory(gp.player,true);
         }
 
         //GAME OVER STATE
         if(gp.gameState==gp.gameOverState){
             drawGameOverScreen();
+        }
+
+        //TRANSITION FX
+        if(gp.gameState == gp.transitionState){
+            drawTransitionFX();
+        }
+
+        //TRADE STATE
+        if(gp.gameState == gp.tradeState){
+            drawTradeScreen();
         }
     }
 
@@ -198,7 +217,7 @@ public class UI {
         final int frameX=gp.tileSize*2;
         final int frameY=gp.tileSize;
         final int frameWidth=gp.tileSize*6;
-        final int frameHeight=gp.tileSize*10;
+        final int frameHeight=gp.tileSize*11;
         drawSubWindow(frameX,frameY,frameWidth,frameHeight);
 
         //text
@@ -220,7 +239,7 @@ public class UI {
         textY=statusDraw("Strength",textX,textY,lineHeight);
         textY=statusDraw("Dexterity",textX,textY,lineHeight);
         textY=statusDraw("Coins",textX,textY,lineHeight);
-        textY+=lineHeight;
+        textY+=lineHeight*2;
         textY=statusDraw("Weapon",textX,textY,lineHeight);
         textY+=lineHeight/2;
         statusDraw("Shield",textX,textY,lineHeight);
@@ -251,6 +270,7 @@ public class UI {
         value=String.valueOf(gp.player.coin);
         textY=valuesDraw(value, tailX,textY,lineHeight);
 
+        textY+=lineHeight;
         if(gp.player.currentWeapon!=null) {
             g2.drawImage(gp.player.currentWeapon.down1, tailX - gp.tileSize, textY - 5, null);
         }
@@ -316,8 +336,10 @@ public class UI {
             g2.drawImage(gp.player.rightImages[0], frameX - 55, frameY - 30, gp.tileSize, gp.tileSize, null);
             g2.drawImage(gp.player.leftImages[0], frameX-5+g2.getFontMetrics().stringWidth(text), frameY-30, gp.tileSize, gp.tileSize, null);
             if(gp.keyHandler.enterPressed){
+                gp.music.stop();
                 gp.retry();
                 gp.gameState=gp.playState;
+                gp.music.playMusic(15);
             }
         }
 
@@ -340,6 +362,153 @@ public class UI {
         }
         }
         gp.keyHandler.enterPressed=false;
+    }
+
+    public void drawTransitionFX(){
+        counter++;
+        g2.setColor(new Color(0,0,0,counter*5));
+        g2.fillRect(0,0,gp.screenWidth,gp.screenHeight);
+
+        if(counter>=50){
+            counter=0;
+            gp.gameState=gp.dialogueState;
+            gp.ui.currentDialogue = "Shiver my timbers! One blink I be here, next blink I be lost… hope there be rum where I land!";
+            gp.currentMap=gp.eventHandler.tempMap;
+            gp.player.x=gp.tileSize*gp.eventHandler.tempCol;
+            gp.player.y=gp.tileSize*gp.eventHandler.tempRow;
+            gp.eventHandler.previousEventX=gp.player.x;
+            gp.eventHandler.previousEventY=gp.player.y;
+        }
+    }
+
+    public void drawTradeScreen(){
+        switch (subState){
+            case 0: tradeSelect(); break;
+            case 1: tradeBuy(); break;
+            case 2: tradeSell(); break;
+        }
+        gp.keyHandler.enterPressed=false;
+    }
+
+    public void tradeSelect(){
+        drawDialogueScreen();
+
+        int x=gp.tileSize*15;
+        int y=gp.tileSize*6;
+        int width=gp.tileSize*4;
+        int height=gp.tileSize*3;
+        drawSubWindow(x,y,width,height);
+
+        String text="BUY";
+        x+=gp.tileSize+10;
+        y+= gp.tileSize+10;
+        g2.drawString(text,x+5,y);
+        if(commandNum==0){
+            g2.drawImage(gp.player.rightImages[0], x - 55, y - 30, gp.tileSize, gp.tileSize, null);
+            g2.drawImage(gp.player.leftImages[0], x+g2.getFontMetrics().stringWidth(text)+gp.tileSize/2, y-30, gp.tileSize, gp.tileSize, null);
+            if(gp.keyHandler.enterPressed){
+                subState=1;
+            }
+        }
+        y+=gp.tileSize;
+        g2.drawString("SELL",x,y);
+        if(commandNum==1){
+            g2.drawImage(gp.player.rightImages[0], x - 55, y - 30, gp.tileSize, gp.tileSize, null);
+            g2.drawImage(gp.player.leftImages[0], x+g2.getFontMetrics().stringWidth(text)+gp.tileSize/2, y-30, gp.tileSize, gp.tileSize, null);
+            if(gp.keyHandler.enterPressed){
+                subState=2;
+            }
+        }
+    }
+    public void tradeBuy(){
+        drawInventory(gp.player,false);
+        drawInventory(trade,true);
+
+        //Coins
+        int x=gp.tileSize*13;
+        int y=gp.tileSize*10;
+        int width=gp.tileSize*6;
+        int height=gp.tileSize*2;
+        drawSubWindow(x,y,width,height);
+        g2.setFont(getPublicPixel().deriveFont(20f));
+        g2.drawString("Coins: " + gp.player.coin,x+24,y+60);
+
+        //BUY
+        int itemIndex=getItemIndexSlot(tradeSlotCol,tradeSlotRow);
+        if(itemIndex<trade.inventory.size()){
+            x=(int)(gp.tileSize*5.5);
+            y= gp.tileSize*6;
+            width= (int) (gp.tileSize*2.5);
+            height=gp.tileSize;
+            drawSubWindow(x,y,width,height);
+            g2.drawImage(coin,x+12,y+16,16,16,null);
+            int price=trade.inventory.get(itemIndex).value;
+            String text=""+price;
+            if(price > 0){
+                g2.drawString(text,x+getXAlignToRightText(text,width)-10,y+34);
+            }
+            if(gp.keyHandler.enterPressed){
+                if(trade.inventory.get(itemIndex).value>gp.player.coin){
+                    gp.keyHandler.previousGameState = gp.gameState;
+                    commandNum=0;
+                    subState=0;
+                    gp.gameState=gp.dialogueState;
+                    currentDialogue="Har har! Yer pockets be emptier than a sober tavern. Come back with more gold, ye stingy barnacle!";
+
+                }
+                else if(gp.player.inventory.size()==gp.player.maxInventorySize){
+                    gp.keyHandler.previousGameState = gp.gameState;
+                    subState=0;
+                    commandNum=0;
+                    gp.gameState=gp.dialogueState;
+                    currentDialogue="Arrr, yer bag be fuller than me belly after ten barrels o’ rum! Toss some junk afore ye buy more.";
+                }else{
+                    gp.player.coin-=trade.inventory.get(itemIndex).value;
+                    gp.player.inventory.add(trade.inventory.get(itemIndex));
+                }
+            }
+        }
+    }
+    public void tradeSell(){
+        drawInventory(gp.player,true);
+        //Coins
+        int x=gp.tileSize*2;
+        int y=gp.tileSize;
+        int width=gp.tileSize*6;
+        int height=gp.tileSize*2;
+        drawSubWindow(x,y,width,height);
+        g2.setFont(getPublicPixel().deriveFont(20f));
+        g2.drawString("Coins: " + gp.player.coin,x+24,y+60);
+
+        //SELL
+        int itemIndex=getItemIndexSlot(slotCol,slotRow);
+        if(itemIndex<gp.player.inventory.size()){
+            x=(int)(gp.tileSize*16.5);
+            y= gp.tileSize*6;
+            width= (int) (gp.tileSize*2.5);
+            height=gp.tileSize;
+            drawSubWindow(x,y,width,height);
+            g2.drawImage(coin,x+12,y+16,16,16,null);
+            int price=gp.player.inventory.get(itemIndex).value/4;
+            String text=""+price;
+            if(price > 0){
+                g2.drawString(text,x+getXAlignToRightText(text,width)-10,y+34);
+            }
+            if(gp.keyHandler.enterPressed){
+                if(gp.player.inventory.get(itemIndex)==gp.player.currentWeapon || gp.player.inventory.get(itemIndex)==gp.player.currentShield
+                ||gp.player.inventory.get(itemIndex)==gp.player.currentHelmet || gp.player.inventory.get(itemIndex)==gp.player.currentChest
+                || gp.player.inventory.get(itemIndex)==gp.player.currentBoots){
+                    gp.keyHandler.previousGameState = gp.gameState;
+                    commandNum=0;
+                    subState=0;
+                    gp.gameState=gp.dialogueState;
+                    currentDialogue="Arrr, ye can’t sell the steel on yer back, ye drunken fool! Unequip it first!";
+                }else{
+                    gp.player.inventory.remove(itemIndex);
+                    gp.player.coin+=price;
+                }
+            }
+        }
     }
 
     public void optionsTop(int frameX,int frameY){
@@ -539,12 +708,29 @@ public class UI {
 
     }
 
-    public void drawInventory(){
-        //frame
-         int frameX=gp.tileSize*13;
-         int frameY=gp.tileSize;
-         int frameWidth=gp.tileSize*6;
-         int frameHeight=gp.tileSize*5;
+    public void drawInventory(Entity entity,boolean cursor){
+
+        int frameX;
+        int frameY = gp.tileSize;
+        int frameWidth = gp.tileSize * 6;
+        int frameHeight = gp.tileSize * 5;
+        int slotTCol;
+        int slotTRow;
+
+        if(entity==gp.player) {
+
+            slotTCol=slotCol;
+            slotTRow=slotRow;
+
+            frameX = gp.tileSize * 13;
+            frameWidth = gp.tileSize * 6;
+            frameHeight = gp.tileSize * 5;
+        }else{
+            slotTCol=tradeSlotCol;
+            slotTRow=tradeSlotRow;
+
+            frameX = gp.tileSize * 2;
+        }
          drawSubWindow(frameX,frameY,frameWidth,frameHeight);
 
          //slot
@@ -555,19 +741,19 @@ public class UI {
          int slotSize=gp.tileSize+3;
 
          //draw items
-        for(int i=0;i<gp.player.inventory.size();i++) {
+        for(int i=0;i<entity.inventory.size();i++) {
 
             //equip cursor
-            if (gp.player.inventory.get(i) == gp.player.currentWeapon ||
-                    gp.player.inventory.get(i) == gp.player.currentShield ||
-                    gp.player.inventory.get(i) == gp.player.currentBoots ||
-                    gp.player.inventory.get(i) == gp.player.currentChest ||
-                    gp.player.inventory.get(i) == gp.player.currentHelmet) {
+            if (entity==gp.player && entity.inventory.get(i) == entity.currentWeapon ||
+                    entity.inventory.get(i) == entity.currentShield ||
+                    entity.inventory.get(i) == entity.currentBoots ||
+                    entity.inventory.get(i) == entity.currentChest ||
+                    entity.inventory.get(i) == entity.currentHelmet) {
                 g2.setColor(new Color(98, 189, 38, 139));
                 g2.fillRoundRect(slotX,slotY,gp.tileSize,gp.tileSize,10,10);
             }
-            if (gp.player.inventory.get(i) != null) {
-                g2.drawImage(gp.player.inventory.get(i).down1, slotX, slotY, null);
+            if (entity.inventory.get(i) != null) {
+                g2.drawImage(entity.inventory.get(i).down1, slotX, slotY, null);
                 slotX += slotSize;
                 if (i % 5 == 4) {
                     slotX = slotXStart;
@@ -577,43 +763,43 @@ public class UI {
         }
 
          //cursor
-         int cursorX=slotXStart+(slotSize*slotCol);
-         int cursorY=slotYStart+(slotSize*slotRow);
-         int cursorWidth=gp.tileSize;
-         int cursorHeight=gp.tileSize;
-        //draw cursor
-         g2.setColor(Color.white);
-         g2.setStroke(new BasicStroke(3));
-         g2.drawRoundRect(cursorX,cursorY,cursorWidth,cursorHeight,10,10);
+        if(cursor) {
+            int cursorX=slotXStart+(slotSize*slotTCol);
+            int cursorY=slotYStart+(slotSize*slotTRow);
+            int cursorWidth=gp.tileSize;
+            int cursorHeight=gp.tileSize;
+            //draw cursor
+            g2.setColor(Color.white);
+            g2.setStroke(new BasicStroke(3));
+            g2.drawRoundRect(cursorX,cursorY,cursorWidth,cursorHeight,10,10);
 
-         //description
-        int dFrameY=frameY+frameHeight+gp.tileSize;
-        int dFrameHeight=gp.tileSize*5;
-        //draw description
-        int textX= frameX +20;
-        int textY=dFrameY+gp.tileSize;
-        g2.setFont(getPublicPixel().deriveFont(10F));
+            //description
+            int dFrameY=frameY+frameHeight+gp.tileSize;
+            int dFrameHeight=gp.tileSize*5;
+            //draw description
+            int textX= frameX +20;
+            int textY=dFrameY+gp.tileSize;
+            g2.setFont(getPublicPixel().deriveFont(10F));
 
-        int itemIndex=getItemIndexSlot();
+            int itemIndex=getItemIndexSlot(slotTCol,slotTRow);
 
-        if(itemIndex<gp.player.inventory.size()){
+            if(itemIndex<entity.inventory.size()){
 
-            drawSubWindow(frameX,dFrameY, frameWidth,dFrameHeight);
+                drawSubWindow(frameX,dFrameY, frameWidth,dFrameHeight);
 
-            ArrayList<String> wrappedLines = wrapText(gp.player.inventory.get(itemIndex).itemDescription, frameWidth);
+                ArrayList<String> wrappedLines = wrapText(entity.inventory.get(itemIndex).itemDescription, frameWidth);
 
-            // Draw each wrapped line
-            for (String line : wrappedLines) {
-                g2.drawString(line, textX, textY);
-                textY += 40;
+                // Draw each wrapped line
+                for (String line : wrappedLines) {
+                    g2.drawString(line, textX, textY);
+                    textY += 40;
+                }
             }
         }
-
-
     }
 
-    public int getItemIndexSlot(){
-        return slotCol+(slotRow*5);
+    public int getItemIndexSlot(int slotC,int slotR){
+        return slotC+(slotR*5);
     }
 
     public int valuesDraw(String value, int tailX, int textY, int lineHeight){
@@ -713,10 +899,9 @@ public class UI {
         int x = gp.tileSize / 2;
         int y = gp.tileSize / 2;
         int i = 0;
-        //int life= Math.max(gp.player.health, gp.player.maxHealth);
 
         //HEARTS
-        while (i < gp.player.maxHealth / 2) {
+        while (round((float)(i)) < gp.player.maxHealth / 2) {
             g2.drawImage(heartEmpty, x, y, null);
             i++;
             x += gp.tileSize;

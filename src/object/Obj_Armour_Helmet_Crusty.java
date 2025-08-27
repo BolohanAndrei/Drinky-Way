@@ -10,5 +10,6 @@ public class Obj_Armour_Helmet_Crusty extends Entity{
         armourType=0;
         down1=setup("objects/armour_helmet_crusty");
         defenseValue=1;
+        value=100;
         itemDescription = "["+name+"] Arm +"+defenseValue+"\nA rusty bucket for your head. Protects against swords, not against bad ideas.";
     }}

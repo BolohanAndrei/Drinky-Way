@@ -7,6 +7,7 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Random;
 
@@ -101,7 +102,12 @@ public class Entity {
     public boolean pickable = true;
     public int value;
 
-    // ========== 13. NPC Idle Behavior ==========
+    // ========== 13. Inventory ==========
+
+    public ArrayList<Entity> inventory=new ArrayList<>();
+    public final int maxInventorySize=20;
+
+    // ========== 14. NPC Idle Behavior ==========
     boolean isIdle = false;
     int idleCounter = 0;
     int idleDuration = 120;
@@ -141,11 +147,11 @@ public class Entity {
     public void use(Entity e){}
     public void checkDrop(){}
     public void dropItem(Entity droppedItem){
-        for(int i=0;i<gp.obj.length;i++){
-            if(gp.obj[i]==null){
-                gp.obj[i]=droppedItem;
-                gp.obj[i].x=x;
-                gp.obj[i].y=y;
+        for(int i=0;i<gp.obj[gp.currentMap].length;i++){
+            if(gp.obj[gp.currentMap][i]==null){
+                gp.obj[gp.currentMap][i]=droppedItem;
+                gp.obj[gp.currentMap][i].x=x;
+                gp.obj[gp.currentMap][i].y=y;
                 break;
             }
         }
@@ -175,7 +181,7 @@ public class Entity {
             }
         }
         spriteCounter++;
-        if (spriteCounter > 12) {
+        if (spriteCounter > 20) {
             if (spriteNum == 1) {
                 spriteNum = 2;
             } else if (spriteNum == 2) {

@@ -18,7 +18,7 @@ public class MovementNPC extends Entity {
         if (isIdle) {
             idleCounter++;
 
-            if (idleCounter % 30 == 0) {
+            if (idleCounter % 60 == 0) {
                 spriteNum = (spriteNum % 4) + 1;
                 switch (spriteNum) {
                     case 1: direction="idle_1"; break;
@@ -37,7 +37,7 @@ public class MovementNPC extends Entity {
 
         // NPC is moving
         actionLockCounter++;
-        if (actionLockCounter == 120) {
+        if (actionLockCounter == 240) {
             Random rand = new Random();
             int i = rand.nextInt(100) + 1;
             if (i <= 25) direction = "up";

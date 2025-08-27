@@ -9,6 +9,7 @@ public class Obj_Beer extends Entity {
         name="beer";
         gearType=2;
         alcohol=5;
+        value=5;
         down1=setup("objects/beer");
         itemDescription="["+name+"] Alc "+alcohol+"%\n"+" Ocean water’s tastier cousin. Keeps pirates hydrated and slightly stupid.\n";
     }

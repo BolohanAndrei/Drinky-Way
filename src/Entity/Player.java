@@ -32,9 +32,6 @@ public class Player extends Entity {
     public int drinkPercent;
     public final int maxDrinkPercent=100;
 
-    public ArrayList<Entity> inventory=new ArrayList<>();
-    public final int maxInventorySize=20;
-
     private int baseStrength;
     private int baseDexterity;
 
@@ -56,6 +53,7 @@ public class Player extends Entity {
     public BufferedImage[] attackRightImages = new BufferedImage[5];
 
     public BufferedImage[] dieImages = new BufferedImage[36];
+    private boolean deathSfxPlayed=false;
 
     public Player(GamePanel gp, KeyHandler kh) {
         super(gp);
@@ -80,6 +78,7 @@ public class Player extends Entity {
         setDefaultPosition();
 
         dieFrame=0;
+        deathSfxPlayed=false;
 
         speed = 4;
         maxHealth = 6;
@@ -96,7 +95,7 @@ public class Player extends Entity {
         dexterity = baseDexterity;
         exp=0;
         nextLevelExp=10;
-        coin=0;
+        coin=1000;
 
         currentWeapon=new Obj_Wooden_Sword(gp);
         currentShield=new Obj_Shield(gp);
@@ -106,11 +105,14 @@ public class Player extends Entity {
     }
 
     public void setDefaultPosition(){
-        x = gp.tileSize * 23;
-        y = gp.tileSize * 23;
+//        x = gp.tileSize * 23;
+//        y = gp.tileSize * 23;
+        x = gp.tileSize * 12;
+        y = gp.tileSize * 12;
         moveDirection = "down";
         facingDirection = "down";
         invincible=false;
+        gp.gameState = gp.playState;
     }
 
     public void setDefaultLife(){
@@ -201,7 +203,6 @@ public class Player extends Entity {
 
     public void getPlayerAttackImage() {
         try {
-            // Load attack animations (6 frames each direction)
             for (int i = 0; i < 5; i++) {
                 attackUpImages[i] = setup("player/pirate_attack_up" + (i + 1));
                 attackDownImages[i] = setup("player/pirate_attack_down" + (i + 1));
@@ -220,23 +221,29 @@ public class Player extends Entity {
 
     public void update() {
         // Death animation
-        if (health<=0) {
-            if(gp.gameState==gp.gameOverState) return;
-            gp.se.stopMusic();
+        if (health <= 0) {
+            if (gp.gameState == gp.gameOverState) return;
+            if (!deathSfxPlayed) {
+                gp.music.stopMusic();
+                gp.music.playSE(29);
+                deathSfxPlayed = true;
+            }
+
             if (dieFrame < 35) {
-                if(spriteCounter%10==0){
+                if (spriteCounter % 10 == 0) {
                     dieFrame++;
                 }
                 spriteCounter++;
-            }
-            else{
-                if(spriteCounter>60){
+            } else {
+                if (spriteCounter > 60) {
                     gp.se.playSE(28);
                     gp.music.stopMusic();
                     gp.gameState = gp.gameOverState;
+                    deathSfxPlayed = false;
+                    gp.ui.commandNum=-1;
                     gp.music.playMusic(14);
                     spriteCounter = 0;
-                }else{
+                } else {
                     spriteCounter++;
                 }
             }
@@ -399,26 +406,25 @@ public class Player extends Entity {
         if (canMoveX) x += (int) (dx * currentSpeed);
         if (canMoveY) y += (int) (dy * currentSpeed);
 
-        // Walking animation updates
+        // Walking animation
         if (!attacking) {
             if (currentSpeed > 0) {
                 spriteCounter++;
-                if (spriteCounter > 5) { // Animation speed - adjust as needed
+                if (spriteCounter > 5) {
                     walkAnimationFrame = (walkAnimationFrame + 1) % 10;
                     spriteCounter = 0;
                 }
             } else {
-                walkAnimationFrame = 0; // Reset to first frame when not moving
+                walkAnimationFrame = 0;
             }
         }
 
-        // Attack handling with new animation system
         if (attacking) {
             attackCounter++;
             if (attackCounter <= 5) {
                 attackAnimationFrame = 0;
-            } else if (attackCounter <= 25) { // Extended attack duration for 6 frames
-                int frameIndex = (attackCounter - 5) / 4; // Each frame lasts 4 updates
+            } else if (attackCounter <= 25) {
+                int frameIndex = (attackCounter - 5) / 4;
                 attackAnimationFrame = Math.min(frameIndex, 4);
 
                 if (attackCounter == 15 && !hasHit) {
@@ -539,8 +545,8 @@ public class Player extends Entity {
     }
 
     public void checkAttackHit(Rectangle area,int damageValue, boolean fromProjectile){
-        for (int i = 0; i < gp.monster.length; i++) {
-            Entity mon = gp.monster[i];
+        for (int i = 0; i < gp.monster[gp.currentMap].length; i++) {
+            Entity mon = gp.monster[gp.currentMap][i];
             if (mon == null || mon.dying || !mon.alive) continue;
 
             Rectangle monBox = new Rectangle(mon.x + mon.solidArea.x,
@@ -583,16 +589,16 @@ public class Player extends Entity {
         int playerCenterY = y + solidArea.y + solidArea.height/2;
 
         List<Integer> hits = new ArrayList<>();
-        for(int i=0;i<gp.iTile.length;i++){
-            if(gp.iTile[i]==null) continue;
-            if(!gp.iTile[i].destructible) continue;
-            if(gp.iTile[i].invincible) continue;
+        for(int i=0;i<gp.iTile[gp.currentMap].length;i++){
+            if(gp.iTile[gp.currentMap][i]==null) continue;
+            if(!gp.iTile[gp.currentMap][i].destructible) continue;
+            if(gp.iTile[gp.currentMap][i].invincible) continue;
 
             Rectangle tileBox = new Rectangle(
-                    gp.iTile[i].x + gp.iTile[i].solidArea.x,
-                    gp.iTile[i].y + gp.iTile[i].solidArea.y,
-                    gp.iTile[i].solidArea.width,
-                    gp.iTile[i].solidArea.height
+                    gp.iTile[gp.currentMap][i].x + gp.iTile[gp.currentMap][i].solidArea.x,
+                    gp.iTile[gp.currentMap][i].y + gp.iTile[gp.currentMap][i].solidArea.y,
+                    gp.iTile[gp.currentMap][i].solidArea.width,
+                    gp.iTile[gp.currentMap][i].solidArea.height
             );
             if(attackArea.intersects(tileBox)){
                 hits.add(i);
@@ -604,7 +610,7 @@ public class Player extends Entity {
         int chosenIndex = hits.getFirst();
         long bestDist = Long.MAX_VALUE;
         for(int idx : hits){
-            Entity t = gp.iTile[idx];
+            Entity t = gp.iTile[gp.currentMap][idx];
             int cx = t.x + t.solidArea.x + t.solidArea.width/2;
             int cy = t.y + t.solidArea.y + t.solidArea.height/2;
             long dx = cx - playerCenterX;
@@ -616,36 +622,36 @@ public class Player extends Entity {
             }
         }
 
-        if(!gp.iTile[chosenIndex].isCorrectItem(this)){
+        if(!gp.iTile[gp.currentMap][chosenIndex].isCorrectItem(this)){
             gp.se.playSE(27);
             gp.ui.addMessage("Need an Axe");
             return;
         }
 
         gp.se.playSE(26);
-        gp.iTile[chosenIndex].health--;
-        gp.iTile[chosenIndex].invincible = true;
-        generateParticle(gp.iTile[chosenIndex],gp.iTile[chosenIndex]);
-        if(gp.iTile[chosenIndex].health<=0){
-            gp.iTile[chosenIndex].health=0;
+        gp.iTile[gp.currentMap][chosenIndex].health--;
+        gp.iTile[gp.currentMap][chosenIndex].invincible = true;
+        generateParticle(gp.iTile[gp.currentMap][chosenIndex],gp.iTile[gp.currentMap][chosenIndex]);
+        if(gp.iTile[gp.currentMap][chosenIndex].health<=0){
+            gp.iTile[gp.currentMap][chosenIndex].health=0;
             gp.ui.addMessage("Tree felled");
-            gp.iTile[chosenIndex] = gp.iTile[chosenIndex].getDestroyedFrom();
+            gp.iTile[gp.currentMap][chosenIndex] = gp.iTile[gp.currentMap][chosenIndex].getDestroyedFrom();
         }
     }
 
     public void pickUpObj(int i) {
         if (i != 999) {
-            if (!gp.obj[i].pickable) {
+            if (!gp.obj[gp.currentMap][i].pickable) {
                 return;
             }
-            if (gp.obj[i].gearType == 3) {
-                gp.obj[i].use(this);
+            if (gp.obj[gp.currentMap][i].gearType == 3) {
+                gp.obj[gp.currentMap][i].use(this);
             } else {
                 String text;
                 if (inventory.size() != maxInventorySize) {
-                    inventory.add(gp.obj[i]);
+                    inventory.add(gp.obj[gp.currentMap][i]);
                     gp.se.playSE(2);
-                    text = "Picked up " + gp.obj[i].name;
+                    text = "Picked up " + gp.obj[gp.currentMap][i].name;
 
                 } else {
                     text = "Inventory Full";
@@ -653,7 +659,7 @@ public class Player extends Entity {
                 gp.ui.addMessage(text);
 
             }
-            gp.obj[i]=null;
+            gp.obj[gp.currentMap][i]=null;
         }
     }
 
@@ -662,7 +668,7 @@ public class Player extends Entity {
             int nearestNPC = findNearestNPC();
             if (nearestNPC != 999) {
                 gp.gameState = gp.dialogueState;
-                gp.npc[nearestNPC].speak();
+                gp.npc[gp.currentMap][nearestNPC].speak();
             }
         }
     }
@@ -672,12 +678,12 @@ public class Player extends Entity {
         double shortestDistance = Double.MAX_VALUE;
         int interactionRange = gp.tileSize *2;
 
-        for (int i = 0; i < gp.npc.length; i++) {
-            if (gp.npc[i] != null) {
+        for (int i = 0; i < gp.npc[gp.currentMap].length; i++) {
+            if (gp.npc[gp.currentMap][i] != null) {
                 double playerCenterX = x + gp.tileSize / 2.0;
                 double playerCenterY = y + gp.tileSize / 2.0;
-                double npcCenterX = gp.npc[i].x + gp.tileSize / 2.0;
-                double npcCenterY = gp.npc[i].y + gp.tileSize / 2.0;
+                double npcCenterX = gp.npc[gp.currentMap][i].x + gp.tileSize / 2.0;
+                double npcCenterY = gp.npc[gp.currentMap][i].y + gp.tileSize / 2.0;
 
                 double distance = Math.sqrt(
                         Math.pow(playerCenterX - npcCenterX, 2) +
@@ -695,9 +701,9 @@ public class Player extends Entity {
     }
 
     public void contactMonster(int i) {
-        if (i != 999 && !invincible && !gp.monster[i].dying) {
+        if (i != 999 && !invincible && !gp.monster[gp.currentMap][i].dying) {
             gp.se.playSE(18);
-            int damage=gp.monster[i].attack-defense;
+            int damage=gp.monster[gp.currentMap][i].attack-defense;
             if(damage<=0){
                 damage=1;
             }
@@ -823,7 +829,7 @@ public class Player extends Entity {
     }
 
     public void selectItem(){
-        int itemIndex=gp.ui.getItemIndexSlot();
+        int itemIndex=gp.ui.getItemIndexSlot(gp.ui.slotCol,gp.ui.slotRow);
         if(itemIndex>=inventory.size()) return;
 
         Entity selectedItem=inventory.get(itemIndex);

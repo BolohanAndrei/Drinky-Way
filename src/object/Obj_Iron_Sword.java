@@ -11,6 +11,7 @@ public class Obj_Iron_Sword extends Entity {
         gearType=0;
         down1=setup("objects/iron_sword");
         attackValue=2;
-        itemDescription="["+name+"] Atk +"+attackValue+"\nHeavy, sharp, and definitely compensating\nfor something. Makes a\nfine bottle opener too.";
+        value=200;
+        itemDescription="["+name+"] Atk +"+attackValue+"\nHeavy, sharp, and\ndefinitely compensating\nfor something. Makes a\nfine bottle opener too.";
     }
 }

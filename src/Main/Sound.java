@@ -43,6 +43,7 @@ public class Sound {
         soundURL[26] = load(base + "axe_cut.wav");
         soundURL[27] = load(base + "wrong_choice.wav");
         soundURL[28] = load(base + "game_over.wav");
+        soundURL[29] = load(base + "pirate_laugh.wav");
     }
 
     private URL load(String path) {
@@ -106,8 +107,8 @@ public class Sound {
             case 1: volume=-40f; break;
             case 2: volume=-30f; break;
             case 3: volume=-20f; break;
-            case 4: volume=-10f; break;
-            case 5: volume=0f; break;
+            case 4: volume=0f; break;
+            case 5: volume=10f; break;
         }
         fc.setValue(volume);
     }

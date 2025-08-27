@@ -23,6 +23,8 @@ public class GamePanel extends JPanel implements Runnable {
 
     public final int maxWorldCol = 50;
     public final int maxWorldRow = 50;
+    public int maxMap=10;
+    public int currentMap=1;
 
     private BufferedImage tempScreen;
 
@@ -36,9 +38,11 @@ public class GamePanel extends JPanel implements Runnable {
     public final int dialogueState = 3;
     public final int characterState = 4;
     public final int gameOverState = 5;
+    public final int transitionState = 6;
+    public final int tradeState = 7;
 
     public KeyHandler keyHandler = new KeyHandler(this);
-    tileManager tileManager = new tileManager(this);
+    public tileManager tileManager = new tileManager(this);
     public CollisionCheck collisionCheck = new CollisionCheck(this);
     public AssetManager assetManager = new AssetManager(this);
     public EventHandler eventHandler = new EventHandler(this);
@@ -48,11 +52,11 @@ public class GamePanel extends JPanel implements Runnable {
     public UI ui = new UI(this);
     Config config=new Config(this);
 
-    public Entity[] obj = new Entity[100];
+    public Entity[][] obj = new Entity[maxMap][100];
     public Player player = new Player(this, keyHandler);
-    public Entity[] npc = new Entity[10];
-    public Entity[] monster = new Entity[100];
-    public InteractiveTiles[] iTile = new InteractiveTiles[50];
+    public Entity[][] npc = new Entity[maxMap][10];
+    public Entity[][] monster = new Entity[maxMap][100];
+    public InteractiveTiles[][] iTile = new InteractiveTiles[maxMap][50];
     public ArrayList<Entity> projectiles = new ArrayList<>();
     public ArrayList<Entity> particles = new ArrayList<>();
     private final ArrayList<Entity> entities = new ArrayList<>();
@@ -100,22 +104,12 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void retry(){
+        player.dieFrame=0;
         player.setDefaultPosition();
         player.setDefaultLife();
         assetManager.setNPC();
         assetManager.setMonster();
     }
-
-    public void restart(){
-        gameState=titleState;
-        player.setDefaultValues();
-        player.setItems();
-        assetManager.setObj();
-        assetManager.setNPC();
-        assetManager.setMonster();
-        assetManager.setInteractiveTile();
-    }
-
 
     public void startGameThread() {
         if (gameThread != null) return;
@@ -159,12 +153,15 @@ public class GamePanel extends JPanel implements Runnable {
             tick++;
             player.update();
             drinkSystem.update(player);
-            for (Entity e : npc) if (e != null) e.update();
-            for (int i = 0; i < monster.length; i++) {
-                Entity m = monster[i];
+            for(int i=0;i<npc[currentMap].length;i++){
+                if(npc[currentMap][i] == null) continue;
+                npc[currentMap][i].update();
+            }
+            for (int i = 0; i < monster[currentMap].length; i++) {
+                Entity m = monster[currentMap][i];
                 if (m == null) continue;
                 if (m.alive && !m.dying) m.update();
-                if (!m.alive) { m.checkDrop(); monster[i] = null; }
+                if (!m.alive) { m.checkDrop(); monster[currentMap][i] = null; }
             }
             for (int i = projectiles.size() - 1; i >= 0; i--) {
                 Entity p = projectiles.get(i);
@@ -174,7 +171,10 @@ public class GamePanel extends JPanel implements Runnable {
                 Entity p = particles.get(i);
                 if (p == null || !p.alive) particles.remove(i); else p.update();
             }
-            for (InteractiveTiles t : iTile) if (t != null) t.update();
+            for(int i=0;i<iTile[currentMap].length;i++){
+                if(iTile[currentMap][i] == null) continue;
+                iTile[currentMap][i].update();
+            }
         }
     }
 
@@ -196,11 +196,23 @@ public class GamePanel extends JPanel implements Runnable {
             Graphics2D worldG = useBuffer ? drinkSystem.beginWorldBuffer() : g2d;
             drinkSystem.preWorldTransform(worldG);
             tileManager.draw(worldG);
-            for (InteractiveTiles t : iTile) if (t != null) t.draw(worldG);
+            for(int i=0;i<iTile[currentMap].length;i++){
+                if(iTile[currentMap][i] == null) continue;
+                iTile[currentMap][i].draw(worldG);
+            }
             entities.add(player);
-            for (Entity e : npc) if (e != null) entities.add(e);
-            for (Entity e : obj) if (e != null) entities.add(e);
-            for (Entity e : monster) if (e != null) entities.add(e);
+            for(int i=0;i<npc[currentMap].length;i++){
+                if(npc[currentMap][i] == null) continue;
+                entities.add(npc[currentMap][i]);
+            }
+            for(int i=0;i<obj[currentMap].length;i++){
+                if(obj[currentMap][i] == null) continue;
+                entities.add(obj[currentMap][i]);
+            }
+            for(int i=0;i<monster[currentMap].length;i++){
+                if(monster[currentMap][i] == null) continue;
+                entities.add(monster[currentMap][i]);
+            }
             entities.addAll(projectiles);
             entities.addAll(particles);
             entities.sort((a, b) -> Integer.compare(a.x, b.x));

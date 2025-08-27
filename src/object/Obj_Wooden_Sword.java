@@ -11,6 +11,7 @@ public class Obj_Wooden_Sword extends Entity{
         gearType=0;
         down1=setup("objects/wooden_sword");
         attackValue=1;
+        value=100;
         itemDescription="["+name+"] Atk +"+attackValue+"\n A mighty stick of doom, sharp enough to tickle\nyour enemies into regret.";
     }
 }

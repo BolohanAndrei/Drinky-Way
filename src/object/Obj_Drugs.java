@@ -10,6 +10,7 @@ public class Obj_Drugs extends Entity {
         gearType=2;
         down1=setup("objects/drugs");
         alcohol=80;
+        value=100;
         itemDescription = "["+name+"] Alc "+alcohol+"%"+"\nMagic dust. Every time is\na new mistery";
     }
 }

@@ -10,6 +10,7 @@ public class Obj_Whiskey extends Entity {
         gearType=2;
         down1=setup("objects/Whiskey");
         alcohol=40;
+        value=50;
         itemDescription = "["+name+"] Alc "+alcohol+"%"+"\nGolden pirate wisdom in a bottle. May cause deep philosophy and bar fights.";
     }
 }

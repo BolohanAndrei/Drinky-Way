@@ -11,6 +11,7 @@ public class Obj_Rum extends Entity {
         gearType=2;
         down1=setup("objects/Rom");
         alcohol=40;
+        value=50;
         itemDescription="["+name+"] Alc "+alcohol+"%"+"\nLiquid courage of pirates. Turns cowards into champions.";
     }
 }

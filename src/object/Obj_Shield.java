@@ -11,6 +11,7 @@ public class Obj_Shield extends Entity{
         gearType=1;
         down1=setup("objects/shield");
         defenseValue=1;
+        value=100;
         itemDescription="["+name+"] Arm +"+defenseValue+"\nStrong like soggy bread,\nbut at least it blocks insults.";
     }
 }

@@ -11,6 +11,7 @@ public class Obj_Silver_Key extends Entity {
         super(gp);
         name="Silver_Key";
         down1=setup("objects/silver_key");
+        value=200;
 
     }
 }

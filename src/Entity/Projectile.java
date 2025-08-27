@@ -54,8 +54,8 @@ public class Projectile extends Entity {
             Rectangle hitBox = new Rectangle(cx - hitRadius, cy - hitRadius, hitRadius * 2, hitRadius * 2);
 
             boolean hit = false;
-            for (int i = 0; i < gp.monster.length; i++) {
-                Entity mon = gp.monster[i];
+            for (int i = 0; i < gp.monster[gp.currentMap].length; i++) {
+                Entity mon = gp.monster[gp.currentMap][i];
                 if (mon == null || !mon.alive || mon.dying) continue;
                 Rectangle monBox = new Rectangle(mon.x + mon.solidArea.x,
                         mon.y + mon.solidArea.y,

@@ -10,5 +10,6 @@ public class Obj_Armour_Chest_Crusty extends Entity{
         armourType=1;
         down1=setup("objects/armour_chest_crusty");
         defenseValue=1;
+        value=100;
         itemDescription = "["+name+"] Arm +"+defenseValue+"\nArmor forged from disappointment. Stops arrows, but not\nheartbreak.";
     }}

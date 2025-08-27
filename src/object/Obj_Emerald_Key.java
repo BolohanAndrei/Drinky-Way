@@ -8,5 +8,6 @@ public class Obj_Emerald_Key extends Entity {
         super(gp);
         name = "Emerald_Key";
         down1=setup("objects/emerald_key");
+        value=1000;
     }
 }
