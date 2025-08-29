@@ -46,6 +46,13 @@ public class Player extends Entity {
     public BufferedImage[] rightImages = new BufferedImage[10];
 
     public BufferedImage idle_up, idle_down, idle_left, idle_right;
+    public BufferedImage[] idleImages=new  BufferedImage[4];
+    private boolean longIdle = false;
+    private int longIdleCounter = 0;
+    private int longIdleAnimFrame = 0;
+    private int longIdleAnimTick = 0;
+    private final int longIdleDelay = 300;
+    private final int longIdleAnimSpeed = 30;
 
     public BufferedImage[] attackUpImages = new BufferedImage[5];
     public BufferedImage[] attackDownImages = new BufferedImage[5];
@@ -70,6 +77,7 @@ public class Player extends Entity {
         setDefaultValues();
         getPlayerImage();
         getPlayerAttackImage();
+        getPlayerIdleImages();
         setItems();
     }
 
@@ -105,10 +113,10 @@ public class Player extends Entity {
     }
 
     public void setDefaultPosition(){
-//        x = gp.tileSize * 23;
-//        y = gp.tileSize * 23;
-        x = gp.tileSize * 12;
-        y = gp.tileSize * 12;
+        x = gp.tileSize * 23;
+        y = gp.tileSize * 23;
+//        x = gp.tileSize * 12;
+//        y = gp.tileSize * 12;
         moveDirection = "down";
         facingDirection = "down";
         invincible=false;
@@ -214,6 +222,16 @@ public class Player extends Entity {
         }
     }
 
+    public void getPlayerIdleImages() {
+        try {
+            for (int i = 0; i < 4; i++) {
+                idleImages[i] = setup("player/idle" + (i + 1));
+            }
+        } catch (NullPointerException e) {
+            e.getMessage();
+        }
+    }
+
     public void recenter() {
         screenX = gp.screenWidth / 2 - (gp.tileSize / 2);
         screenY = gp.screenHeight / 2 - (gp.tileSize / 2);
@@ -240,7 +258,7 @@ public class Player extends Entity {
                     gp.music.stopMusic();
                     gp.gameState = gp.gameOverState;
                     deathSfxPlayed = false;
-                    gp.ui.commandNum=-1;
+                    gp.ui.commandNum=0;
                     gp.music.playMusic(14);
                     spriteCounter = 0;
                 } else {
@@ -298,13 +316,41 @@ public class Player extends Entity {
             dy /= Math.sqrt(2);
         }
 
+
+        double acceleration = 0.20;
+        double maxSpeed = 4.0;
+        double deceleration = 0.35;
+        double minStopSpeed = 0.10;
+
         if(moved) {
-            double acceleration = 0.2;
-            double maxSpeed = 4.0;
+            longIdle=false;
+            longIdleCounter = 0;
+            longIdleAnimFrame = 0;
+            longIdleAnimTick = 0;
             currentSpeed = Math.min(currentSpeed + acceleration, maxSpeed);
         } else {
-            currentSpeed = 0;
+            currentSpeed = Math.max(0, currentSpeed - deceleration);
+            if (currentSpeed < minStopSpeed) {
+                currentSpeed = 0;
+                walkAnimationFrame = 0;
+            }
+            if (!longIdle) {
+                if (longIdleCounter < longIdleDelay) {
+                    longIdleCounter++;
+                    if (longIdleCounter == longIdleDelay) {
+                        longIdle = true;
+                    }
+                }
+            } else {
+                longIdleAnimTick++;
+                if (longIdleAnimTick >= longIdleAnimSpeed) {
+                    longIdleAnimTick = 0;
+                    longIdleAnimFrame = (longIdleAnimFrame + 1) % idleImages.length;
+                }
+            }
         }
+
+
 
         double[] wobble={dx,dy};
         gp.drinkSystem.distortInput(this,wobble);
@@ -408,13 +454,13 @@ public class Player extends Entity {
 
         // Walking animation
         if (!attacking) {
-            if (currentSpeed > 0) {
+            if (moved && currentSpeed > 0) {
                 spriteCounter++;
                 if (spriteCounter > 5) {
                     walkAnimationFrame = (walkAnimationFrame + 1) % 10;
                     spriteCounter = 0;
                 }
-            } else {
+            } else if(currentSpeed==0){
                 walkAnimationFrame = 0;
             }
         }
@@ -720,45 +766,56 @@ public class Player extends Entity {
         recenter();
         BufferedImage image = null;
 
-        if (health<=0) {
+        if (health <= 0) {
             image = dieImages[Math.min(dieFrame, 35)];
             g2d.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
             return;
         }
 
-        if (attacking) {
-            switch (facingDirection) {
-                case "up", "up_left", "up_right" -> image = attackUpImages[attackAnimationFrame];
-                case "down", "down_left", "down_right" -> image = attackDownImages[attackAnimationFrame];
-                case "left" -> image = attackLeftImages[attackAnimationFrame];
-                case "right" -> image = attackRightImages[attackAnimationFrame];
-            }
-        } else {
-            if (currentSpeed > 0) {
-                switch (moveDirection) {
-                    case "up" -> image = upImages[walkAnimationFrame];
-                    case "down" -> image = downImages[walkAnimationFrame];
-                    case "left", "up_left", "down_left" -> image = leftImages[walkAnimationFrame];
-                    case "right", "up_right", "down_right" -> image = rightImages[walkAnimationFrame];
+        if (longIdleAnimFrame >= idleImages.length) {
+            longIdleAnimFrame = 0;
+        }
+
+        if (longIdle) {
+            image = idleImages[longIdleAnimFrame];
+        }else if (attacking) {
+                switch (facingDirection) {
+                    case "up", "up_left", "up_right" -> image = attackUpImages[attackAnimationFrame];
+                    case "down", "down_left", "down_right" -> image = attackDownImages[attackAnimationFrame];
+                    case "left" -> image = attackLeftImages[attackAnimationFrame];
+                    case "right" -> image = attackRightImages[attackAnimationFrame];
                 }
             } else {
-                image = switch (facingDirection) {
-                    case "up", "up_left", "up_right" -> idle_up;
-                    case "down", "down_left", "down_right" -> idle_down;
-                    case "left" -> idle_left;
-                    case "right" -> idle_right;
-                    default -> idle_down;
-                };
+                if (currentSpeed > 0) {
+                    switch (moveDirection) {
+                        case "up" -> image = upImages[walkAnimationFrame];
+                        case "down" -> image = downImages[walkAnimationFrame];
+                        case "left", "up_left", "down_left" -> image = leftImages[walkAnimationFrame];
+                        case "right", "up_right", "down_right" -> image = rightImages[walkAnimationFrame];
+                    }
+                } else {
+                    image = switch (facingDirection) {
+                        case "up", "up_left", "up_right" -> idle_up;
+                        case "down", "down_left", "down_right" -> idle_down;
+                        case "left" -> idle_left;
+                        case "right" -> idle_right;
+                        default -> idle_down;
+                    };
+                }
             }
+
+        if(image==null){
+            image=idleImages[3];
         }
 
-        Composite originalComposite = g2d.getComposite();
-        if(invincible) {
-            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
-        }
+            Composite originalComposite = g2d.getComposite();
+            if (invincible) {
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
+            }
 
-        g2d.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
-        g2d.setComposite(originalComposite);
+            g2d.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+            g2d.setComposite(originalComposite);
+
     }
 
     public void damageReaction() {

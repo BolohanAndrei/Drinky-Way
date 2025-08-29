@@ -18,8 +18,8 @@ public class MerchantNPC extends MovementNPC {
 
     public void getMerchantNPCImage() {
         try {
-            down1 = setup("NPC/b_down1");
-            down2 = setup("NPC/b_down2");
+            down1 = setup("NPC/merchant1_down1");
+            down2 = setup("NPC/merchant1_down2");
 
             up1 = down1;
             up2 = down2;
@@ -46,7 +46,7 @@ public class MerchantNPC extends MovementNPC {
         setAction();
 
         spriteCounter++;
-        if (spriteCounter > 45) {
+        if (spriteCounter > 60) {
             spriteNum = (spriteNum == 1) ? 2 : 1;
             spriteCounter = 0;
         }

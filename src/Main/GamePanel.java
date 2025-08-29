@@ -1,5 +1,6 @@
 package Main;
 
+import AI.PathFind;
 import Entity.Entity;
 import Entity.Player;
 import tiles.tileManager;
@@ -24,7 +25,7 @@ public class GamePanel extends JPanel implements Runnable {
     public final int maxWorldCol = 50;
     public final int maxWorldRow = 50;
     public int maxMap=10;
-    public int currentMap=1;
+    public int currentMap=0;
 
     private BufferedImage tempScreen;
 
@@ -51,6 +52,7 @@ public class GamePanel extends JPanel implements Runnable {
     public Sound se=new Sound();
     public UI ui = new UI(this);
     Config config=new Config(this);
+    public PathFind pathFind = new PathFind(this);
 
     public Entity[][] obj = new Entity[maxMap][100];
     public Player player = new Player(this, keyHandler);

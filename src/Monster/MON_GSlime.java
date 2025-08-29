@@ -50,34 +50,53 @@ public class MON_GSlime extends Entity {
         downRight1=setup("monsters/Slime_right2");
     }
 
+    public void update(){
+        super.update();
+        int xDist=Math.abs(x-gp.player.x);
+        int yDist=Math.abs(y-gp.player.y);
+        int dist=(xDist+yDist)/gp.tileSize;
+        if(!onPath && dist<5){
+            int i=new Random().nextInt(100)+1;
+            if(i>50){
+                onPath=true;
+            }
+        }
+        if(onPath && dist>=15){
+            onPath=false;
+        }
+    }
+
     public void setAction() {
 
-        // monster is moving
-        actionLockCounter++;
-        if (actionLockCounter >= 120) {
-            Random rand = new Random();
-            int i = rand.nextInt(100) + 1;
-            if (i <= 25) {
-                direction = "up";
-            } else if (i <= 50) {
-                direction = "down";
-            } else if (i <= 75) {
-                direction = "left";
-            } else direction = "right";
-            actionLockCounter = 0;
-        }
-        int i=new Random().nextInt(100)+1;
-        if(i>99 && !projectile.alive && shotAvailableCounter>=30){
-            projectile.set(x,y,direction,true,this);
-            gp.projectiles.add(projectile);
-            shotAvailableCounter=0;
-        }
+        if(onPath){
+            int endCol=(gp.player.x+gp.player.solidArea.x)/gp.tileSize;
+           int endRow=(gp.player.y+gp.player.solidArea.y)/gp.tileSize;
+            searchPath(endCol,endRow);
 
+            int i=new Random().nextInt(200)+1;
+            if(i>199 && !projectile.alive && shotAvailableCounter>=30){
+                projectile.set(x,y,direction,true,this);
+                gp.projectiles.add(projectile);
+                shotAvailableCounter=0;
+            }
+        }else{
+            actionLockCounter++;
+            if (actionLockCounter == 240) {
+                Random rand = new Random();
+                int i = rand.nextInt(100) + 1;
+                if (i <= 25) direction = "up";
+                else if (i <= 50) direction = "down";
+                else if (i <= 75) direction = "left";
+                else direction = "right";
+
+                actionLockCounter = 0;
+            }
+        }
     }
 
     public void damageReaction(){
         actionLockCounter=0;
-        direction=gp.player.direction;
+        onPath=true;
     }
 
     @Override

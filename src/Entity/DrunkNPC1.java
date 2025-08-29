@@ -47,5 +47,6 @@ public class DrunkNPC1 extends MovementNPC{
 
     public void speak() {
         super.speak();
+        onPath=true;
     }
 }

@@ -42,8 +42,8 @@ public class AssetManager {
         int mapNum=0;
         int i=0;
         gp.npc[mapNum][i]=new DrunkNPC1(gp);
-        gp.npc[mapNum][i].x = 23 * gp.tileSize;
-        gp.npc[mapNum][i].y = 21 * gp.tileSize;
+        gp.npc[mapNum][i].x = 21 * gp.tileSize;
+        gp.npc[mapNum][i].y = 23 * gp.tileSize;
 
         mapNum++;
         i++;

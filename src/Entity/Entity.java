@@ -1,5 +1,6 @@
 package Entity;
 
+import AI.Node;
 import Main.GamePanel;
 import Main.Utility;
 
@@ -25,6 +26,7 @@ public class Entity {
     public String direction = "down";
     public int actionLockCounter = 0;
     public boolean attacking = false;
+    public boolean onPath=false;
 
     // ========== 3. Rendering Assets ==========
     // --- 3.1 Movement Sprites ---
@@ -157,20 +159,24 @@ public class Entity {
         }
     }
 
-    public void update(){
-
+    public void checkCollision() {
         collisionOn = false;
         gp.collisionCheck.checkTile(this);
         gp.collisionCheck.checkObj(this, false);
         gp.collisionCheck.checkEntity(this,gp.npc);
         gp.collisionCheck.checkEntity(this,gp.monster);
         gp.collisionCheck.checkEntity(this,gp.iTile);
-       boolean contactPlayer= gp.collisionCheck.checkPlayer(this);
+        boolean contactPlayer= gp.collisionCheck.checkPlayer(this);
 
-       if(this.entityType==2 && contactPlayer){
-           damagePlayer(attack);
-       }
+        if(this.entityType==2 && contactPlayer){
+            damagePlayer(attack);
+        }
+    }
+
+    public void update(){
+
         setAction();
+        checkCollision();
 
         if(!collisionOn){
             switch (direction) {
@@ -440,4 +446,61 @@ public class Entity {
             gp.particles.add(new Particle(gp, generator, sparkle, vx, vy, Math.max(2, baseSize - 1), baseSpeed + 1, baseLife));
         }
     }
-}
+
+    public void searchPath(int endCol, int endRow) {
+        int startCol = (x + solidArea.x) / gp.tileSize;
+        int startRow = (y + solidArea.y) / gp.tileSize;
+
+        boolean needNew = gp.pathFind.pathList.isEmpty()
+                || gp.pathFind.endNode == null
+                || gp.pathFind.endNode.col != endCol
+                || gp.pathFind.endNode.row != endRow;
+
+        if (needNew) {
+            gp.pathFind.setNodes(startCol, startRow, endCol, endRow);
+            gp.pathFind.search();
+        }
+        if (gp.pathFind.pathList.isEmpty()) return;
+
+        Node next = gp.pathFind.pathList.peekFirst();
+        int nextX = next.col * gp.tileSize;
+        int nextY = next.row * gp.tileSize;
+
+        int leftX   = x + solidArea.x;
+        int rightX  = x + solidArea.x + solidArea.width;
+        int topY    = y + solidArea.y;
+        int bottomY = y + solidArea.y + solidArea.height;
+
+        int tileRight  = nextX + gp.tileSize;
+        int tileBottom = nextY + gp.tileSize;
+
+        boolean withinX = leftX >= nextX && rightX <= tileRight;
+        boolean withinY = topY >= nextY && bottomY <= tileBottom;
+
+        if (withinX && withinY) {
+            gp.pathFind.pathList.removeFirst();
+            if (gp.pathFind.pathList.isEmpty()) {
+                onPath = false;
+            }
+            return;
+        }
+
+        if (!withinX) {
+            if (leftX < nextX) direction = "right";
+            else if (leftX > nextX) direction = "left";
+        } else{
+            if (topY < nextY) direction = "down";
+            else if (topY > nextY) direction = "up";
+        }
+
+
+        if (collisionOn) {
+            if (!withinY) {
+                if (topY < nextY) direction = "down";
+                else if (topY > nextY) direction = "up";
+            } else {
+                if (leftX < nextX) direction = "right";
+                else if (leftX > nextX) direction = "left";
+            }
+        }
+    }}
