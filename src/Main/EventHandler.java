@@ -8,6 +8,8 @@ public class EventHandler {
     int previousEventX, previousEventY;
     boolean canTouchEvent=true;
 
+    int x,y;
+
 
     public EventHandler(GamePanel gp) {
         this.gp = gp;
@@ -17,10 +19,10 @@ public class EventHandler {
         int col=0,row=0;
         while(col < gp.maxWorldCol && row < gp.maxWorldRow && map<gp.maxMap) {
             eventRect[map][col][row] = new EventRect();
-            eventRect[map][col][row].x = 8;
-            eventRect[map][col][row].y = 8;
-            eventRect[map][col][row].width = 32;
-            eventRect[map][col][row].height = 32;
+            eventRect[map][col][row].x = 0;
+            eventRect[map][col][row].y = 0;
+            eventRect[map][col][row].width = 48;
+            eventRect[map][col][row].height = 48;
             eventRect[map][col][row].eventRectDefaultX = eventRect[map][col][row].x;
             eventRect[map][col][row].eventRectDefaultY = eventRect[map][col][row].y;
             col++;

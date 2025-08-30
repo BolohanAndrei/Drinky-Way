@@ -102,6 +102,7 @@ public class Entity {
     public int gearType = -1;   // 0 sword, 1 shield, 2 consumable 3 pickUp(goods)
     public int armourType = -1; // 0 helmet, 1 chest, 2 boots
     public boolean pickable = true;
+    public boolean obstacle = false;
     public int value;
 
     // ========== 13. Inventory ==========
@@ -117,8 +118,29 @@ public class Entity {
         this.gp = gp;
     }
 
+    public int getLeftX() {
+        return x+solidArea.x;
+    }
+    public int getRightX() {
+        return x+solidArea.x+solidArea.width;
+    }
+    public int getTopY() {
+        return y+solidArea.y;
+    }
+    public int getBottomY() {
+        return y+solidArea.y+solidArea.height;
+    }
+    public int getCol(){
+        return (x+solidArea.x)/gp.tileSize;
+
+    }
+    public int getRow(){
+        return (y+solidArea.y)/gp.tileSize;
+    }
+
     public void setAction(){
     }
+    public void interact(){}
 
     public void damageReaction(){
     }
@@ -146,7 +168,9 @@ public class Entity {
         }
     }
 
-    public void use(Entity e){}
+    public boolean use(Entity e){
+        return false;
+    }
     public void checkDrop(){}
     public void dropItem(Entity droppedItem){
         for(int i=0;i<gp.obj[gp.currentMap].length;i++){
@@ -350,6 +374,9 @@ public class Entity {
         BufferedImage scale = null;
         try {
             scale = ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/res/" + name + ".png")));
+            if(name.contains("door")){
+                scale = u.scaleImage(scale, (int) (gp.tileSize*2.0), (int) (gp.tileSize*2.0));
+            }
             scale = u.scaleImage(scale, gp.tileSize, gp.tileSize);
         } catch (IOException e) {
             e.getStackTrace();
@@ -503,4 +530,33 @@ public class Entity {
                 else if (leftX > nextX) direction = "left";
             }
         }
-    }}
+    }
+
+    public int getDetected(Entity user, Entity[][] target, String targetName){
+        int index=999;
+
+        int nextWorldX=user.getLeftX();
+        int nextWorldY=user.getTopY();
+
+        switch(user.direction){
+            case "up": nextWorldY=user.getTopY()-1; break;
+            case "down": nextWorldY=user.getBottomY()+1; break;
+            case "left": nextWorldX=user.getLeftX()-1; break;
+            case "right": nextWorldX=user.getRightX()+1; break;
+        }
+        int col=nextWorldX/gp.tileSize;
+        int row=nextWorldY/gp.tileSize;
+
+        for(int i=0;i<target[gp.currentMap].length;i++){
+            Entity obj=target[gp.currentMap][i];
+            if(obj!=null){
+                if(obj.getCol()==col && obj.getRow()==row && obj.name.equals(targetName)){
+                    index=i;
+                    break;
+                }
+            }
+        }
+        return index;
+    }
+
+}

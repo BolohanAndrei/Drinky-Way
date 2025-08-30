@@ -89,8 +89,11 @@ public class Player extends Entity {
         deathSfxPlayed=false;
 
         speed = 4;
-        maxHealth = 6;
+
+        //TO DO de schimbat
+        maxHealth = 100;
         health = maxHealth;
+        coin=1000;
 
         maxDrunk = 6;
         drunk = 0;
@@ -103,7 +106,7 @@ public class Player extends Entity {
         dexterity = baseDexterity;
         exp=0;
         nextLevelExp=10;
-        coin=1000;
+
 
         currentWeapon=new Obj_Wooden_Sword(gp);
         currentShield=new Obj_Shield(gp);
@@ -185,6 +188,7 @@ public class Player extends Entity {
         inventory.clear();
         inventory.add(currentWeapon);
         inventory.add(currentShield);
+        inventory.add(new Obj_Gold_Key(gp));
     }
 
     public void getPlayerImage() {
@@ -238,6 +242,7 @@ public class Player extends Entity {
     }
 
     public void update() {
+
         // Death animation
         if (health <= 0) {
             if (gp.gameState == gp.gameOverState) return;
@@ -425,11 +430,52 @@ public class Player extends Entity {
             y = (int) tempY;
         }
 
+        // Object collision check for X movement
+        if (dx != 0 && canMoveX) {
+            double tempX = x;
+            x = (int) futureX;
+            direction = dx > 0 ? "right" : "left";
+
+            // Check for blocking objects
+            for (int i = 0; i < gp.obj[gp.currentMap].length; i++) {
+                if (gp.obj[gp.currentMap][i] != null && gp.obj[gp.currentMap][i].collision) {
+                    // Temporarily set collision detection
+                    collisionOn = false;
+                    gp.collisionCheck.checkObject(this,i, gp.obj[gp.currentMap]);
+                    if (collisionOn) {
+                        canMoveX = false;
+                        break;
+                    }
+                }
+            }
+            x = (int) tempX;
+        }
+        // Object collision check for Y movement
+        if (dy != 0 && canMoveY) {
+            double tempY = y;
+            y = (int) futureY;
+            direction = dy > 0 ? "down" : "up";
+
+            // Check for blocking objects
+            for (int i = 0; i < gp.obj[gp.currentMap].length; i++) {
+                if (gp.obj[gp.currentMap][i] != null && gp.obj[gp.currentMap][i].collision) {
+                    // Temporarily set collision detection
+                    collisionOn = false;
+                    gp.collisionCheck.checkObject(this,i, gp.obj[gp.currentMap]);
+                    if (collisionOn) {
+                        canMoveY = false;
+                        break;
+                    }
+                }
+            }
+            y = (int) tempY;
+        }
+
         // Restore actual movement direction
         direction = moveDirection;
 
         // Object collision
-        int objIndex = gp.collisionCheck.checkObj(this, true);
+        int objIndex = gp.collisionCheck.checkObjForInteraction(this);
         pickUpObj(objIndex);
 
         // NPC interaction
@@ -687,9 +733,17 @@ public class Player extends Entity {
 
     public void pickUpObj(int i) {
         if (i != 999) {
-            if (!gp.obj[gp.currentMap][i].pickable) {
+            Entity obj = gp.obj[gp.currentMap][i];
+
+            if (!obj.pickable && obj.obstacle) {
+                if (keyHandler.ePressed) {
+                    obj.interact();
+                }
+                return;
+            } else if (!obj.pickable) {
                 return;
             }
+
             if (gp.obj[gp.currentMap][i].gearType == 3) {
                 gp.obj[gp.currentMap][i].use(this);
             } else {
@@ -698,14 +752,12 @@ public class Player extends Entity {
                     inventory.add(gp.obj[gp.currentMap][i]);
                     gp.se.playSE(2);
                     text = "Picked up " + gp.obj[gp.currentMap][i].name;
-
                 } else {
                     text = "Inventory Full";
                 }
                 gp.ui.addMessage(text);
-
             }
-            gp.obj[gp.currentMap][i]=null;
+            gp.obj[gp.currentMap][i] = null;
         }
     }
 
@@ -846,7 +898,7 @@ public class Player extends Entity {
         }
     }
 
-    private boolean isEquipped(Entity item){
+    public boolean isEquipped(Entity item){
         return item!=null && (item==currentWeapon || item==currentShield ||
                 item==currentHelmet || item==currentChest || item==currentBoots);
     }
@@ -895,9 +947,10 @@ public class Player extends Entity {
             if(selectedItem.alcohol>0){
                 consumeDrunk(selectedItem);
             } else {
-                selectedItem.use(this);
-                inventory.remove(selectedItem);
-                gp.ui.addMessage(selectedItem.name+" used");
+                if(selectedItem.use(this)) {
+                    inventory.remove(selectedItem);
+                    gp.ui.addMessage(selectedItem.name + " used");
+                }
             }
             return;
         }

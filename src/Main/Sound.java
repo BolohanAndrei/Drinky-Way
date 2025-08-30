@@ -7,7 +7,7 @@ import java.net.URL;
 
 public class Sound {
     private Clip clip;
-    private final URL[] soundURL = new URL[30];
+    private final URL[] soundURL = new URL[100];
     FloatControl fc;
     int volumeScale=3;
     float volume;
@@ -44,6 +44,9 @@ public class Sound {
         soundURL[27] = load(base + "wrong_choice.wav");
         soundURL[28] = load(base + "game_over.wav");
         soundURL[29] = load(base + "pirate_laugh.wav");
+        soundURL[30] = load(base + "move_item.wav");
+        soundURL[31] = load(base + "chest_open.wav");
+        soundURL[32] = load(base + "chest_close.wav");
     }
 
     private URL load(String path) {

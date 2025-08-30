@@ -41,6 +41,7 @@ public class GamePanel extends JPanel implements Runnable {
     public final int gameOverState = 5;
     public final int transitionState = 6;
     public final int tradeState = 7;
+    public final int chestState=8;
 
     public KeyHandler keyHandler = new KeyHandler(this);
     public tileManager tileManager = new tileManager(this);

@@ -36,6 +36,18 @@ public class AssetManager {
         gp.obj[mapNum][i]=new Obj_Teleport(gp);
         gp.obj[mapNum][i].x = 25 * gp.tileSize;
         gp.obj[mapNum][i].y = 19 * gp.tileSize;
+        i++;
+        gp.obj[mapNum][i]=new Obj_Door(gp);
+        gp.obj[mapNum][i].x = 14 * gp.tileSize;
+        gp.obj[mapNum][i].y = 28 * gp.tileSize;
+        i++;
+        gp.obj[mapNum][i]=new Obj_Door(gp);
+        gp.obj[mapNum][i].x = 12 * gp.tileSize;
+        gp.obj[mapNum][i].y = 12 * gp.tileSize;
+        i++;
+        gp.obj[mapNum][i]=new Obj_Chest(gp);
+        gp.obj[mapNum][i].x = 12 * gp.tileSize;
+        gp.obj[mapNum][i].y = 30 * gp.tileSize;
     }
 
     public void setNPC(){
@@ -63,28 +75,28 @@ public class AssetManager {
         gp.monster[mapNum][i].y = 30 * gp.tileSize;
         i++;
         gp.monster[mapNum][i]=new MON_GSlime(gp);
-        gp.monster[mapNum][i].x = 22 * gp.tileSize;
-        gp.monster[mapNum][i].y = 31 * gp.tileSize;
-        i++;
-        gp.monster[mapNum][i]=new MON_GSlime(gp);
-        gp.monster[mapNum][i].x = 22 * gp.tileSize;
-        gp.monster[mapNum][i].y = 32 * gp.tileSize;
-        i++;
-        gp.monster[mapNum][i]=new MON_GSlime(gp);
-        gp.monster[mapNum][i].x = 22 * gp.tileSize;
-        gp.monster[mapNum][i].y = 33 * gp.tileSize;
-        i++;
-        gp.monster[mapNum][i]=new MON_GSlime(gp);
-        gp.monster[mapNum][i].x = 22 * gp.tileSize;
+        gp.monster[mapNum][i].x = 23 * gp.tileSize;
         gp.monster[mapNum][i].y = 34 * gp.tileSize;
+//        i++;
+//        gp.monster[mapNum][i]=new MON_GSlime(gp);
+//        gp.monster[mapNum][i].x = 22 * gp.tileSize;
+//        gp.monster[mapNum][i].y = 32 * gp.tileSize;
         i++;
-        gp.monster[mapNum][i]=new MON_GSlime(gp);
-        gp.monster[mapNum][i].x = 22 * gp.tileSize;
-        gp.monster[mapNum][i].y = 35 * gp.tileSize;
-        i++;
-        gp.monster[mapNum][i]=new MON_GSlime(gp);
-        gp.monster[mapNum][i].x = 22 * gp.tileSize;
-        gp.monster[mapNum][i].y = 36 * gp.tileSize;
+//        gp.monster[mapNum][i]=new MON_GSlime(gp);
+//        gp.monster[mapNum][i].x = 22 * gp.tileSize;
+//        gp.monster[mapNum][i].y = 33 * gp.tileSize;
+//        i++;
+//        gp.monster[mapNum][i]=new MON_GSlime(gp);
+//        gp.monster[mapNum][i].x = 22 * gp.tileSize;
+//        gp.monster[mapNum][i].y = 34 * gp.tileSize;
+//        i++;
+//        gp.monster[mapNum][i]=new MON_GSlime(gp);
+//        gp.monster[mapNum][i].x = 22 * gp.tileSize;
+//        gp.monster[mapNum][i].y = 35 * gp.tileSize;
+//        i++;
+//        gp.monster[mapNum][i]=new MON_GSlime(gp);
+//        gp.monster[mapNum][i].x = 22 * gp.tileSize;
+//        gp.monster[mapNum][i].y = 36 * gp.tileSize;
 
     }
 

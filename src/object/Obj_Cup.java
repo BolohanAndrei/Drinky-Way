@@ -14,10 +14,11 @@ public class Obj_Cup extends Entity {
         down1=setup("/objects/cup");
         value=2;
     }
-    public void use(Entity e){
+    public boolean use(Entity e){
 
         gp.se.playSE(25);
         gp.ui.addMessage("Coin"+" +" + value);
         gp.player.coin+=value;
+        return true;
     }
 }

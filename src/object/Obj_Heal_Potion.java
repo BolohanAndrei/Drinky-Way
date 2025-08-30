@@ -15,7 +15,7 @@ public class Obj_Heal_Potion extends Entity {
         itemDescription = "["+name+"] HP +"+2+"\nLiquid bandage for the soul. Restores health, dignity sold separately.";
     }
 
-    public void use(Entity e){
+    public boolean use(Entity e){
         gp.gameState=gp.dialogueState;
         gp.ui.currentDialogue="Health restored by "+2+"HP!\nMy liver cries, but my heart sings! Now, where’s the tavern?";
         e.health+=2;
@@ -24,5 +24,6 @@ public class Obj_Heal_Potion extends Entity {
         }
         gp.drinkSystem.soberUp(gp.player);
         gp.se.playSE(20);
+        return true;
     }
 }

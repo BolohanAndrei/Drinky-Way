@@ -6,7 +6,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 public class KeyHandler implements KeyListener, MouseListener {
-    public boolean upPressed, downPressed, leftPressed, rightPressed,enterPressed,ePressed;
+    public boolean upPressed, downPressed, leftPressed, rightPressed,enterPressed,ePressed,spacePressed;
     public boolean attackClicked,shotKeyPressed;
     public int previousGameState;
     GamePanel gp;
@@ -14,6 +14,7 @@ public class KeyHandler implements KeyListener, MouseListener {
     public KeyHandler(GamePanel gp) {
        this.gp = gp;
        gp.addMouseListener(this);
+       previousGameState = gp.playState;
     }
 
     @Override
@@ -23,7 +24,9 @@ public class KeyHandler implements KeyListener, MouseListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int code= e.getKeyCode();
-
+        if(code==KeyEvent.VK_SPACE){
+            spacePressed = true;
+        }
         if(code==KeyEvent.VK_ESCAPE){
             if(gp.gameState==gp.optionState){
                 gp.gameState = previousGameState;
@@ -48,8 +51,11 @@ public class KeyHandler implements KeyListener, MouseListener {
                 previousGameState = gp.tradeState;
                 gp.gameState=gp.optionState;
             }
+            else if(gp.gameState==gp.chestState){
+                previousGameState = gp.chestState;
+                gp.gameState=gp.optionState;
+            }
         }
-
         //Title state
         if(gp.gameState==gp.titleState){
             titleState(code);
@@ -76,6 +82,9 @@ public class KeyHandler implements KeyListener, MouseListener {
         }
         else if(gp.gameState==gp.tradeState){
             tradeState(code);
+        }
+        else if(gp.gameState==gp.chestState){
+            chestState(code);
         }
     }
 
@@ -205,15 +214,20 @@ public class KeyHandler implements KeyListener, MouseListener {
         }
     }
     public void dialogueState(int code){
+        if(gp.gameState!=gp.dialogueState){
+            previousGameState = gp.gameState;
+            gp.gameState=gp.dialogueState;
+        }
         if(code==KeyEvent.VK_E) {
             if(previousGameState == gp.tradeState){
-                gp.gameState = gp.tradeState;
+                gp.gameState = gp.playState;
                 gp.ui.subState = 0;
                 gp.ui.commandNum = 0;
             } else {
                 gp.gameState = gp.playState;
             }
             gp.keyHandler.enterPressed = false;
+            ePressed=false;
         }
     }
     public void characterState(int code) {
@@ -365,6 +379,68 @@ public class KeyHandler implements KeyListener, MouseListener {
             }
         }
     }
+    public void chestInventory(int code){
+        if (code == KeyEvent.VK_W) {
+            if (gp.ui.chestSlotRow != 0) {
+                gp.ui.chestSlotRow--;
+                gp.se.playSE(19);
+            }
+            else{
+                gp.ui.chestSlotRow = 3;
+                gp.se.playSE(19);
+            }
+        }
+        if (code == KeyEvent.VK_S) {
+            if (gp.ui.chestSlotRow != 3) {
+                gp.ui.chestSlotRow++;
+                gp.se.playSE(19);
+            }
+            else{
+                gp.ui.chestSlotRow = 0;
+                gp.se.playSE(19);
+            }
+        }
+        if (code == KeyEvent.VK_A) {
+            if (gp.ui.chestSlotCol != 0) {
+                gp.ui.chestSlotCol--;
+                gp.se.playSE(19);
+            }
+            else{
+                gp.ui.chestSlotCol = 4;
+                gp.se.playSE(19);
+            }
+        }
+        if (code == KeyEvent.VK_D) {
+            if (gp.ui.chestSlotCol != 4) {
+                gp.ui.chestSlotCol++;
+                gp.se.playSE(19);
+            }else{
+                gp.ui.chestSlotCol = 0;
+                gp.se.playSE(19);
+            }
+        }
+    }
+    public void chestState(int code) {
+        if(code==KeyEvent.VK_E) {
+
+            gp.gameState = gp.playState;
+            enterPressed = false;
+            ePressed = false;
+            gp.ui.chest.down1=gp.ui.chest.image1;
+            gp.se.playSE(32);
+            return;
+        }
+
+        if(code==KeyEvent.VK_ENTER) {
+            enterPressed=true;
+        }
+        if(gp.ui.chestFocusPlayer ){
+            playerInventory(code);
+        }else{
+            chestInventory(code);
+        }
+
+    }
 
     @Override
     public void keyReleased(KeyEvent e) {
@@ -386,6 +462,9 @@ public class KeyHandler implements KeyListener, MouseListener {
         }
         if(code==KeyEvent.VK_E) {
             ePressed = false;
+        }
+        if(code==KeyEvent.VK_SPACE){
+            spacePressed = false;
         }
     }
 

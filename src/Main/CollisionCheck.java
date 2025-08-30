@@ -2,6 +2,8 @@ package Main;
 
 import Entity.Entity;
 
+import java.awt.*;
+
 
 public class CollisionCheck {
     GamePanel gp;
@@ -283,4 +285,89 @@ public class CollisionCheck {
 
         return contactPlayer;
     }
+
+    public void checkObject(Entity entity, int objIndex, Entity[] objects) {
+        if (objects[objIndex] == null) return;
+
+        Entity obj = objects[objIndex];
+
+        // Get entity's solid area position
+        entity.solidArea.x = entity.x + entity.solidArea.x;
+        entity.solidArea.y = entity.y + entity.solidArea.y;
+
+        // Get object's solid area position
+        obj.solidArea.x = obj.x + obj.solidArea.x;
+        obj.solidArea.y = obj.y + obj.solidArea.y;
+
+        switch (entity.direction) {
+            case "up":
+                entity.solidArea.y -= entity.speed;
+                break;
+            case "down":
+                entity.solidArea.y += entity.speed;
+                break;
+            case "left":
+                entity.solidArea.x -= entity.speed;
+                break;
+            case "right":
+                entity.solidArea.x += entity.speed;
+                break;
+        }
+
+        if (entity.solidArea.intersects(obj.solidArea)) {
+            if (obj.collision) {
+                entity.collisionOn = true;
+            }
+        }
+
+        // Reset solid areas
+        entity.solidArea.x = entity.solidAreaDefaultX;
+        entity.solidArea.y = entity.solidAreaDefaultY;
+        obj.solidArea.x = obj.solidAreaDefaultX;
+        obj.solidArea.y = obj.solidAreaDefaultY;
+    }
+
+    public int checkObjForInteraction(Entity entity) {
+        int index = 999;
+
+        for (int i = 0; i < gp.obj[gp.currentMap].length; i++) {
+            if (gp.obj[gp.currentMap][i] != null) {
+                // Get entity's current solid area position (no movement prediction)
+                entity.solidArea.x = entity.x + entity.solidArea.x;
+                entity.solidArea.y = entity.y + entity.solidArea.y;
+
+                // Get object's solid area position
+                gp.obj[gp.currentMap][i].solidArea.x = gp.obj[gp.currentMap][i].x + gp.obj[gp.currentMap][i].solidArea.x;
+                gp.obj[gp.currentMap][i].solidArea.y = gp.obj[gp.currentMap][i].y + gp.obj[gp.currentMap][i].solidArea.y;
+
+                // Create an expanded interaction area around the player
+                Rectangle interactionArea = new Rectangle(
+                        entity.solidArea.x - gp.tileSize/2,
+                        entity.solidArea.y - gp.tileSize/2,
+                        entity.solidArea.width + gp.tileSize,
+                        entity.solidArea.height + gp.tileSize
+                );
+
+                // Check if object is within interaction range
+                if (interactionArea.intersects(gp.obj[gp.currentMap][i].solidArea)) {
+                    index = i;
+                    // Reset solid areas before breaking
+                    entity.solidArea.x = entity.solidAreaDefaultX;
+                    entity.solidArea.y = entity.solidAreaDefaultY;
+                    gp.obj[gp.currentMap][i].solidArea.x = gp.obj[gp.currentMap][i].solidAreaDefaultX;
+                    gp.obj[gp.currentMap][i].solidArea.y = gp.obj[gp.currentMap][i].solidAreaDefaultY;
+                    break;
+                }
+
+                // Reset solid areas
+                entity.solidArea.x = entity.solidAreaDefaultX;
+                entity.solidArea.y = entity.solidAreaDefaultY;
+                gp.obj[gp.currentMap][i].solidArea.x = gp.obj[gp.currentMap][i].solidAreaDefaultX;
+                gp.obj[gp.currentMap][i].solidArea.y = gp.obj[gp.currentMap][i].solidAreaDefaultY;
+            }
+        }
+
+        return index;
+    }
+
 }

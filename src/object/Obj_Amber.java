@@ -14,10 +14,11 @@ public class Obj_Amber extends Entity {
         down1=setup("/objects/amber");
         value=10;
     }
-    public void use(Entity e){
+    public boolean use(Entity e){
 
         gp.se.playSE(25);
         gp.ui.addMessage("Coin"+" +" + value);
         gp.player.coin+=value;
+        return true;
     }
 }
