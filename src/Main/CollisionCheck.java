@@ -40,10 +40,10 @@ public class CollisionCheck {
         int maxCol = gp.tileManager.mapTileNum[gp.currentMap].length;
         int maxRow = gp.tileManager.mapTileNum[gp.currentMap][0].length;
 
-        int leftCol   = clamp(leftWorldX  / gp.tileSize, 0, maxCol - 1);
-        int rightCol  = clamp(rightWorldX / gp.tileSize, 0, maxCol - 1);
-        int topRow    = clamp(topWorldY   / gp.tileSize, 0, maxRow - 1);
-        int bottomRow = clamp(bottomWorldY/ gp.tileSize, 0, maxRow - 1);
+        int leftCol   = clamp(leftWorldX  / gp.tileSize, maxCol - 1);
+        int rightCol  = clamp(rightWorldX / gp.tileSize, maxCol - 1);
+        int topRow    = clamp(topWorldY   / gp.tileSize, maxRow - 1);
+        int bottomRow = clamp(bottomWorldY/ gp.tileSize, maxRow - 1);
 
         // Fetch tile numbers (four corners)
         int[][][] map = gp.tileManager.mapTileNum;
@@ -60,8 +60,8 @@ public class CollisionCheck {
         }
     }
 
-    private int clamp(int v, int min, int max) {
-        return v < min ? min : (Math.min(v, max));
+    private int clamp(int v, int max) {
+        return v < 0 ? 0 : (Math.min(v, max));
     }
 
     public int checkObj(Entity entity, boolean player) {

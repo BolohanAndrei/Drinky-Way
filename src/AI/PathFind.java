@@ -130,7 +130,7 @@ public class PathFind {
         node.fCost=node.gCost+node.hCost;
     }
 
-    public boolean search(){
+    public void search(){
         while(!goalReached && step<500){
             int col=currentNode.col;
             int row=currentNode.row;
@@ -176,7 +176,6 @@ public class PathFind {
             }
             step++;
         }
-        return goalReached;
     }
 
     public void openNode(Node node){

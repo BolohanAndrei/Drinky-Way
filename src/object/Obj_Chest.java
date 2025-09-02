@@ -7,7 +7,6 @@ import java.util.ArrayList;
 
 public class Obj_Chest extends Entity {
     GamePanel gp;
-    public ArrayList<Entity> inventory = new ArrayList<>();
     public Obj_Chest(GamePanel gp) {
         super(gp);
         this.gp=gp;

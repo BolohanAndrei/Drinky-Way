@@ -2,6 +2,7 @@
 package Entity;
 
 import Main.GamePanel;
+import object.Obj_Heal_Potion;
 
 public class MerchantNPC extends MovementNPC {
 
@@ -32,7 +33,7 @@ public class MerchantNPC extends MovementNPC {
             idle_3 = down1;
             idle_4 = down2;
         } catch (NullPointerException e) {
-            e.printStackTrace();
+            e.getMessage();
         }
     }
 
@@ -64,6 +65,7 @@ public class MerchantNPC extends MovementNPC {
         inventory.add(new object.Obj_Emerald_Key(gp));
         inventory.add(new object.Obj_Iron_Sword(gp));
         inventory.add(new object.Obj_Beer(gp));
+        inventory.add(new Obj_Heal_Potion(gp));
     }
 
     @Override

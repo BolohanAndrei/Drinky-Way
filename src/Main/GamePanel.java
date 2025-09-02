@@ -3,6 +3,8 @@ package Main;
 import AI.PathFind;
 import Entity.Entity;
 import Entity.Player;
+import Envire.EnvManager;
+import tiles.Map;
 import tiles.tileManager;
 import tiles_interactive.InteractiveTiles;
 
@@ -42,6 +44,8 @@ public class GamePanel extends JPanel implements Runnable {
     public final int transitionState = 6;
     public final int tradeState = 7;
     public final int chestState=8;
+    public final int sleepState=9;
+    public final int mapState=10;
 
     public KeyHandler keyHandler = new KeyHandler(this);
     public tileManager tileManager = new tileManager(this);
@@ -54,6 +58,8 @@ public class GamePanel extends JPanel implements Runnable {
     public UI ui = new UI(this);
     Config config=new Config(this);
     public PathFind pathFind = new PathFind(this);
+    public EnvManager envManager = new EnvManager(this);
+    public Map map = new Map(this);
 
     public Entity[][] obj = new Entity[maxMap][100];
     public Player player = new Player(this, keyHandler);
@@ -98,6 +104,7 @@ public class GamePanel extends JPanel implements Runnable {
         assetManager.setNPC();
         assetManager.setMonster();
         assetManager.setInteractiveTile();
+        envManager.setup();
         gameState = titleState;
         if (tempScreen == null) {
             tempScreen = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_ARGB);
@@ -120,6 +127,7 @@ public class GamePanel extends JPanel implements Runnable {
         gameThread.start();
     }
 
+    @SuppressWarnings("BusyWait")
     @Override
     public void run() {
         final double drawInterval = 1_000_000_000.0 / FPS;
@@ -131,6 +139,7 @@ public class GamePanel extends JPanel implements Runnable {
             last = loopStart;
             boolean didWork = false;
             while (delta >= 1) {
+                //System.out.println(gameState);
                 update();
                 drawToTempScreen();
                 didWork = true;
@@ -178,6 +187,7 @@ public class GamePanel extends JPanel implements Runnable {
                 if(iTile[currentMap][i] == null) continue;
                 iTile[currentMap][i].update();
             }
+            envManager.update();
         }
     }
 
@@ -195,6 +205,9 @@ public class GamePanel extends JPanel implements Runnable {
                 g2d.dispose();
                 return;
             }
+
+            boolean showMapOverlay=(gameState==mapState);
+
             boolean useBuffer = player.drinkPercent >= 40;
             Graphics2D worldG = useBuffer ? drinkSystem.beginWorldBuffer() : g2d;
             drinkSystem.preWorldTransform(worldG);
@@ -225,6 +238,13 @@ public class GamePanel extends JPanel implements Runnable {
             if (useBuffer) { worldG.dispose(); drinkSystem.flushWorldBuffer(g2d); }
             drinkSystem.drawAfterImages(g2d);
             drinkSystem.overlay(g2d);
+            envManager.draw(g2d);
+
+            if(showMapOverlay) {
+                map.drawFullMapOverlay(g2d);
+            }
+            map.drawMiniMap(g2d);
+
             ui.draw(g2d);
             drawFps(g2d);
             g2d.dispose();

@@ -8,8 +8,6 @@ public class EventHandler {
     int previousEventX, previousEventY;
     boolean canTouchEvent=true;
 
-    int x,y;
-
 
     public EventHandler(GamePanel gp) {
         this.gp = gp;
@@ -55,13 +53,13 @@ public class EventHandler {
                 healingEvent( gp.dialogueState);
             }
             else if (hit(0,25, 19, "any")) {
-                teleportEvent( gp.dialogueState,0,37,10);
+                teleportEvent(0,37,10);
             }
             else if(hit(0,10,39,"any")){
-                teleportEvent( gp.dialogueState,1,12,13);
+                teleportEvent(1,12,13);
             }
             else if(hit(1,12,13,"any")){
-                teleportEvent( gp.dialogueState,0,10,39);
+                teleportEvent(0,10,39);
             }
         }
     }
@@ -106,7 +104,7 @@ public class EventHandler {
         }
     }
 
-    public void teleportEvent(int gameState,int map,int col,int row){
+    public void teleportEvent(int map, int col, int row){
 
         gp.gameState = gp.transitionState;
         tempMap=map;

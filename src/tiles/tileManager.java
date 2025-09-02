@@ -15,9 +15,6 @@ public class tileManager extends JPanel {
     GamePanel gp;
     public tile[] tiles;
     public int[][][] mapTileNum;
-    public int mapCols;
-    public int mapRows;
-    boolean drawPath=true;
 
     //constructor
     public tileManager(GamePanel gp) {

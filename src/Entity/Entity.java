@@ -33,10 +33,10 @@ public class Entity {
     public BufferedImage up1, up2, down1, down2, left1, left2, right1, right2,upLeft1, upLeft2, upRight1, upRight2, downLeft1, downLeft2, downRight1, downRight2;
 
     // --- 3.2 Attack Sprites ---
+    public BufferedImage attackUp1, attackUp2, attackDown1, attackDown2, attackLeft1, attackLeft2, attackRight1,attackRight2;
 
     // --- 3.3 Idle / Death / Extra Sprites ---
     public BufferedImage idle_up, idle_down, idle_left, idle_right;
-    //public BufferedImage die1, die2, die3; in PROGRESS
     public BufferedImage idle_1, idle_2, idle_3, idle_4;
     public BufferedImage image1, image2, image3;
 
@@ -104,6 +104,8 @@ public class Entity {
     public boolean pickable = true;
     public boolean obstacle = false;
     public int value;
+    public boolean stackable = false;
+    public int amount=1;
 
     // ========== 13. Inventory ==========
 
@@ -557,6 +559,16 @@ public class Entity {
             }
         }
         return index;
+    }
+    public int searchItemInInventory(String name){
+        int itemIndex=999;
+        for(int i=0;i<inventory.size();i++){
+            if(inventory.get(i).name.equals(name)){
+                itemIndex=i;
+                break;
+            }
+        }
+        return itemIndex;
     }
 
 }

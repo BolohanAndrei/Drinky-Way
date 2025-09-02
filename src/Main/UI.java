@@ -6,9 +6,8 @@ import object.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-
-import static java.lang.Math.round;
 
 public class UI {
 
@@ -23,8 +22,8 @@ public class UI {
 
     ArrayList<String> message=new ArrayList<>();
     ArrayList<Integer> messageID=new ArrayList<>();
-    public String[] controlLabels = {"Move Up","Move Down","Move Left","Move Right", "Attack", "Shoot", "Interact", "Inventory","Equip/Unequip", "Options", "Back"};
-    public String[] controlKeys = {"W","S","A","R", "Left Click", "Right Click", "E", "TAB","Enter", "ESC", ""};
+    public String[] controlLabels = {"Move Up","Move Down","Move Left","Move Right", "Attack", "Shoot", "Interact", "Inventory","Equip/Unequip","Map","Mini Map", "Options", "Back"};
+    public String[] controlKeys = {"W","S","A","R", "Left Click", "Right Click", "E", "TAB","Enter","M","N", "ESC", ""};
     private int controlScrollOffset = 0;
 
 
@@ -41,6 +40,9 @@ public class UI {
     public int subState=0;
     int counter=0;
     public boolean chestFocusPlayer = true;
+    public boolean sleepActive=false;
+    private int currentSleepPhase = 0; // 0 sleep, 1 wake
+    private int phaseFrame = 0;
 
     public Entity trade;
     public Entity chest;
@@ -138,6 +140,11 @@ public class UI {
             drawChestScreen();
         }
 
+        //SLEEP STATE
+        if(gp.gameState==gp.sleepState){
+            drawSleepScreen();
+        }
+
     }
 
     public void drawDialogueScreen() {
@@ -155,7 +162,7 @@ public class UI {
         if(gp.gameState == gp.tradeState || gp.gameState == gp.chestState){
             drawSubWindow(gp.tileSize*12, (int)(gp.tileSize*4.5), gp.tileSize*7, gp.tileSize);
             g2.drawString("Press ENTER to continue", (int)(gp.tileSize*12.5), (int)(gp.tileSize*5.1));
-            drawSubWindow(gp.tileSize*14, (int)(gp.tileSize*11), gp.tileSize*5, gp.tileSize);
+            drawSubWindow(gp.tileSize*14, gp.tileSize*11, gp.tileSize*5, gp.tileSize);
             g2.drawString("Press E to exit", (int)(gp.tileSize*14.5), (int)(gp.tileSize*11.6));
 
         }else{
@@ -454,7 +461,7 @@ public class UI {
         g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 12F));
         drawSubWindow(gp.tileSize*13, (int)(gp.tileSize*8.5), gp.tileSize*6, gp.tileSize);
         g2.drawString("Press E to go back", (int)(gp.tileSize*13.5), (int)(gp.tileSize*9.1));
-        drawSubWindow(gp.tileSize*13, (int)(gp.tileSize*7), gp.tileSize*6, gp.tileSize);
+        drawSubWindow(gp.tileSize*13, gp.tileSize*7, gp.tileSize*6, gp.tileSize);
         g2.drawString("Press ENTER to buy", (int)(gp.tileSize*13.5), (int)(gp.tileSize*7.6));
 
         //Coins
@@ -490,15 +497,16 @@ public class UI {
                     currentDialogue="Har har! Yer pockets be emptier than a sober tavern. Come back with more gold, ye stingy barnacle!";
 
                 }
-                else if(gp.player.inventory.size()==gp.player.maxInventorySize){
-                    gp.keyHandler.previousGameState = gp.gameState;
-                    subState=0;
-                    commandNum=0;
-                    gp.gameState=gp.dialogueState;
+                else{
+                    if(gp.player.canObtainItem(trade.inventory.get(itemIndex))){
+                        gp.player.coin-=trade.inventory.get(itemIndex).value;
+                    }else{
+                        subState=0;
+                        commandNum=0;
+                        gp.gameState=gp.dialogueState;
                     currentDialogue="Arrr, yer bag be fuller than me belly after ten barrels o’ rum! Toss some junk afore ye buy more.";
-                }else{
-                    gp.player.coin-=trade.inventory.get(itemIndex).value;
-                    gp.player.inventory.add(trade.inventory.get(itemIndex));
+
+                    }
                 }
             }
         }
@@ -508,7 +516,7 @@ public class UI {
 
         //Buttons
         g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 12F));
-        drawSubWindow(gp.tileSize*2, (int)(gp.tileSize*11), gp.tileSize*6, gp.tileSize);
+        drawSubWindow(gp.tileSize*2, gp.tileSize*11, gp.tileSize*6, gp.tileSize);
         g2.drawString("Press E to go back", (int)(gp.tileSize*2.5), (int)(gp.tileSize*11.6));
         drawSubWindow(gp.tileSize*2, (int)(gp.tileSize*9.5), gp.tileSize*6, gp.tileSize);
         g2.drawString("Press ENTER to sell", (int)(gp.tileSize*2.5), (int)(gp.tileSize*10.1));
@@ -546,7 +554,11 @@ public class UI {
                     gp.gameState=gp.dialogueState;
                     currentDialogue="Arrr, ye can’t sell the steel on yer back, ye drunken fool! Unequip it first!";
                 }else{
-                    gp.player.inventory.remove(itemIndex);
+                    if(gp.player.inventory.get(itemIndex).amount>1){
+                        gp.player.inventory.get(itemIndex).amount--;
+                    }else{
+                        gp.player.inventory.remove(itemIndex);
+                    }
                     gp.player.coin+=price;
                 }
             }
@@ -567,19 +579,19 @@ public class UI {
 
         if(chestFocusPlayer){
             int bx1 = gp.tileSize*2;
-            drawSubWindow(bx1, (int)(gp.tileSize*8), gp.tileSize*6, gp.tileSize);
+            drawSubWindow(bx1, gp.tileSize*8, gp.tileSize*6, gp.tileSize);
             g2.drawString("Press ENTER to drop", (int)(bx1+gp.tileSize*0.5), (int)(gp.tileSize*8.6));
             drawSubWindow(bx1, (int)(gp.tileSize*9.5), gp.tileSize*6, gp.tileSize);
             g2.drawString("Press SPACE to chg", (int)(bx1+gp.tileSize*0.5), (int)(gp.tileSize*10.1));
-            drawSubWindow(bx1, (int)(gp.tileSize*11), gp.tileSize*6, gp.tileSize);
+            drawSubWindow(bx1, gp.tileSize*11, gp.tileSize*6, gp.tileSize);
             g2.drawString("Press E to exit", (int)(bx1+gp.tileSize*0.5), (int)(gp.tileSize*11.6));
         } else {
             int bx1 = gp.tileSize*13;
-            drawSubWindow(bx1, (int)(gp.tileSize*8), gp.tileSize*6, gp.tileSize);
+            drawSubWindow(bx1, gp.tileSize*8, gp.tileSize*6, gp.tileSize);
             g2.drawString("Press ENTER to pick", (int)(bx1+gp.tileSize*0.5), (int)(gp.tileSize*8.6));
             drawSubWindow(bx1, (int)(gp.tileSize*9.5), gp.tileSize*6, gp.tileSize);
             g2.drawString("Press SPACE to chg", (int)(bx1+gp.tileSize*0.5), (int)(gp.tileSize*10.1));
-            drawSubWindow(bx1, (int)(gp.tileSize*11), gp.tileSize*6, gp.tileSize);
+            drawSubWindow(bx1, gp.tileSize*11, gp.tileSize*6, gp.tileSize);
             g2.drawString("Press E to exit", (int)(bx1+gp.tileSize*0.5), (int)(gp.tileSize*11.6));
         }
 
@@ -588,40 +600,110 @@ public class UI {
             if (chestFocusPlayer) {
                 int itemIndex = getItemIndexSlot(slotCol, slotRow);
                 if (itemIndex >= 0 && itemIndex < gp.player.inventory.size()) {
-                    if (gp.player.inventory.get(itemIndex) == gp.player.currentWeapon || gp.player.inventory.get(itemIndex) == gp.player.currentShield
-                            || gp.player.inventory.get(itemIndex) == gp.player.currentHelmet || gp.player.inventory.get(itemIndex) == gp.player.currentChest
-                            || gp.player.inventory.get(itemIndex) == gp.player.currentBoots) {
+                    Entity item = gp.player.inventory.get(itemIndex);
+
+                    if (item == gp.player.currentWeapon || item == gp.player.currentShield
+                            || item == gp.player.currentHelmet || item == gp.player.currentChest
+                            || item == gp.player.currentBoots) {
                         gp.keyHandler.previousGameState = gp.gameState;
                         gp.gameState = gp.dialogueState;
-                        currentDialogue = "Arrr, ye can't sell the steel on yer back, ye drunken fool! Unequip it first!";
+                        currentDialogue = "Arrr, ye can't drop the steel on yer back, ye drunken fool! Unequip it first!";
                     } else {
-                        if (chest.inventory.size() < chest.maxInventorySize) {
-                            chest.inventory.add(gp.player.inventory.get(itemIndex));
-                            gp.player.inventory.remove(itemIndex);
+                        if (transferItemToChest(item, itemIndex)) {
                             gp.se.playSE(30);
                         } else {
                             gp.keyHandler.previousGameState = gp.gameState;
                             gp.gameState = gp.dialogueState;
-                            currentDialogue="Chest Full";
+                            currentDialogue = "Chest Full";
                         }
                     }
                 }
             } else {
                 int itemIndex = getItemIndexSlot(chestSlotCol, chestSlotRow);
                 if (itemIndex >= 0 && itemIndex < chest.inventory.size()) {
-                    if (gp.player.inventory.size() < gp.player.maxInventorySize) {
-                        gp.player.inventory.add(chest.inventory.get(itemIndex));
-                        chest.inventory.remove(itemIndex);
+                    Entity item = chest.inventory.get(itemIndex);
+
+                    if (gp.player.canObtainItem(item)) {
+                        if (item.amount > 1) {
+                            item.amount--;
+                        } else {
+                            chest.inventory.remove(itemIndex);
+                        }
                         gp.se.playSE(30);
                     } else {
                         gp.keyHandler.previousGameState = gp.gameState;
                         gp.gameState = gp.dialogueState;
-                        currentDialogue="Inventory Full";
+                        currentDialogue = "Inventory Full";
                     }
                 }
             }
             gp.keyHandler.enterPressed = false;
         }
+    }
+
+    public void startSleep(){
+        if(sleepActive){return;}
+        sleepActive = true;
+        counter=0;
+        gp.envManager.light.filterAlpha=0f;
+        gp.gameState = gp.sleepState;
+    }
+
+    public void drawSleepScreen() {
+        if (!sleepActive) return;
+
+        final int sleepFrameCount = gp.player.sleep.length;
+        final int wakeFrameCount = gp.player.wake.length;
+        final int sleepFrameDuration = 8;
+        final int wakeFrameDuration = 9;
+
+
+        if (counter == 0) {
+            currentSleepPhase = 0;
+            phaseFrame = 0;
+        }
+
+        if (currentSleepPhase == 0) {
+            int frameIndex = phaseFrame / sleepFrameDuration;
+            if (frameIndex >= sleepFrameCount) {
+                currentSleepPhase = 1;
+                phaseFrame = 0;
+            }
+        }
+
+        BufferedImage frame;
+        if (currentSleepPhase == 0) {
+            int frameIndex = Math.min(sleepFrameCount - 1, phaseFrame / sleepFrameDuration);
+            frame = gp.player.sleep[frameIndex];
+            float t = frameIndex / (float) (sleepFrameCount - 1 == 0 ? 1 : sleepFrameCount - 1);
+            gp.envManager.light.filterAlpha = Math.min(1f, t);
+        } else {
+            int frameIndex = Math.min(wakeFrameCount - 1, phaseFrame / wakeFrameDuration);
+            frame = gp.player.wake[frameIndex];
+            float t = frameIndex / (float) (wakeFrameCount - 1 == 0 ? 1 : wakeFrameCount - 1);
+            gp.envManager.light.filterAlpha = Math.max(0f, 1f - t);
+            if (frameIndex == wakeFrameCount - 1 &&
+                    (phaseFrame / wakeFrameDuration) >= wakeFrameCount) {
+                gp.envManager.light.filterAlpha = 0f;
+                counter = 0;
+                phaseFrame = 0;
+                currentSleepPhase = 0;
+                sleepActive = false;
+                gp.player.drinkPercent = 99;
+                gp.gameState = gp.playState;
+                return;
+            }
+        }
+
+        if (frame == null) {
+            frame = gp.player.idle_down;
+        }
+
+        gp.player.recenter();
+        g2.drawImage(frame, gp.player.screenX, gp.player.screenY, gp.tileSize, gp.tileSize, null);
+
+        phaseFrame++;
+        counter++;
     }
 
     public void optionsTop(int frameX,int frameY){
@@ -871,6 +953,18 @@ public class UI {
             }
             if (entity.inventory.get(i) != null) {
                 g2.drawImage(entity.inventory.get(i).down1, slotX, slotY, null);
+                if((entity==gp.player || entity==chest )&& entity.inventory.get(i).amount>1) {
+                    g2.setFont(getPublicPixel().deriveFont(12F));
+                    int amountX;
+                    int amountY;
+                    String s=""+entity.inventory.get(i).amount;
+                    amountX=getXAlignToRightText(s,slotX+44);
+                    amountY=slotY+gp.tileSize;
+                    g2.setColor(new Color(60, 60, 60));
+                    g2.drawString(s, amountX, amountY);
+                    g2.setColor(Color.white);
+                    g2.drawString(s, amountX-3, amountY-3);
+                }
                 slotX += slotSize;
 
                 if (i % 5 == 4) {
@@ -915,16 +1009,16 @@ public class UI {
                 }
                 if(entity==gp.player && gp.gameState==gp.characterState) {
                     g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 12F));
-                    if (entity.inventory.get(itemIndex) != null && itemIndex<entity.inventory.size()) {
+                    if (entity.inventory.get(itemIndex) != null) {
                         if (gp.player.inventory.get(itemIndex).gearType > 1) {
-                            drawSubWindow((int) (gp.tileSize * 12.8), (int) (gp.tileSize * 6), (int) (gp.tileSize * 6.4), gp.tileSize);
+                            drawSubWindow((int) (gp.tileSize * 12.8), gp.tileSize * 6, (int) (gp.tileSize * 6.4), gp.tileSize);
                             g2.drawString("Press ENTER to use", (int) (gp.tileSize * 13.6), (int) (gp.tileSize * 6.6));
                         }
                        else if (!gp.player.isEquipped(gp.player.inventory.get(itemIndex))) {
-                            drawSubWindow((int) (gp.tileSize * 12.8), (int) (gp.tileSize * 6), (int) (gp.tileSize * 6.4), gp.tileSize);
+                            drawSubWindow((int) (gp.tileSize * 12.8), gp.tileSize * 6, (int) (gp.tileSize * 6.4), gp.tileSize);
                             g2.drawString("Press ENTER to equip", (int) (gp.tileSize * 13.5), (int) (gp.tileSize * 6.6));
                         } else if (gp.player.isEquipped(gp.player.inventory.get(itemIndex))) {
-                            drawSubWindow((int) (gp.tileSize * 12.8), (int) (gp.tileSize * 6), (int) (gp.tileSize * 6.4), gp.tileSize);
+                            drawSubWindow((int) (gp.tileSize * 12.8), gp.tileSize * 6, (int) (gp.tileSize * 6.4), gp.tileSize);
                             g2.drawString("Press ENTER to unequip", (int) (gp.tileSize * 13.2), (int) (gp.tileSize * 6.6));
                         }
                     }
@@ -1121,5 +1215,45 @@ public class UI {
 
     public Font getPublicPixel() {
         return PublicPixel;
+    }
+    private boolean transferItemToChest(Entity item, int playerItemIndex) {
+        if (item.stackable) {
+            int chestIndex = chest.searchItemInInventory(item.name);
+            if (chestIndex != 999) {
+                chest.inventory.get(chestIndex).amount++;
+                if(gp.player.inventory.get(playerItemIndex).amount>1){
+                    gp.player.inventory.get(playerItemIndex).amount--;
+                }
+                else {
+                    gp.player.inventory.remove(playerItemIndex);
+                }
+                return true;
+            } else {
+                if (chest.inventory.size() < chest.maxInventorySize) {
+                    try {
+                        Entity newItem=item.getClass().getConstructor(GamePanel.class).newInstance(gp);
+                        newItem.amount=1;
+                        chest.inventory.add(newItem);
+                    } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
+                             InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    if(gp.player.inventory.get(playerItemIndex).amount>1){
+                        gp.player.inventory.get(playerItemIndex).amount--;
+                    }else{
+                        gp.player.inventory.remove(playerItemIndex);
+                    }
+                    return true;
+                }
+            }
+        } else {
+            if (chest.inventory.size() < chest.maxInventorySize) {
+                chest.inventory.add(item);
+                gp.player.inventory.remove(playerItemIndex);
+                return true;
+            }
+        }
+        return false;
     }
 }

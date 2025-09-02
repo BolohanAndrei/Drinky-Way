@@ -55,7 +55,16 @@ public class KeyHandler implements KeyListener, MouseListener {
                 previousGameState = gp.chestState;
                 gp.gameState=gp.optionState;
             }
+            else if(gp.gameState==gp.sleepState){
+                previousGameState = gp.sleepState;
+                gp.gameState=gp.optionState;
+            }
+            else if(gp.gameState==gp.mapState){
+                previousGameState = gp.mapState;
+                gp.gameState=gp.optionState;
+            }
         }
+
         //Title state
         if(gp.gameState==gp.titleState){
             titleState(code);
@@ -86,6 +95,10 @@ public class KeyHandler implements KeyListener, MouseListener {
         else if(gp.gameState==gp.chestState){
             chestState(code);
         }
+        else if(gp.gameState==gp.mapState){
+            mapState(code);
+        }
+
     }
 
     public void titleState(int code) {
@@ -106,9 +119,7 @@ public class KeyHandler implements KeyListener, MouseListener {
             }
             if (code == KeyEvent.VK_ENTER) {
                 switch (gp.ui.commandNum) {
-                    case 0 -> {
-                        gp.ui.titleScreenState = 1;
-                    }
+                    case 0 -> gp.ui.titleScreenState = 1;
                     case 1 -> System.out.println("Load Game");
                     case 2 -> System.exit(0);
                 }
@@ -136,6 +147,12 @@ public class KeyHandler implements KeyListener, MouseListener {
         }
         if(code==KeyEvent.VK_TAB) {
             gp.gameState=gp.characterState;
+        }
+        if(code==KeyEvent.VK_M) {
+            gp.gameState=gp.mapState;
+        }
+        if(code==KeyEvent.VK_N) {
+            gp.map.miniMapOn= !gp.map.miniMapOn;
         }
     }
     public void optionState(int code){
@@ -440,6 +457,11 @@ public class KeyHandler implements KeyListener, MouseListener {
             chestInventory(code);
         }
 
+    }
+    public void mapState(int code) {
+        if(code==KeyEvent.VK_M) {
+            gp.gameState = gp.playState;
+        }
     }
 
     @Override

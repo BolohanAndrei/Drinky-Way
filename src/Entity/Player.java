@@ -9,6 +9,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Player extends Entity {
     KeyHandler keyHandler;
@@ -45,14 +46,14 @@ public class Player extends Entity {
     public BufferedImage[] leftImages = new BufferedImage[10];
     public BufferedImage[] rightImages = new BufferedImage[10];
 
+    public BufferedImage[] sleep=new BufferedImage[15];
+    public BufferedImage[] wake=new BufferedImage[13];
     public BufferedImage idle_up, idle_down, idle_left, idle_right;
     public BufferedImage[] idleImages=new  BufferedImage[4];
     private boolean longIdle = false;
     private int longIdleCounter = 0;
     private int longIdleAnimFrame = 0;
     private int longIdleAnimTick = 0;
-    private final int longIdleDelay = 300;
-    private final int longIdleAnimSpeed = 30;
 
     public BufferedImage[] attackUpImages = new BufferedImage[5];
     public BufferedImage[] attackDownImages = new BufferedImage[5];
@@ -61,6 +62,7 @@ public class Player extends Entity {
 
     public BufferedImage[] dieImages = new BufferedImage[36];
     private boolean deathSfxPlayed=false;
+
 
     public Player(GamePanel gp, KeyHandler kh) {
         super(gp);
@@ -178,7 +180,12 @@ public class Player extends Entity {
             drinkPercent+=drink.alcohol;
             if(drinkPercent>maxDrinkPercent) drinkPercent=maxDrinkPercent;
             updateDrunkFromPercent();
-            inventory.remove(drink);
+            if(drink.amount>1){
+                drink.amount--;
+            }
+           else {
+                inventory.remove(drink);
+            }
             gp.se.playSE(20);
             gp.ui.addMessage("Alcohol +" + drink.alcohol + "% (" + drinkPercent + "%)");
         }
@@ -189,6 +196,9 @@ public class Player extends Entity {
         inventory.add(currentWeapon);
         inventory.add(currentShield);
         inventory.add(new Obj_Gold_Key(gp));
+        canObtainItem(new Obj_Drugs(gp));
+        canObtainItem(new Obj_Drugs(gp));
+
     }
 
     public void getPlayerImage() {
@@ -207,6 +217,12 @@ public class Player extends Entity {
 
             for (int i = 0; i < 36; i++) {
                 dieImages[i] = setup("player/pirate_die" + (i));
+            }
+            for(int i=0;i<15;i++){
+                sleep[i]=setup("player/sleep_" + (i+1));
+            }
+            for(int i=0;i<13;i++){
+                wake[i]=setup("player/wake_" + (i+1));
             }
         } catch (NullPointerException e) {
             e.getMessage();
@@ -242,6 +258,7 @@ public class Player extends Entity {
     }
 
     public void update() {
+        Random rand=new Random();
 
         // Death animation
         if (health <= 0) {
@@ -271,6 +288,17 @@ public class Player extends Entity {
                 }
             }
             return;
+        }
+
+        if(drinkPercent>99 && !gp.ui.sleepActive){
+            if(rand.nextInt(10)<=5){
+                gp.music.playSE(6);
+            }
+            else {
+                gp.music.playSE(7);
+            }
+            gp.ui.startSleep();
+            //Hangover
         }
 
         double dx = 0, dy = 0;
@@ -327,7 +355,7 @@ public class Player extends Entity {
         double deceleration = 0.35;
         double minStopSpeed = 0.10;
 
-        if(moved) {
+        if(moved || attacking) {
             longIdle=false;
             longIdleCounter = 0;
             longIdleAnimFrame = 0;
@@ -340,6 +368,7 @@ public class Player extends Entity {
                 walkAnimationFrame = 0;
             }
             if (!longIdle) {
+                int longIdleDelay = 300;
                 if (longIdleCounter < longIdleDelay) {
                     longIdleCounter++;
                     if (longIdleCounter == longIdleDelay) {
@@ -348,14 +377,13 @@ public class Player extends Entity {
                 }
             } else {
                 longIdleAnimTick++;
+                int longIdleAnimSpeed = 30;
                 if (longIdleAnimTick >= longIdleAnimSpeed) {
                     longIdleAnimTick = 0;
                     longIdleAnimFrame = (longIdleAnimFrame + 1) % idleImages.length;
                 }
             }
         }
-
-
 
         double[] wobble={dx,dy};
         gp.drinkSystem.distortInput(this,wobble);
@@ -512,25 +540,7 @@ public class Player extends Entity {
         }
 
         if (attacking) {
-            attackCounter++;
-            if (attackCounter <= 5) {
-                attackAnimationFrame = 0;
-            } else if (attackCounter <= 25) {
-                int frameIndex = (attackCounter - 5) / 4;
-                attackAnimationFrame = Math.min(frameIndex, 4);
-
-                if (attackCounter == 15 && !hasHit) {
-                    Rectangle area = buildAttackArea();
-                    checkAttackHit(area, attack, false);
-                    damageInteractiveTile(area);
-                    hasHit = true;
-                }
-            } else {
-                attacking = false;
-                attackCounter = 0;
-                hasHit = false;
-                attackAnimationFrame = 0;
-            }
+            attack();
         }
 
         if(gp.keyHandler.shotKeyPressed && !projectile.alive && shotAvailableCounter==60){
@@ -556,6 +566,28 @@ public class Player extends Entity {
         }
         updateDrunkFromPercent();
 
+    }
+
+    public void attack(){
+        attackCounter++;
+        if (attackCounter <= 5) {
+            attackAnimationFrame = 0;
+        } else if (attackCounter <= 25) {
+            int frameIndex = (attackCounter - 5) / 4;
+            attackAnimationFrame = Math.min(frameIndex, 4);
+
+            if (attackCounter == 15 && !hasHit) {
+                Rectangle area = buildAttackArea();
+                checkAttackHit(area, attack, false);
+                damageInteractiveTile(area);
+                hasHit = true;
+            }
+        } else {
+            attacking = false;
+            attackCounter = 0;
+            hasHit = false;
+            attackAnimationFrame = 0;
+        }
     }
 
     private Rectangle buildAttackArea(){
@@ -748,8 +780,7 @@ public class Player extends Entity {
                 gp.obj[gp.currentMap][i].use(this);
             } else {
                 String text;
-                if (inventory.size() != maxInventorySize) {
-                    inventory.add(gp.obj[gp.currentMap][i]);
+                if (canObtainItem(gp.obj[gp.currentMap][i])) {
                     gp.se.playSE(2);
                     text = "Picked up " + gp.obj[gp.currentMap][i].name;
                 } else {
@@ -948,7 +979,11 @@ public class Player extends Entity {
                 consumeDrunk(selectedItem);
             } else {
                 if(selectedItem.use(this)) {
-                    inventory.remove(selectedItem);
+                    if(selectedItem.amount>1){
+                        selectedItem.amount--;
+                    }else{
+                        inventory.remove(selectedItem);
+                    }
                     gp.ui.addMessage(selectedItem.name + " used");
                 }
             }
@@ -994,5 +1029,27 @@ public class Player extends Entity {
             case "right" -> idle_right;
             default -> idle_down;
         };
+    }
+
+    public boolean canObtainItem(Entity item){
+        boolean canObtain=false;
+        if(item.stackable){
+            int index=searchItemInInventory(item.name);
+            if(index!=999){
+                inventory.get(index).amount++;
+                canObtain=true;
+            }else{
+                if(inventory.size()<maxInventorySize){
+                    inventory.add(item);
+                    canObtain=true;
+                }
+            }
+        }else{
+            if(inventory.size()<maxInventorySize){
+                inventory.add(item);
+                canObtain=true;
+            }
+        }
+     return canObtain;
     }
 }

@@ -53,14 +53,6 @@ public class DrinkSystem {
                 }
             }
 
-            if(p.drinkPercent>=95){
-                if(rand.nextInt(10)<=5){
-                    gp.music.playSE(6);
-                }
-                else {
-                    gp.music.playSE(7);
-                }
-            }
 
             if(p.drinkPercent==0 && (!trail.isEmpty() || p.drunkOriginalTx!=null)){
                 soberUp(p);

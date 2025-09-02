@@ -13,6 +13,7 @@ public class Obj_Gold_Key extends Entity {
         this.gp=gp;
         name="Gold Key";
         gearType=2;
+        stackable=true;
         down1=setup("objects/gold_key");
         value=500;
         itemDescription = "["+name+"]\nOpens chests, doors, and maybe your ex’s heart.\nShiny enough to blind a sober man.";

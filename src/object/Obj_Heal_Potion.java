@@ -10,6 +10,8 @@ public class Obj_Heal_Potion extends Entity {
         this.gp=gp;
         gearType=2;
         value=50;
+        stackable=true;
+
         name="Heal Potion";
         down1=setup("objects/heal_potion");
         itemDescription = "["+name+"] HP +"+2+"\nLiquid bandage for the soul. Restores health, dignity sold separately.";
