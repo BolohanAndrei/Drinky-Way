@@ -19,6 +19,6 @@ public class EnvManager {
         light.draw(g2);
     }
     public void update(){
-        light.update();
+        light.update(gp, 400);
     }
 }

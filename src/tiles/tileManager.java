@@ -16,7 +16,6 @@ public class tileManager extends JPanel {
     public tile[] tiles;
     public int[][][] mapTileNum;
 
-    //constructor
     public tileManager(GamePanel gp) {
         this.gp = gp;
         tiles = new tile[100];
@@ -26,7 +25,6 @@ public class tileManager extends JPanel {
         loadMap("/res/maps/interior01.txt",1);
     }
 
-    //load tile images
     public void getTileImage() {
         try {
             setup(0, "grass00", false);
@@ -91,7 +89,6 @@ public class tileManager extends JPanel {
         }
     }
 
-    //load map from text file
     public void loadMap(String filePath,int map) {
         try{
             InputStream is = getClass().getResourceAsStream(filePath);
@@ -119,35 +116,54 @@ public class tileManager extends JPanel {
         }
     }
 
-    //draw the tiles on the screen
     public void draw(Graphics g2) {
-        g2.drawImage(tiles[12].image, 0, 0, gp.screenWidth, gp.screenHeight, null);
+        final int tileSize = gp.tileSize;
 
-        int worldCol=0;
-        int worldRow =0;
+        int playerX = gp.player.x;
+        int playerY = gp.player.y;
+        int screenX = gp.player.screenX;
+        int screenY = gp.player.screenY;
 
-        while(worldCol<gp.maxWorldCol && worldRow <gp.maxWorldRow) {
-            int tileNum = mapTileNum[gp.currentMap][worldCol][worldRow];
+        int worldLeft = playerX - screenX;
+        int worldTop = playerY - screenY;
+        int worldRight = worldLeft + gp.screenWidth;
+        int worldBottom = worldTop + gp.screenHeight;
+        int worldPixelWidth = gp.maxWorldCol * tileSize;
+        int worldPixelHeight = gp.maxWorldRow * tileSize;
 
-            int worldX = worldCol * gp.tileSize;
-            int worldY = worldRow * gp.tileSize;
-            int x = worldX - gp.player.x + gp.player.screenX;
-            int y = worldY - gp.player.y + gp.player.screenY;
+        g2.setColor(new Color(59, 143, 202));
 
-            if(worldX+gp.tileSize>gp.player.x-gp.player.screenX &&
-                    worldX-gp.tileSize<gp.player.x+gp.player.screenX &&
-                    worldY+gp.tileSize>gp.player.y-gp.player.screenY &&
-                    worldY-gp.tileSize<gp.player.y+gp.player.screenY) {
-                g2.drawImage(tiles[tileNum].image, x, y,  null);
-            }
-            worldCol++;
+        if (worldLeft < 0) {
+            int w = -worldLeft;
+            g2.fillRect(0, 0, w, gp.screenHeight);
+        }
+        if (worldRight > worldPixelWidth) {
+            int w = worldRight - worldPixelWidth;
+            g2.fillRect(gp.screenWidth - w, 0, w, gp.screenHeight);
+        }
+        if (worldTop < 0) {
+            int h = -worldTop;
+            g2.fillRect(0, 0, gp.screenWidth, h);
+        }
+        if (worldBottom > worldPixelHeight) {
+            int h = worldBottom - worldPixelHeight;
+            g2.fillRect(0, gp.screenHeight - h, gp.screenWidth, h);
+        }
 
-            if(worldCol == gp.maxWorldCol) {
-                worldCol = 0;
+        int startCol = Math.max(0, worldLeft / tileSize);
+        int endCol = Math.min(gp.maxWorldCol, (worldRight / tileSize) + 1);
+        int startRow = Math.max(0, worldTop / tileSize);
+        int endRow = Math.min(gp.maxWorldRow, (worldBottom / tileSize) + 1);
 
-                worldRow++;
+        for (int row = startRow; row < endRow; row++) {
+            int baseY = row * tileSize - worldTop;
+            for (int col = startCol; col < endCol; col++) {
+                int baseX = col * tileSize - worldLeft;
+                int tileNum = mapTileNum[gp.currentMap][col][row];
+                g2.drawImage(tiles[tileNum].image, baseX, baseY, null);
             }
         }
     }
+
 
 }

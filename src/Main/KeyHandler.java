@@ -89,12 +89,15 @@ public class KeyHandler implements KeyListener, MouseListener {
         else if(gp.gameState==gp.gameOverState){
             gameOverState(code);
         }
+        //Trade State
         else if(gp.gameState==gp.tradeState){
             tradeState(code);
         }
+        //Chest State
         else if(gp.gameState==gp.chestState){
             chestState(code);
         }
+        //Map Stat
         else if(gp.gameState==gp.mapState){
             mapState(code);
         }
@@ -154,23 +157,27 @@ public class KeyHandler implements KeyListener, MouseListener {
         if(code==KeyEvent.VK_N) {
             gp.map.miniMapOn= !gp.map.miniMapOn;
         }
+        if(code==KeyEvent.VK_F3){
+            gp.toggleDebugHitboxes();
+        }
     }
     public void optionState(int code){
         if(code == KeyEvent.VK_ENTER) {
             enterPressed=true;
         }
         if(gp.ui.subState == 0) {
+            int max = gp.ui.getOptionMenuItemCount() - 1;
             if (code == KeyEvent.VK_W) {
                 gp.se.playSE(19);
                 gp.ui.commandNum--;
                 if (gp.ui.commandNum < 0) {
-                    gp.ui.commandNum = 4;
+                    gp.ui.commandNum = max;
                 }
             }
             if (code == KeyEvent.VK_S) {
                 gp.se.playSE(19);
                 gp.ui.commandNum++;
-                if (gp.ui.commandNum > 4) {
+                if (gp.ui.commandNum > max) {
                     gp.ui.commandNum = 0;
                 }
             }

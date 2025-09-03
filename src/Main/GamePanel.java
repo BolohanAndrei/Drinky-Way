@@ -7,6 +7,7 @@ import Envire.EnvManager;
 import tiles.Map;
 import tiles.tileManager;
 import tiles_interactive.InteractiveTiles;
+import Monster.BaseMonster;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,6 +16,10 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 public class GamePanel extends JPanel implements Runnable {
+
+    //Debug hitbox
+    public boolean debugHitboxes = false;
+    public void toggleDebugHitboxes(){ debugHitboxes = !debugHitboxes; }
 
     final int originalTileSize = 16;
     final int scale = 3;
@@ -130,33 +135,38 @@ public class GamePanel extends JPanel implements Runnable {
     @SuppressWarnings("BusyWait")
     @Override
     public void run() {
-        final double drawInterval = 1_000_000_000.0 / FPS;
+        final long frameDuration = (long)(1_000_000_000.0 / FPS);
+        long nextFrameTime = System.nanoTime();
         double delta = 0;
-        long last = System.nanoTime();
+
         while (gameThread != null) {
-            long loopStart = System.nanoTime();
-            delta += (loopStart - last) / drawInterval;
-            last = loopStart;
-            boolean didWork = false;
-            while (delta >= 1) {
-                //System.out.println(gameState);
+            long now = System.nanoTime();
+
+            if (now >= nextFrameTime) {
+                long framesBehind = (now - nextFrameTime) / frameDuration;
+                nextFrameTime += (framesBehind + 1) * frameDuration;
+                delta += framesBehind + 1;
+            }
+
+            if (delta >= 1) {
                 update();
                 drawToTempScreen();
-                didWork = true;
-                delta--;
+                if (useStrategy) renderFrameStrategy(); else repaint();
+                delta -= 1;
             }
-            if (didWork) {
-                if (useStrategy) {
-                    renderFrameStrategy();
-                } else {
-                    repaint();
+
+            long remaining = nextFrameTime - System.nanoTime();
+            if (remaining > 1_000_000) {
+                try {
+                    Thread.sleep(remaining / 1_000_000);
+                } catch (InterruptedException ignored) {}
+            } else if (remaining > 100_000) {
+                Thread.yield();
+            } else {
+                while ((remaining = nextFrameTime - System.nanoTime()) > 0) {
+                    if (remaining > 50_000) Thread.onSpinWait();
                 }
             }
-            long frameTime = System.nanoTime() - loopStart;
-            long sleepNanos = (long) drawInterval - frameTime;
-            if (sleepNanos > 0) {
-                try { Thread.sleep(1); } catch (InterruptedException ignored) {}
-            } else Thread.yield();
         }
     }
 
@@ -164,6 +174,8 @@ public class GamePanel extends JPanel implements Runnable {
         if (gameState == playState) {
             tick++;
             player.update();
+            // Reveal current tile (fog of war)
+            map.updateExploration();
             drinkSystem.update(player);
             for(int i=0;i<npc[currentMap].length;i++){
                 if(npc[currentMap][i] == null) continue;
@@ -172,7 +184,7 @@ public class GamePanel extends JPanel implements Runnable {
             for (int i = 0; i < monster[currentMap].length; i++) {
                 Entity m = monster[currentMap][i];
                 if (m == null) continue;
-                if (m.alive && !m.dying) m.update();
+                if (m.alive) m.update();
                 if (!m.alive) { m.checkDrop(); monster[currentMap][i] = null; }
             }
             for (int i = projectiles.size() - 1; i >= 0; i--) {
@@ -193,10 +205,25 @@ public class GamePanel extends JPanel implements Runnable {
 
     public long playerTick() { return tick; }
 
+    private boolean isOnScreen(Entity e){
+        int tile = tileSize;
+        int px = player.x;
+        int py = player.y;
+        int sx = player.screenX;
+        int sy = player.screenY;
+        return ((e.x + tile) > (px - sx)) &&
+               ((e.x - tile) < (px + sx)) &&
+               ((e.y + tile) > (py - sy)) &&
+               ((e.y - tile) < (py + sy));
+    }
+
     public void drawToTempScreen() {
         if (tempScreen == null) return;
         synchronized (renderLock) {
             Graphics2D g2d = tempScreen.createGraphics();
+            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+            g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
+
             g2d.setColor(Color.black);
             g2d.fillRect(0, 0, screenWidth, screenHeight);
             if (gameState == titleState || gameState==optionState) {
@@ -212,32 +239,63 @@ public class GamePanel extends JPanel implements Runnable {
             Graphics2D worldG = useBuffer ? drinkSystem.beginWorldBuffer() : g2d;
             drinkSystem.preWorldTransform(worldG);
             tileManager.draw(worldG);
+
+            entities.add(player);
+
             for(int i=0;i<iTile[currentMap].length;i++){
                 if(iTile[currentMap][i] == null) continue;
+                if(!isOnScreen(iTile[currentMap][i])) continue;
                 iTile[currentMap][i].draw(worldG);
             }
-            entities.add(player);
+
             for(int i=0;i<npc[currentMap].length;i++){
-                if(npc[currentMap][i] == null) continue;
-                entities.add(npc[currentMap][i]);
+                Entity e = npc[currentMap][i];
+                if(e == null) continue;
+                if(!isOnScreen(e)) continue;
+                entities.add(e);
             }
             for(int i=0;i<obj[currentMap].length;i++){
-                if(obj[currentMap][i] == null) continue;
-                entities.add(obj[currentMap][i]);
+                Entity e = obj[currentMap][i];
+                if(e == null) continue;
+                if(!isOnScreen(e)) continue;
+                entities.add(e);
             }
             for(int i=0;i<monster[currentMap].length;i++){
-                if(monster[currentMap][i] == null) continue;
-                entities.add(monster[currentMap][i]);
+                Entity e = monster[currentMap][i];
+                if(e == null) continue;
+                if(!isOnScreen(e)) continue;
+                entities.add(e);
             }
-            entities.addAll(projectiles);
-            entities.addAll(particles);
-            entities.sort((a, b) -> Integer.compare(a.x, b.x));
+
+            if (!projectiles.isEmpty()) {
+                for(Entity p : projectiles){ if(isOnScreen(p)) entities.add(p); }
+            }
+            if (!particles.isEmpty()) {
+                for(Entity p : particles){ if(isOnScreen(p)) entities.add(p); }
+            }
+
+            if (entities.size() > 1) {
+                entities.sort((a, b) -> Integer.compare(a.x, b.x));
+            }
+
             for (Entity e : entities) e.draw(worldG);
+
+            //Debug
+            if(debugHitboxes){
+                drawDebugHitboxes(worldG);
+            }
+
             entities.clear();
             drinkSystem.postWorldTransform(worldG);
             if (useBuffer) { worldG.dispose(); drinkSystem.flushWorldBuffer(g2d); }
-            drinkSystem.drawAfterImages(g2d);
-            drinkSystem.overlay(g2d);
+
+            if (player.drinkPercent >= 70) {
+                drinkSystem.drawAfterImages(g2d);
+            }
+            if (player.drinkPercent >= 30) {
+                drinkSystem.overlay(g2d);
+            }
+
             envManager.draw(g2d);
 
             if(showMapOverlay) {
@@ -273,28 +331,28 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void drawScaledFrame(Graphics g) {
-        BufferedImage frame;
-        synchronized (renderLock) { frame = tempScreen; }
-        if (frame == null) return;
+        synchronized (renderLock) {
+            BufferedImage frame = tempScreen;
+            if (frame == null) return;
 
-        int w = getWidth();
-        int h = getHeight();
-        if (w <= 0 || h <= 0) return;
+            int w = getWidth();
+            int h = getHeight();
+            if (w <= 0 || h <= 0) return;
 
-        double scaleX = (double) w / screenWidth;
-        double scaleY = (double) h / screenHeight;
-        double scale = Math.min(scaleX, scaleY);
+            ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 
-        int scaledWidth = (int) Math.round(screenWidth * scale);
-        int scaledHeight = (int) Math.round(screenHeight * scale);
-        int x = (w - scaledWidth) / 2;
-        int y = (h - scaledHeight) / 2;
+            double scaleX = (double) w / screenWidth;
+            double scaleY = (double) h / screenHeight;
 
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, w, h);
+                double scale = Math.max(scaleX, scaleY);
+                int scaledWidth = (int)Math.round(screenWidth * scale);
+                int scaledHeight = (int)Math.round(screenHeight * scale);
+                int x = (w - scaledWidth)/2;
+                int y = (h - scaledHeight)/2;
+                g.setColor(Color.BLACK); g.fillRect(0,0,w,h);
+                g.drawImage(frame, x, y, scaledWidth, scaledHeight, null);
 
-        ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g.drawImage(frame, x, y, scaledWidth, scaledHeight, null);
+        }
     }
 
     @Override
@@ -335,6 +393,57 @@ public class GamePanel extends JPanel implements Runnable {
 
         g.setColor(new Color(255,255,255,170));
         g.drawString(text, x + pad, y + pad + textH - fm.getDescent());
+    }
+
+
+    //Debug
+    private void drawDebugHitboxes(Graphics2D g){
+        g.setStroke(new BasicStroke(2f));
+        int pSX = player.screenX + player.solidArea.x;
+        int pSY = player.screenY + player.solidArea.y;
+        g.setColor(new Color(0,255,0,120));
+        g.drawRect(pSX, pSY, player.solidArea.width, player.solidArea.height);
+        if(player.attacking){
+            Rectangle area;
+            try {
+                java.lang.reflect.Method m = player.getClass().getDeclaredMethod("buildAttackArea");
+                m.setAccessible(true);
+                area = (Rectangle) m.invoke(player);
+            } catch (Exception ex){ area = null; }
+            if(area!=null){
+                int screenX = area.x - player.x + player.screenX;
+                int screenY = area.y - player.y + player.screenY;
+                g.setColor(new Color(0,200,255,90));
+                g.fillRect(screenX, screenY, area.width, area.height);
+                g.setColor(new Color(0,255,255,170));
+                g.drawRect(screenX, screenY, area.width, area.height);
+            }
+        }
+        for(Entity mon : monster[currentMap]){
+            if(mon==null || !(mon instanceof BaseMonster bm) || !mon.alive) continue;
+            Rectangle r = bm.debugMeleeRect();
+            int sx = r.x - player.x + player.screenX;
+            int sy = r.y - player.y + player.screenY;
+            Color fill = bm.isMeleeActivePhase()? new Color(255,0,0,80) : (bm.isMeleeWindupPhase()? new Color(255,140,0,60): new Color(255,255,0,40));
+            Color outline = bm.isMeleeActivePhase()? new Color(255,0,0,180) : (bm.isMeleeWindupPhase()? new Color(255,140,0,180): new Color(255,255,0,160));
+            g.setColor(fill); g.fillRect(sx, sy, r.width, r.height);
+            g.setColor(outline); g.drawRect(sx, sy, r.width, r.height);
+            int monSX = mon.x - player.x + player.screenX + mon.solidArea.x;
+            int monSY = mon.y - player.y + player.screenY + mon.solidArea.y;
+            g.setColor(new Color(255,0,255,150));
+            g.drawRect(monSX, monSY, mon.solidArea.width, mon.solidArea.height);
+        }
+        g.setFont(g.getFont().deriveFont(12f));
+        int y = 14;
+        g.setColor(new Color(0,0,0,130));
+        g.fillRoundRect(6,6,210,90,8,8);
+        g.setColor(Color.WHITE);
+        g.drawString("DEBUG HITBOXES (F3)", 12, y); y+=14;
+        g.setColor(new Color(0,255,0)); g.drawString("Player Solid",12,y); y+=14;
+        g.setColor(new Color(0,255,255)); g.drawString("Player Attack",12,y); y+=14;
+        g.setColor(new Color(255,255,0)); g.drawString("Melee Range (idle)",12,y); y+=14;
+        g.setColor(new Color(255,140,0)); g.drawString("Melee Windup",12,y); y+=14;
+        g.setColor(new Color(255,0,0)); g.drawString("Melee Active",12,y);
     }
 
 }

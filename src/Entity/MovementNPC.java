@@ -43,7 +43,6 @@ public class MovementNPC extends Entity {
                 return;
             }
 
-            // NPC is moving
             actionLockCounter++;
             if (actionLockCounter == 240) {
                 Random rand = new Random();

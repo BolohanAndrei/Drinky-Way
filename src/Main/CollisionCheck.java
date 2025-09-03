@@ -15,7 +15,6 @@ public class CollisionCheck {
     public void checkTile(Entity entity) {
         entity.collisionOn = false;
 
-        // Predict future position based on direction & speed
         int futureX = entity.x;
         int futureY = entity.y;
 
@@ -30,13 +29,11 @@ public class CollisionCheck {
             case "down_right": futureX += entity.speed; futureY += entity.speed; break;
         }
 
-        // World-space bounds of solid area after movement
         int leftWorldX   = futureX + entity.solidArea.x;
         int rightWorldX  = futureX + entity.solidArea.x + entity.solidArea.width  - 1; // -1 critical
         int topWorldY    = futureY + entity.solidArea.y;
         int bottomWorldY = futureY + entity.solidArea.y + entity.solidArea.height - 1; // -1 critical
 
-        // Derive tile indices
         int maxCol = gp.tileManager.mapTileNum[gp.currentMap].length;
         int maxRow = gp.tileManager.mapTileNum[gp.currentMap][0].length;
 
@@ -45,7 +42,6 @@ public class CollisionCheck {
         int topRow    = clamp(topWorldY   / gp.tileSize, maxRow - 1);
         int bottomRow = clamp(bottomWorldY/ gp.tileSize, maxRow - 1);
 
-        // Fetch tile numbers (four corners)
         int[][][] map = gp.tileManager.mapTileNum;
         int tileNumTL = map[gp.currentMap][leftCol][topRow];
         int tileNumTR = map[gp.currentMap][rightCol][topRow];
@@ -291,11 +287,9 @@ public class CollisionCheck {
 
         Entity obj = objects[objIndex];
 
-        // Get entity's solid area position
         entity.solidArea.x = entity.x + entity.solidArea.x;
         entity.solidArea.y = entity.y + entity.solidArea.y;
 
-        // Get object's solid area position
         obj.solidArea.x = obj.x + obj.solidArea.x;
         obj.solidArea.y = obj.y + obj.solidArea.y;
 
@@ -320,7 +314,6 @@ public class CollisionCheck {
             }
         }
 
-        // Reset solid areas
         entity.solidArea.x = entity.solidAreaDefaultX;
         entity.solidArea.y = entity.solidAreaDefaultY;
         obj.solidArea.x = obj.solidAreaDefaultX;
@@ -332,15 +325,12 @@ public class CollisionCheck {
 
         for (int i = 0; i < gp.obj[gp.currentMap].length; i++) {
             if (gp.obj[gp.currentMap][i] != null) {
-                // Get entity's current solid area position (no movement prediction)
                 entity.solidArea.x = entity.x + entity.solidArea.x;
                 entity.solidArea.y = entity.y + entity.solidArea.y;
 
-                // Get object's solid area position
                 gp.obj[gp.currentMap][i].solidArea.x = gp.obj[gp.currentMap][i].x + gp.obj[gp.currentMap][i].solidArea.x;
                 gp.obj[gp.currentMap][i].solidArea.y = gp.obj[gp.currentMap][i].y + gp.obj[gp.currentMap][i].solidArea.y;
 
-                // Create an expanded interaction area around the player
                 Rectangle interactionArea = new Rectangle(
                         entity.solidArea.x - gp.tileSize/2,
                         entity.solidArea.y - gp.tileSize/2,
@@ -348,10 +338,8 @@ public class CollisionCheck {
                         entity.solidArea.height + gp.tileSize
                 );
 
-                // Check if object is within interaction range
                 if (interactionArea.intersects(gp.obj[gp.currentMap][i].solidArea)) {
                     index = i;
-                    // Reset solid areas before breaking
                     entity.solidArea.x = entity.solidAreaDefaultX;
                     entity.solidArea.y = entity.solidAreaDefaultY;
                     gp.obj[gp.currentMap][i].solidArea.x = gp.obj[gp.currentMap][i].solidAreaDefaultX;
@@ -359,7 +347,6 @@ public class CollisionCheck {
                     break;
                 }
 
-                // Reset solid areas
                 entity.solidArea.x = entity.solidAreaDefaultX;
                 entity.solidArea.y = entity.solidAreaDefaultY;
                 gp.obj[gp.currentMap][i].solidArea.x = gp.obj[gp.currentMap][i].solidAreaDefaultX;

@@ -14,13 +14,11 @@ public class InteractiveTiles extends Entity {
 
     }
     public boolean isCorrectItem(Entity item){
-        boolean isCorrect=false;
-        return  isCorrect;
+        return false;
     }
     public void playSE(){}
     public InteractiveTiles getDestroyedFrom(){
-        InteractiveTiles tile=null;
-        return  tile;
+        return null;
     }
     public void update(){
         if(invincible){
@@ -35,7 +33,9 @@ public class InteractiveTiles extends Entity {
         int screenX = x - gp.player.x + gp.player.screenX;
         int screenY = y - gp.player.y + gp.player.screenY;
 
-        g.drawImage(down1, screenX, screenY, gp.tileSize, gp.tileSize, null);
-
+        if (screenX + gp.tileSize > 0 && screenX < gp.screenWidth &&
+            screenY + gp.tileSize > 0 && screenY < gp.screenHeight) {
+            g.drawImage(down1, screenX, screenY, gp.tileSize, gp.tileSize, null);
+        }
     }
 }

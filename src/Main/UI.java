@@ -47,6 +47,8 @@ public class UI {
     public Entity trade;
     public Entity chest;
 
+    private int optionScrollOffset=0;
+
     //CONSTRUCTOR
     public UI(GamePanel gp) {
         this.gp = gp;
@@ -148,7 +150,6 @@ public class UI {
     }
 
     public void drawDialogueScreen() {
-        //WINDOW
         int x, y, width, height;
 
         x = gp.tileSize * 2;
@@ -191,15 +192,13 @@ public class UI {
 
         if (titleScreenState == 0) {
 
-            //GAME NAME + PLAYER IMAGE
             g2.setFont(getPublicPixel().deriveFont(68F));
             String text = "Drinky Way";
             int x = getXforCenteredText(text);
             int y = gp.screenHeight / 4;
             g2.drawString(text, x, y);
 
-            //MENU GAME
-            //New Game
+
             g2.setFont(getPublicPixel().deriveFont(48F));
             text = "New Game";
             x = getXforCenteredText(text);
@@ -208,7 +207,6 @@ public class UI {
             if (commandNum == 0) {
                 drawMenuPlayerImages(text, 0);
             }
-            //Load Game
             text = "Load Game";
             x = getXforCenteredText(text);
             y += gp.tileSize * 2;
@@ -217,7 +215,6 @@ public class UI {
                 drawMenuPlayerImages(text, 2);
             }
 
-            //Quit Game
             text = "Quit Game";
             x = getXforCenteredText(text);
             y += gp.tileSize * 2;
@@ -226,7 +223,6 @@ public class UI {
                 drawMenuPlayerImages(text, 4);
             }
 
-            //Confirmation
             g2.setFont(getPublicPixel().deriveFont(12F));
             text = "Press ENTER to confirm";
             x = getXforCenteredText(text);
@@ -252,7 +248,6 @@ public class UI {
         final int frameHeight=gp.tileSize*11;
         drawSubWindow(frameX,frameY,frameWidth,frameHeight);
 
-        //text
         g2.setColor(Color.white);
         g2.setFont(getPublicPixel().deriveFont(12F));
 
@@ -260,7 +255,6 @@ public class UI {
         int textY=frameY+gp.tileSize;
         final int lineHeight=30;
 
-        //Names
         textY=statusDraw("Level",textX,textY,lineHeight);
         textY=statusDraw("Exp",textX,textY,lineHeight);
         textY=statusDraw("Exp to up",textX,textY,lineHeight);
@@ -277,7 +271,6 @@ public class UI {
         statusDraw("Shield",textX,textY,lineHeight);
 
 
-        //Values
         int tailX=(frameX+frameWidth)-30;
         textY=frameY+gp.tileSize;
         String value;
@@ -457,14 +450,12 @@ public class UI {
         drawInventory(trade,true);
 
 
-        //Buttons
         g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 12F));
         drawSubWindow(gp.tileSize*13, (int)(gp.tileSize*8.5), gp.tileSize*6, gp.tileSize);
         g2.drawString("Press E to go back", (int)(gp.tileSize*13.5), (int)(gp.tileSize*9.1));
         drawSubWindow(gp.tileSize*13, gp.tileSize*7, gp.tileSize*6, gp.tileSize);
         g2.drawString("Press ENTER to buy", (int)(gp.tileSize*13.5), (int)(gp.tileSize*7.6));
 
-        //Coins
         int x=gp.tileSize*13;
         int y=gp.tileSize*10;
         int width=gp.tileSize*6;
@@ -474,7 +465,6 @@ public class UI {
         g2.drawString("Coins: " + gp.player.coin,x+24,y+60);
 
 
-        //BUY
         int itemIndex=getItemIndexSlot(tradeSlotCol,tradeSlotRow);
         if(itemIndex<trade.inventory.size()){
             x=(int)(gp.tileSize*3.7);
@@ -514,14 +504,12 @@ public class UI {
     public void tradeSell(){
         drawInventory(gp.player,true);
 
-        //Buttons
         g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 12F));
         drawSubWindow(gp.tileSize*2, gp.tileSize*11, gp.tileSize*6, gp.tileSize);
         g2.drawString("Press E to go back", (int)(gp.tileSize*2.5), (int)(gp.tileSize*11.6));
         drawSubWindow(gp.tileSize*2, (int)(gp.tileSize*9.5), gp.tileSize*6, gp.tileSize);
         g2.drawString("Press ENTER to sell", (int)(gp.tileSize*2.5), (int)(gp.tileSize*10.1));
 
-        //Coins
         int x=gp.tileSize*2;
         int y=gp.tileSize;
         int width=gp.tileSize*6;
@@ -530,7 +518,6 @@ public class UI {
         g2.setFont(getPublicPixel().deriveFont(20f));
         g2.drawString("Coins: " + gp.player.coin,x+24,y+60);
 
-        //SELL
         int itemIndex=getItemIndexSlot(slotCol,slotRow);
         if(itemIndex<gp.player.inventory.size()){
             x=(int)(gp.tileSize*16.5);
@@ -707,91 +694,65 @@ public class UI {
     }
 
     public void optionsTop(int frameX,int frameY){
-        int textX;
-        int textY;
-
-        String text="Options";
-        textX=getXforCenteredText(text);
+        int textX; int textY;
+        String header="Options";
+        textX=getXforCenteredText(header);
         textY=frameY+gp.tileSize;
-        g2.drawString(text,textX,textY);
+        g2.drawString(header,textX,textY);
 
-        //MUSIC
+        java.util.List<String> labels = new java.util.ArrayList<>();
+        labels.add("Music");
+        labels.add("SE");
+        labels.add("Control");
+        labels.add("Quit Game");
+        labels.add("Back");
+
+        if(commandNum>=labels.size()) commandNum = labels.size()-1;
+
+        int maxVisible = 5;
+        if(commandNum < optionScrollOffset) optionScrollOffset = commandNum;
+        if(commandNum >= optionScrollOffset + maxVisible) optionScrollOffset = commandNum - maxVisible + 1;
+
         textX=frameX+gp.tileSize;
-        textY+= (int) (gp.tileSize*1.5);
-        text="Music";
-        g2.drawString(text,textX,textY);
-        if(commandNum==0){
-            g2.drawImage(gp.player.rightImages[0], textX-45, textY-30, gp.tileSize, gp.tileSize, null);
-            g2.drawImage(gp.player.leftImages[0], textX-5+g2.getFontMetrics().stringWidth(text), textY-30, gp.tileSize, gp.tileSize, null);
-        }
+        textY+= (int)(gp.tileSize*1.5);
 
-        //SE
-        textY+=(int) (gp.tileSize*1.5);
-        text="SE";
-        g2.drawString(text,textX,textY);
-            if(commandNum==1) {
+        for(int visualIndex=0; visualIndex<maxVisible; visualIndex++){
+            int actualIndex = optionScrollOffset + visualIndex;
+            if(actualIndex>=labels.size()) break;
+            String txt = labels.get(actualIndex);
+            if(txt.equals("Back")){
+                textY+=gp.tileSize;
+            }
+            g2.drawString(txt,textX,textY);
+            if(commandNum==actualIndex){
                 g2.drawImage(gp.player.rightImages[0], textX - 45, textY - 30, gp.tileSize, gp.tileSize, null);
-                g2.drawImage(gp.player.leftImages[0], textX-5+g2.getFontMetrics().stringWidth(text), textY-30, gp.tileSize, gp.tileSize, null);
+                g2.drawImage(gp.player.leftImages[0], textX-5+g2.getFontMetrics().stringWidth(txt), textY-30, gp.tileSize, gp.tileSize, null);
+                if(gp.keyHandler.enterPressed){
+                    switch(actualIndex){
+                        case 2 -> { subState=1; commandNum=0; controlScrollOffset=0; optionScrollOffset=0; }
+                        case 3 -> { subState=2; commandNum=0; optionScrollOffset=0; }
+                        case 4 -> { gp.gameState=gp.keyHandler.previousGameState; commandNum=0; optionScrollOffset=0; }
+                    }
+                }
             }
 
-        //CONTROL
-        textY+=(int) (gp.tileSize*1.5);
-            text="Control";
-        g2.drawString(text,textX,textY);
-        if(commandNum==2) {
-            g2.drawImage(gp.player.rightImages[0], textX - 45, textY - 30, gp.tileSize, gp.tileSize, null);
-            g2.drawImage(gp.player.leftImages[0], textX-5+g2.getFontMetrics().stringWidth(text), textY-30, gp.tileSize, gp.tileSize, null);
-            if(gp.keyHandler.enterPressed) {
-                subState = 1;
-                commandNum = 0;
-                controlScrollOffset=0;
-            }
-        }
-
-        //QUIT GAME
-        textY+=(int) (gp.tileSize*1.5);
-        text="Quit Game";
-        g2.drawString(text,textX,textY);
-        if(commandNum==3) {
-            g2.drawImage(gp.player.rightImages[0], textX - 45, textY - 30, gp.tileSize, gp.tileSize, null);
-            g2.drawImage(gp.player.leftImages[0], textX-5+g2.getFontMetrics().stringWidth(text), textY-30, gp.tileSize, gp.tileSize, null);
-            if(gp.keyHandler.enterPressed) {
-                subState = 2;
-                commandNum = 0;
-            }
-        }
-
-        //BACK
-        textY+=gp.tileSize*3;
-        text="Back";
-        g2.drawString(text,textX,textY);
-        if(commandNum==4) {
-            g2.drawImage(gp.player.rightImages[0], textX - 45, textY - 30, gp.tileSize, gp.tileSize, null);
-            g2.drawImage(gp.player.leftImages[0], textX-5+g2.getFontMetrics().stringWidth(text), textY-30, gp.tileSize, gp.tileSize, null);
-            if(gp.keyHandler.enterPressed) {
-                gp.gameState=gp.keyHandler.previousGameState;
-                commandNum = 0;
-            }
+            textY+=(int)(gp.tileSize*1.5);
         }
 
         g2.setStroke(new BasicStroke(3));
-
-        //MUSIC VOLUME
-        textX=frameX+(int)(gp.tileSize*5.5);
-        textY=frameY+gp.tileSize*2;
-        g2.drawRect(textX,textY,120,24);
-        int volumeWidth=24*gp.music.volumeScale;
-        g2.fillRect(textX,textY,volumeWidth,24);
-
-        //SE VOLUME
-        textY+=(int) (gp.tileSize*1.5);
-        g2.drawRect(textX,textY,120,24);
-        volumeWidth=24*gp.se.volumeScale;
-        g2.fillRect(textX,textY,volumeWidth,24);
+        int barX=frameX+(int)(gp.tileSize*5.5);
+        int musicBarY=frameY+gp.tileSize*2;
+        int seBarY=musicBarY+(int)(gp.tileSize*1.5);
+        g2.drawRect(barX,musicBarY,120,24);
+        g2.fillRect(barX,musicBarY,24*gp.music.volumeScale,24);
+        g2.drawRect(barX,seBarY,120,24);
+        g2.fillRect(barX,seBarY,24*gp.se.volumeScale,24);
 
         gp.config.saveConfig();
-
+        gp.keyHandler.enterPressed=false;
     }
+
+    public int getOptionMenuItemCount(){ return 5; }
 
     public void optionsControl(int frameX, int frameY){
         int textX;
@@ -823,6 +784,7 @@ public class UI {
         for(int i = startIndex; i < endIndex; i++){
             int displayIndex = i - startIndex;
             int currentY = textY + (displayIndex * lineHeight);
+
 
             g2.drawString(controlLabels[i], textX, currentY);
 
@@ -932,7 +894,6 @@ public class UI {
         }
          drawSubWindow(frameX,frameY,frameWidth,frameHeight);
 
-         //slot
          final int slotXStart=frameX+20;
          final int slotYStart=frameY+20;
          int slotX=slotXStart;
@@ -1049,15 +1010,12 @@ public class UI {
             return wrappedLines;
         }
 
-        // First split by manual line breaks (\n)
-        String[] manualLines = text.split("\\n");
+        String[] manualLines = text.split("\n");
 
         for (String line : manualLines) {
-            // Check if this line needs wrapping
             if (g2.getFontMetrics().stringWidth(line) <= maxWidth) {
                 wrappedLines.add(line);
             } else {
-                // Apply word wrapping to this line
                 String[] words = line.split(" ");
                 StringBuilder currentLine = new StringBuilder();
 
@@ -1257,3 +1215,4 @@ public class UI {
         return false;
     }
 }
+

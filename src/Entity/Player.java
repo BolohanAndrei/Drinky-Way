@@ -63,6 +63,8 @@ public class Player extends Entity {
     public BufferedImage[] dieImages = new BufferedImage[36];
     private boolean deathSfxPlayed=false;
 
+    private final Random rng = new Random();
+
 
     public Player(GamePanel gp, KeyHandler kh) {
         super(gp);
@@ -258,9 +260,7 @@ public class Player extends Entity {
     }
 
     public void update() {
-        Random rand=new Random();
 
-        // Death animation
         if (health <= 0) {
             if (gp.gameState == gp.gameOverState) return;
             if (!deathSfxPlayed) {
@@ -291,14 +291,13 @@ public class Player extends Entity {
         }
 
         if(drinkPercent>99 && !gp.ui.sleepActive){
-            if(rand.nextInt(10)<=5){
+            if(rng.nextInt(10)<=5){
                 gp.music.playSE(6);
             }
             else {
                 gp.music.playSE(7);
             }
             gp.ui.startSleep();
-            //Hangover
         }
 
         double dx = 0, dy = 0;
@@ -390,7 +389,6 @@ public class Player extends Entity {
         dx=wobble[0];
         dy=wobble[1];
 
-        // Collision checks
         double futureX = x + dx * currentSpeed;
         double futureY = y + dy * currentSpeed;
 
@@ -467,7 +465,6 @@ public class Player extends Entity {
             // Check for blocking objects
             for (int i = 0; i < gp.obj[gp.currentMap].length; i++) {
                 if (gp.obj[gp.currentMap][i] != null && gp.obj[gp.currentMap][i].collision) {
-                    // Temporarily set collision detection
                     collisionOn = false;
                     gp.collisionCheck.checkObject(this,i, gp.obj[gp.currentMap]);
                     if (collisionOn) {
@@ -487,7 +484,6 @@ public class Player extends Entity {
             // Check for blocking objects
             for (int i = 0; i < gp.obj[gp.currentMap].length; i++) {
                 if (gp.obj[gp.currentMap][i] != null && gp.obj[gp.currentMap][i].collision) {
-                    // Temporarily set collision detection
                     collisionOn = false;
                     gp.collisionCheck.checkObject(this,i, gp.obj[gp.currentMap]);
                     if (collisionOn) {
@@ -499,7 +495,6 @@ public class Player extends Entity {
             y = (int) tempY;
         }
 
-        // Restore actual movement direction
         direction = moveDirection;
 
         // Object collision
@@ -522,11 +517,9 @@ public class Player extends Entity {
 
         gp.keyHandler.ePressed=false;
 
-        // Apply movement if allowed
         if (canMoveX) x += (int) (dx * currentSpeed);
         if (canMoveY) y += (int) (dy * currentSpeed);
 
-        // Walking animation
         if (!attacking) {
             if (moved && currentSpeed > 0) {
                 spriteCounter++;
@@ -552,7 +545,6 @@ public class Player extends Entity {
             gp.se.playSE(21);
         }
 
-        // Invincibility handling
         if (invincible) {
             invincibleCounter++;
             if (invincibleCounter > 60) {
@@ -1053,3 +1045,4 @@ public class Player extends Entity {
      return canObtain;
     }
 }
+

@@ -9,7 +9,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.Random;
 
 public class Entity {
@@ -19,6 +18,7 @@ public class Entity {
     // ========== 1. Identity & Classification ==========
     public String name;
     public int entityType = -1; // 0 player, 1 npc, 2 monster
+    public boolean allowContactDamage = true;
 
     // ========== 2. Position & Movement ==========
     public int x, y;
@@ -33,7 +33,6 @@ public class Entity {
     public BufferedImage up1, up2, down1, down2, left1, left2, right1, right2,upLeft1, upLeft2, upRight1, upRight2, downLeft1, downLeft2, downRight1, downRight2;
 
     // --- 3.2 Attack Sprites ---
-    public BufferedImage attackUp1, attackUp2, attackDown1, attackDown2, attackLeft1, attackLeft2, attackRight1,attackRight2;
 
     // --- 3.3 Idle / Death / Extra Sprites ---
     public BufferedImage idle_up, idle_down, idle_left, idle_right;
@@ -194,7 +193,7 @@ public class Entity {
         gp.collisionCheck.checkEntity(this,gp.iTile);
         boolean contactPlayer= gp.collisionCheck.checkPlayer(this);
 
-        if(this.entityType==2 && contactPlayer){
+        if(this.entityType==2 && allowContactDamage && contactPlayer){
             damagePlayer(attack);
         }
     }
@@ -375,13 +374,19 @@ public class Entity {
         Utility u = new Utility();
         BufferedImage scale = null;
         try {
-            scale = ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/res/" + name + ".png")));
+            String path = "/res/" + name + ".png";
+            var is = getClass().getResourceAsStream(path);
+            if (is == null) {
+                System.err.println("[WARN] Missing sprite resource: " + path);
+                return null;
+            }
+            scale = ImageIO.read(is);
             if(name.contains("door")){
                 scale = u.scaleImage(scale, (int) (gp.tileSize*2.0), (int) (gp.tileSize*2.0));
             }
             scale = u.scaleImage(scale, gp.tileSize, gp.tileSize);
         } catch (IOException e) {
-            e.getStackTrace();
+            System.err.println("[ERROR] Failed loading sprite: " + name + " -> " + e.getMessage());
         }
         return scale;
     }
@@ -545,6 +550,18 @@ public class Entity {
             case "down": nextWorldY=user.getBottomY()+1; break;
             case "left": nextWorldX=user.getLeftX()-1; break;
             case "right": nextWorldX=user.getRightX()+1; break;
+            case "up_left":
+                nextWorldY=user.getTopY()-1;
+                nextWorldX=user.getLeftX()-1; break;
+            case "up_right":
+                nextWorldY=user.getTopY()-1;
+                nextWorldX=user.getRightX()+1; break;
+            case "down_left":
+                nextWorldY=user.getBottomY()+1;
+                nextWorldX=user.getLeftX()-1; break;
+            case "down_right":
+                nextWorldY=user.getBottomY()+1;
+                nextWorldX=user.getRightX()+1; break;
         }
         int col=nextWorldX/gp.tileSize;
         int row=nextWorldY/gp.tileSize;
@@ -553,6 +570,34 @@ public class Entity {
             Entity obj=target[gp.currentMap][i];
             if(obj!=null){
                 if(obj.getCol()==col && obj.getRow()==row && obj.name.equals(targetName)){
+                    index=i;
+                    break;
+                }
+            }
+        }
+
+        if(index==999){
+            Rectangle base = new Rectangle(user.getLeftX(), user.getTopY(), user.solidArea.width, user.solidArea.height);
+            int shift = gp.tileSize;
+            int extra = gp.tileSize/2;
+            Rectangle forward = new Rectangle(base);
+            switch(user.direction){
+                case "up": forward.y -= shift; break;
+                case "down": forward.y += shift; break;
+                case "left": forward.x -= shift; break;
+                case "right": forward.x += shift; break;
+                case "up_left": forward.y -= shift; forward.x -= shift; break;
+                case "up_right": forward.y -= shift; forward.x += shift; break;
+                case "down_left": forward.y += shift; forward.x -= shift; break;
+                case "down_right": forward.y += shift; forward.x += shift; break;
+            }
+            forward.grow(extra, extra/2);
+
+            for(int i=0;i<target[gp.currentMap].length;i++){
+                Entity obj=target[gp.currentMap][i];
+                if(obj==null || !targetName.equals(obj.name)) continue;
+                Rectangle objBox = new Rectangle(obj.x + obj.solidArea.x, obj.y + obj.solidArea.y, obj.solidArea.width, obj.solidArea.height);
+                if(forward.intersects(objBox)){
                     index=i;
                     break;
                 }

@@ -25,6 +25,9 @@ public class DrinkSystem {
     private final Random rand=new Random();
 
     private BufferedImage sceneBuffer;
+    private BufferedImage overlayCache;
+    private int lastOverlayPercent = -1;
+    private boolean overlayDirty = true;
 
     public DrinkSystem(GamePanel gp){
         this.gp=gp;
@@ -53,10 +56,14 @@ public class DrinkSystem {
                 }
             }
 
-
             if(p.drinkPercent==0 && (!trail.isEmpty() || p.drunkOriginalTx!=null)){
                 soberUp(p);
             }
+        }
+
+        if (Math.abs(p.drinkPercent - lastOverlayPercent) > 2) {
+            overlayDirty = true;
+            lastOverlayPercent = p.drinkPercent;
         }
     }
 
@@ -114,19 +121,39 @@ public class DrinkSystem {
         int percent=p.drinkPercent;
         if(percent<30) return;
 
-        float intensity=getIntensity(p);
-        Composite old=g2.getComposite();
+        if (overlayCache == null || overlayCache.getWidth() != gp.screenWidth ||
+            overlayCache.getHeight() != gp.screenHeight || overlayDirty) {
+            generateOverlayCache(p);
+            overlayDirty = false;
+        }
+
+        g2.drawImage(overlayCache, 0, 0, null);
+    }
+
+    private void generateOverlayCache(Player p) {
+        if (overlayCache == null ||
+            overlayCache.getWidth() != gp.screenWidth ||
+            overlayCache.getHeight() != gp.screenHeight) {
+            overlayCache = new BufferedImage(gp.screenWidth, gp.screenHeight, BufferedImage.TYPE_INT_ARGB);
+        }
+
+        Graphics2D g2 = overlayCache.createGraphics();
+        g2.setComposite(AlphaComposite.Clear);
+        g2.fillRect(0, 0, gp.screenWidth, gp.screenHeight);
+        g2.setComposite(AlphaComposite.SrcOver);
+
+        float intensity = getIntensity(p);
 
         float alpha = 0.12f + 0.35f * intensity;
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
-        g2.setColor(new Color(120,0,150));
-        g2.fillRect(0,0,gp.screenWidth,gp.screenHeight);
+        g2.setColor(new Color(120, 0, 150));
+        g2.fillRect(0, 0, gp.screenWidth, gp.screenHeight);
 
-        RadialGradientPaint rg=new RadialGradientPaint(
-                gp.screenWidth/2f,
-                gp.screenHeight/2f,
-                Math.max(gp.screenWidth,gp.screenHeight),
-                new float[]{0f,0.8f,1f},
+        RadialGradientPaint rg = new RadialGradientPaint(
+                gp.screenWidth / 2f,
+                gp.screenHeight / 2f,
+                Math.max(gp.screenWidth, gp.screenHeight),
+                new float[]{0f, 0.8f, 1f},
                 new Color[]{
                         new Color(0, 0, 0, 0),
                         new Color(0, 0, 0, (int)(80 * intensity)),
@@ -136,10 +163,8 @@ public class DrinkSystem {
 
         g2.setPaint(rg);
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
-        g2.fillRect(0,0,gp.screenWidth,gp.screenHeight);
-
-        g2.setComposite(old);
-
+        g2.fillRect(0, 0, gp.screenWidth, gp.screenHeight);
+        g2.dispose();
     }
 
     public void doubleVisionComposite(Graphics2D g2, BufferedImage worldImage) {
@@ -148,15 +173,26 @@ public class DrinkSystem {
             g2.drawImage(worldImage, 0, 0, null);
             return;
         }
+
         float intensity = getIntensity(p);
-        g2.drawImage(worldImage, 0, 0, null); // base
-        Composite old = g2.getComposite();
-        float alpha = 0.10f + 0.25f * intensity;
-        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
-        int off = (int)(3 + 6 * intensity);
-        g2.drawImage(worldImage, off, 0, null);
-        g2.drawImage(worldImage, -off, 0, null);
-        g2.setComposite(old);
+
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+        g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
+
+        g2.drawImage(worldImage, 0, 0, null);
+
+        if (intensity > 0.3f && frameCounter % 2 == 0) {
+            Composite old = g2.getComposite();
+            float alpha = Math.min(0.4f, 0.10f + 0.25f * intensity);
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+            int off = Math.min(8, (int)(3 + 6 * intensity));
+
+            if (off > 2) {
+                g2.drawImage(worldImage, off, 0, null);
+                g2.drawImage(worldImage, -off, 0, null);
+            }
+            g2.setComposite(old);
+        }
     }
 
     public Graphics2D beginWorldBuffer() {
@@ -166,6 +202,8 @@ public class DrinkSystem {
             sceneBuffer = new BufferedImage(gp.screenWidth, gp.screenHeight, BufferedImage.TYPE_INT_ARGB);
         }
         Graphics2D g2 = sceneBuffer.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+        g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
         g2.setClip(0,0,gp.screenWidth,gp.screenHeight);
         return g2;
     }

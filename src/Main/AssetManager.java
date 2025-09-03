@@ -1,9 +1,10 @@
 package Main;
 
-//import Entity.DrunkNPC1;
 import Entity.DrunkNPC1;
 import Entity.MerchantNPC;
 import Monster.MON_GSlime;
+import Monster.MON_BlueSlime;
+import Monster.MON_Orc;
 import object.*;
 import tiles_interactive.IT_DryTree;
 
@@ -58,7 +59,6 @@ public class AssetManager {
 
         mapNum++;
         i++;
-        //gp.npc[mapNum][i]=new DrunkNPC(gp);
         gp.npc[mapNum][i]=new MerchantNPC(gp);
         gp.npc[mapNum][i].x = 12 * gp.tileSize;
         gp.npc[mapNum][i].y = 7 * gp.tileSize;
@@ -76,27 +76,14 @@ public class AssetManager {
         gp.monster[mapNum][i]=new MON_GSlime(gp);
         gp.monster[mapNum][i].x = 23 * gp.tileSize;
         gp.monster[mapNum][i].y = 34 * gp.tileSize;
-//        i++;
-//        gp.monster[mapNum][i]=new MON_GSlime(gp);
-//        gp.monster[mapNum][i].x = 22 * gp.tileSize;
-//        gp.monster[mapNum][i].y = 32 * gp.tileSize;
-//        i++;
-//        gp.monster[mapNum][i]=new MON_GSlime(gp);
-//        gp.monster[mapNum][i].x = 22 * gp.tileSize;
-//        gp.monster[mapNum][i].y = 33 * gp.tileSize;
-//        i++;
-//        gp.monster[mapNum][i]=new MON_GSlime(gp);
-//        gp.monster[mapNum][i].x = 22 * gp.tileSize;
-//        gp.monster[mapNum][i].y = 34 * gp.tileSize;
-//        i++;
-//        gp.monster[mapNum][i]=new MON_GSlime(gp);
-//        gp.monster[mapNum][i].x = 22 * gp.tileSize;
-//        gp.monster[mapNum][i].y = 35 * gp.tileSize;
-//        i++;
-//        gp.monster[mapNum][i]=new MON_GSlime(gp);
-//        gp.monster[mapNum][i].x = 22 * gp.tileSize;
-//        gp.monster[mapNum][i].y = 36 * gp.tileSize;
-
+        i++;
+        gp.monster[mapNum][i]=new MON_BlueSlime(gp);
+        gp.monster[mapNum][i].x = 24 * gp.tileSize;
+        gp.monster[mapNum][i].y = 28 * gp.tileSize;
+        i++;
+        gp.monster[mapNum][i]=new MON_Orc(gp);
+        gp.monster[mapNum][i].x = 23 * gp.tileSize;
+        gp.monster[mapNum][i].y = 28 * gp.tileSize;
     }
 
     public void setInteractiveTile(){
