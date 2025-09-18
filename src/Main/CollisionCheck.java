@@ -30,9 +30,9 @@ public class CollisionCheck {
         }
 
         int leftWorldX   = futureX + entity.solidArea.x;
-        int rightWorldX  = futureX + entity.solidArea.x + entity.solidArea.width  - 1; // -1 critical
+        int rightWorldX  = futureX + entity.solidArea.x + entity.solidArea.width  - 1;
         int topWorldY    = futureY + entity.solidArea.y;
-        int bottomWorldY = futureY + entity.solidArea.y + entity.solidArea.height - 1; // -1 critical
+        int bottomWorldY = futureY + entity.solidArea.y + entity.solidArea.height - 1;
 
         int maxCol = gp.tileManager.mapTileNum[gp.currentMap].length;
         int maxRow = gp.tileManager.mapTileNum[gp.currentMap][0].length;
@@ -42,16 +42,10 @@ public class CollisionCheck {
         int topRow    = clamp(topWorldY   / gp.tileSize, maxRow - 1);
         int bottomRow = clamp(bottomWorldY/ gp.tileSize, maxRow - 1);
 
-        int[][][] map = gp.tileManager.mapTileNum;
-        int tileNumTL = map[gp.currentMap][leftCol][topRow];
-        int tileNumTR = map[gp.currentMap][rightCol][topRow];
-        int tileNumBL = map[gp.currentMap][leftCol][bottomRow];
-        int tileNumBR = map[gp.currentMap][rightCol][bottomRow];
-
-        if (   gp.tileManager.tiles[tileNumTL].collision
-                || gp.tileManager.tiles[tileNumTR].collision
-                || gp.tileManager.tiles[tileNumBL].collision
-                || gp.tileManager.tiles[tileNumBR].collision) {
+        if ( gp.tileManager.isCollision(gp.currentMap,leftCol,topRow)
+          || gp.tileManager.isCollision(gp.currentMap,rightCol,topRow)
+          || gp.tileManager.isCollision(gp.currentMap,leftCol,bottomRow)
+          || gp.tileManager.isCollision(gp.currentMap,rightCol,bottomRow)) {
             entity.collisionOn = true;
         }
     }

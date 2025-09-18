@@ -4,11 +4,16 @@ import Entity.Player;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.VolatileImage;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.Random;
 
 public class DrinkSystem {
+    private static final boolean ENABLE_VOLATILE = false;
+    private static final boolean USE_PREMULTIPLIED = false;
+    private static final boolean USE_RADIAL_MASK = true;
+
     private final GamePanel gp;
     private long frameCounter;
     private final int decayIntervalFrames;
@@ -25,18 +30,36 @@ public class DrinkSystem {
     private final Random rand=new Random();
 
     private BufferedImage sceneBuffer;
+    private VolatileImage sceneVolatile;
+    private boolean useVolatile;
+
     private BufferedImage overlayCache;
-    private int lastOverlayPercent = -1;
+    private BufferedImage radialMask;
+    private int lastOverlayBucket = -1;
     private boolean overlayDirty = true;
 
     public DrinkSystem(GamePanel gp){
         this.gp=gp;
         decayIntervalFrames=600;
         decayAmountPercent=5;
+        evaluateVolatileEligibility();
+    }
+
+    private void evaluateVolatileEligibility(){
+        long pixels = (long) gp.screenWidth * gp.screenHeight;
+        useVolatile = ENABLE_VOLATILE && pixels > 400_000;
     }
 
     public void update(Player p){
         frameCounter++;
+
+        int fpsNow = gp.getCurrentFps();
+        boolean lowPerf = fpsNow>0 && fpsNow < 50;
+        if(lowPerf){
+            if(overlayDirty && frameCounter % 10 != 0){
+                // do nothing here
+            }
+        }
 
         if(p.drinkPercent>0 && frameCounter%decayIntervalFrames==0){
             p.drinkPercent=Math.max(0,p.drinkPercent-decayAmountPercent);
@@ -61,9 +84,16 @@ public class DrinkSystem {
             }
         }
 
-        if (Math.abs(p.drinkPercent - lastOverlayPercent) > 2) {
-            overlayDirty = true;
-            lastOverlayPercent = p.drinkPercent;
+        if(p.drinkPercent < 30){
+            if(lastOverlayBucket != -1){
+                lastOverlayBucket = -1;
+            }
+        } else {
+            int bucket = p.drinkPercent / 5;
+            if(bucket != lastOverlayBucket){
+                lastOverlayBucket = bucket;
+                overlayDirty = true;
+            }
         }
     }
 
@@ -118,8 +148,9 @@ public class DrinkSystem {
 
     public void overlay(Graphics2D g2){
         Player p=gp.player;
-        int percent=p.drinkPercent;
-        if(percent<30) return;
+        if(p.drinkPercent < 30) return;
+        int fpsNow = gp.getCurrentFps();
+        if(fpsNow>0 && fpsNow < 45) return;
 
         if (overlayCache == null || overlayCache.getWidth() != gp.screenWidth ||
             overlayCache.getHeight() != gp.screenHeight || overlayDirty) {
@@ -130,86 +161,157 @@ public class DrinkSystem {
         g2.drawImage(overlayCache, 0, 0, null);
     }
 
-    private void generateOverlayCache(Player p) {
-        if (overlayCache == null ||
-            overlayCache.getWidth() != gp.screenWidth ||
-            overlayCache.getHeight() != gp.screenHeight) {
-            overlayCache = new BufferedImage(gp.screenWidth, gp.screenHeight, BufferedImage.TYPE_INT_ARGB);
+    private void ensureOverlayCache(){
+        int type = USE_PREMULTIPLIED ? BufferedImage.TYPE_INT_ARGB_PRE : BufferedImage.TYPE_INT_ARGB;
+        if(overlayCache==null || overlayCache.getWidth()!=gp.screenWidth || overlayCache.getHeight()!=gp.screenHeight || overlayCache.getType()!=type){
+            overlayCache = new BufferedImage(gp.screenWidth, gp.screenHeight, type);
+            radialMask = null;
         }
+    }
 
+    private void buildRadialMask(){
+        if(!USE_RADIAL_MASK){ radialMask=null; return; }
+        int w = gp.screenWidth;
+        int h = gp.screenHeight;
+        int type = USE_PREMULTIPLIED ? BufferedImage.TYPE_INT_ARGB_PRE : BufferedImage.TYPE_INT_ARGB;
+        radialMask = new BufferedImage(w,h,type);
+        int cx = w/2;
+        int cy = h/2;
+        double maxR = Math.max(w,h);
+        double innerR = maxR*0.8;
+        double innerR2 = innerR*innerR;
+        int[] pixels = ((java.awt.image.DataBufferInt)radialMask.getRaster().getDataBuffer()).getData();
+        for(int y=0;y<h;y++){
+            int dy = y-cy;
+            for(int x=0;x<w;x++){
+                int dx = x-cx;
+                double d2 = dx*dx + dy*dy;
+                double alpha;
+                if(d2 <= innerR2){
+                    double t = Math.sqrt(d2)/innerR;
+                    alpha = t*80.0;
+                } else {
+                    double t = (Math.sqrt(d2)-innerR)/(maxR-innerR);
+                    if(t>1) t=1;
+                    alpha = 80.0 + t*80.0;
+                }
+                int a = (int)Math.round(alpha);
+                if(a<0) a=0; else if(a>160) a=160;
+                pixels[y*w + x] = (a<<24);
+            }
+        }
+    }
+
+    private void generateOverlayCache(Player p) {
+        ensureOverlayCache();
+        if(USE_RADIAL_MASK && (radialMask==null || radialMask.getWidth()!=gp.screenWidth || radialMask.getHeight()!=gp.screenHeight)){
+            buildRadialMask();
+        }
         Graphics2D g2 = overlayCache.createGraphics();
+        Composite old = g2.getComposite();
         g2.setComposite(AlphaComposite.Clear);
-        g2.fillRect(0, 0, gp.screenWidth, gp.screenHeight);
-        g2.setComposite(AlphaComposite.SrcOver);
+        g2.fillRect(0,0,gp.screenWidth,gp.screenHeight);
+        g2.setComposite(old);
 
         float intensity = getIntensity(p);
 
         float alpha = 0.12f + 0.35f * intensity;
-        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+        g2.setComposite(AlphaComposite.SrcOver.derive(alpha));
         g2.setColor(new Color(120, 0, 150));
         g2.fillRect(0, 0, gp.screenWidth, gp.screenHeight);
 
-        RadialGradientPaint rg = new RadialGradientPaint(
-                gp.screenWidth / 2f,
-                gp.screenHeight / 2f,
-                Math.max(gp.screenWidth, gp.screenHeight),
-                new float[]{0f, 0.8f, 1f},
-                new Color[]{
-                        new Color(0, 0, 0, 0),
-                        new Color(0, 0, 0, (int)(80 * intensity)),
-                        new Color(0, 0, 0, (int)(160 * intensity))
-                }
-        );
-
-        g2.setPaint(rg);
-        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
-        g2.fillRect(0, 0, gp.screenWidth, gp.screenHeight);
+        if(USE_RADIAL_MASK && intensity>0f && radialMask!=null){
+             old = g2.getComposite();
+            g2.setComposite(AlphaComposite.SrcOver.derive(intensity));
+            g2.drawImage(radialMask,0,0,null);
+            g2.setComposite(old);
+        }
         g2.dispose();
     }
 
-    public void doubleVisionComposite(Graphics2D g2, BufferedImage worldImage) {
+    public void doubleVisionComposite(Graphics2D g2, Image worldImage) {
         Player p = gp.player;
+        int fpsNow = gp.getCurrentFps();
+        if(fpsNow>0 && fpsNow < 45){
+            g2.drawImage(worldImage,0,0,null);
+            return;
+        }
+
         if (p.drinkPercent < 40) {
             g2.drawImage(worldImage, 0, 0, null);
             return;
         }
 
         float intensity = getIntensity(p);
-
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
         g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
 
         g2.drawImage(worldImage, 0, 0, null);
 
-        if (intensity > 0.3f && frameCounter % 2 == 0) {
-            Composite old = g2.getComposite();
-            float alpha = Math.min(0.4f, 0.10f + 0.25f * intensity);
-            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
-            int off = Math.min(8, (int)(3 + 6 * intensity));
+        if (intensity <= 0.3f) return;
+        if (frameCounter % 2 != 0) return;
 
-            if (off > 2) {
-                g2.drawImage(worldImage, off, 0, null);
-                g2.drawImage(worldImage, -off, 0, null);
+        int off = Math.min(8, (int)(3 + 6 * intensity));
+        if (off <= 2) return;
+
+        Composite old = g2.getComposite();
+        float alpha = Math.min(0.4f, 0.10f + 0.25f * intensity);
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+        g2.drawImage(worldImage, off, 0, null);
+        g2.drawImage(worldImage, -off, 0, null);
+        g2.setComposite(old);
+    }
+
+    private void ensureSceneBuffer(){
+        int w = gp.screenWidth;
+        int h = gp.screenHeight;
+        int type = USE_PREMULTIPLIED ? BufferedImage.TYPE_INT_ARGB_PRE : BufferedImage.TYPE_INT_ARGB;
+        if(useVolatile){
+            GraphicsConfiguration gc = GraphicsEnvironment.getLocalGraphicsEnvironment()
+                    .getDefaultScreenDevice().getDefaultConfiguration();
+            if(sceneVolatile==null || sceneVolatile.getWidth()!=w || sceneVolatile.getHeight()!=h){
+                if(sceneVolatile!=null){ sceneVolatile.flush(); }
+                sceneVolatile = gc.createCompatibleVolatileImage(w,h, Transparency.TRANSLUCENT);
             }
-            g2.setComposite(old);
+            if(sceneVolatile.validate(gc)==VolatileImage.IMAGE_INCOMPATIBLE){
+                sceneVolatile.flush();
+                sceneVolatile = gc.createCompatibleVolatileImage(w,h, Transparency.TRANSLUCENT);
+            }
+        } else if(sceneBuffer==null || sceneBuffer.getWidth()!=w || sceneBuffer.getHeight()!=h || sceneBuffer.getType()!=type){
+            sceneBuffer = new BufferedImage(w,h,type);
         }
     }
 
     public Graphics2D beginWorldBuffer() {
-        if (sceneBuffer == null ||
-                sceneBuffer.getWidth() != gp.screenWidth ||
-                sceneBuffer.getHeight() != gp.screenHeight) {
-            sceneBuffer = new BufferedImage(gp.screenWidth, gp.screenHeight, BufferedImage.TYPE_INT_ARGB);
+        ensureSceneBuffer();
+        if(useVolatile && sceneVolatile!=null){
+            Graphics2D g2 = sceneVolatile.createGraphics();
+            g2.setComposite(AlphaComposite.Src);
+            g2.setColor(new Color(0,0,0,0));
+            g2.fillRect(0,0,gp.screenWidth,gp.screenHeight);
+            g2.setComposite(AlphaComposite.SrcOver);
+            g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+            g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
+            g2.setClip(0,0,gp.screenWidth,gp.screenHeight);
+            return g2;
+        } else {
+            Graphics2D g2 = sceneBuffer.createGraphics();
+            g2.setComposite(AlphaComposite.Clear);
+            g2.fillRect(0,0,gp.screenWidth,gp.screenHeight);
+            g2.setComposite(AlphaComposite.SrcOver);
+            g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+            g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
+            g2.setClip(0,0,gp.screenWidth,gp.screenHeight);
+            return g2;
         }
-        Graphics2D g2 = sceneBuffer.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
-        g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
-        g2.setClip(0,0,gp.screenWidth,gp.screenHeight);
-        return g2;
     }
 
     public void flushWorldBuffer(Graphics2D g2) {
-        doubleVisionComposite(g2, sceneBuffer);
+        if(useVolatile && sceneVolatile!=null){
+            doubleVisionComposite(g2, sceneVolatile);
+        } else if(sceneBuffer!=null){
+            doubleVisionComposite(g2, sceneBuffer);
+        }
     }
 
     public void drawAfterImages(Graphics2D g2) {

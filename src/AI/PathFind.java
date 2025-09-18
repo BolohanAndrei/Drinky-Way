@@ -154,7 +154,6 @@ public class PathFind {
             int bestNodeIndex=0;
             int bestNodeFCost=999;
 
-
             for(int i=0;i<openList.size();i++){
                 if(openList.get(i).fCost<bestNodeFCost){
                     bestNodeFCost=openList.get(i).fCost;

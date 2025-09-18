@@ -18,19 +18,24 @@ public class Obj_Gold_Key extends Entity {
         value=500;
         itemDescription = "["+name+"]\nOpens chests, doors, and maybe your ex’s heart.\nShiny enough to blind a sober man.";
 
+        setDialogue();
     }
 
-    public boolean use(Entity entity) {
-        gp.gameState=gp.dialogueState;
+    public void setDialogue()
+    {
+        dialogue[0][0] = "Arrr! The gold key be turnin’, and the door gives way!";
+        dialogue[1][0] = "What in the seven seas are ye tryin’ to unlock, ye drunken fool?";
 
+    }
+    public boolean use(Entity entity) {
         int objIndex=getDetected(entity,gp.obj,"Door");
         if(objIndex!=999){
-            gp.ui.currentDialogue = "Arrr! The gold key be turnin’, and the door gives way!";
+            startDialogue(this,0);
             gp.se.playSE(3);
             gp.obj[gp.currentMap][objIndex]=null;
             return true;
         }else{
-            gp.ui.currentDialogue = "What in the seven seas are ye tryin’ to unlock, ye drunken fool?";
+            startDialogue(this,1);
         }
         return  false;
     }

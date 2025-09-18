@@ -22,11 +22,17 @@ public class Obj_Door extends Entity {
         solidArea.height=32;
         solidAreaDefaultX=solidArea.x;
         solidAreaDefaultY=solidArea.y;
+
+        setDialogue();
     }
 
 
+    public void setDialogue(){
+        dialogue[0][0]= "Arrr! This door won’t budge without a shiny key, matey!";
+
+    }
     public void interact(){
-        gp.gameState=gp.dialogueState;
-        gp.ui.currentDialogue = "Arrr! This door won’t budge without a shiny key, matey!";
+
+        startDialogue(this,0);
     }
 }

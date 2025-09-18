@@ -1,8 +1,11 @@
 package Main;
 
-public class EventHandler {
+import Entity.Entity;
+
+public class EventHandler{
     GamePanel gp;
     EventRect[][][] eventRect;
+    Entity event;
     int tempMap,tempRow, tempCol;
 
     int previousEventX, previousEventY;
@@ -11,6 +14,7 @@ public class EventHandler {
 
     public EventHandler(GamePanel gp) {
         this.gp = gp;
+        event=new Entity(gp);
 
         eventRect = new EventRect[gp.maxMap][gp.maxWorldCol][gp.maxWorldRow];
         int map=0;
@@ -19,10 +23,20 @@ public class EventHandler {
             eventRect[map][col][row] = new EventRect();
             eventRect[map][col][row].x = 0;
             eventRect[map][col][row].y = 0;
-            eventRect[map][col][row].width = 48;
-            eventRect[map][col][row].height = 48;
+            eventRect[map][col][row].width = gp.tileSize;
+            eventRect[map][col][row].height = gp.tileSize;
             eventRect[map][col][row].eventRectDefaultX = eventRect[map][col][row].x;
             eventRect[map][col][row].eventRectDefaultY = eventRect[map][col][row].y;
+            if (col == 23 && row == 12) {
+                EventRect r = eventRect[0][23][12];
+                int ts = gp.tileSize;
+                r.x = -ts;
+                r.y = -ts;
+                r.width = ts * 2;
+                r.height = ts * 2;
+                r.eventRectDefaultX = r.x;
+                r.eventRectDefaultY = r.y;
+            }
             col++;
             if (col == gp.maxWorldCol) {
                 col = 0;
@@ -32,9 +46,13 @@ public class EventHandler {
                     map++;
                 }
             }
-
-
         }
+        setDialogue();
+    }
+
+    public void setDialogue(){
+        event.dialogue[0][0]="Arrrgh! My legs be softer than I thought… blasted hole stole my health!";
+        event.dialogue[1][0]="Shiver my timbers! One blink I be here, next blink I be lost… hope there be rum where I land!";
 
     }
 
@@ -48,9 +66,9 @@ public class EventHandler {
 
         if(canTouchEvent) {
             if (hit(0,27, 16, "any")) {
-                damagePit( gp.dialogueState);}
+                damagePit();}
            else if (hit(0,23, 12, "any")) {
-                healingEvent( gp.dialogueState);
+                healingEvent();
             }
             else if (hit(0,25, 19, "any")) {
                 teleportEvent(0,37,10);
@@ -92,11 +110,10 @@ public class EventHandler {
 
     }
 
-    public void damagePit(int gameState) {
+    public void damagePit() {
         if(gp.keyHandler.ePressed) {
-            gp.gameState = gameState;
             gp.se.playSE(18);
-            gp.ui.currentDialogue = "Arrrgh! My legs be softer than I thought… blasted hole stole my health!";
+            event.startDialogue(event,0);
             gp.player.health -= 2;
             if (gp.player.health <= 0) {
                 gp.player.health = 0;
@@ -114,14 +131,12 @@ public class EventHandler {
         canTouchEvent=false;
     }
 
-    public void healingEvent(int gameState) {
+    public void healingEvent() {
         if(gp.keyHandler.ePressed){
             gp.se.playSE(12);
-        gp.gameState = gameState;
-        gp.ui.currentDialogue = "By the seas! The siren’s brew heals my wounds… and curses me with sobriety!";
-            gp.player.health =gp.player.maxHealth;
-        gp.drinkSystem.soberUp(gp.player);
-    }}
-
-
+            gp.gameState = gp.saveState;
+            gp.player.health = gp.player.maxHealth;
+            gp.drinkSystem.soberUp(gp.player);
+        }
+    }
 }

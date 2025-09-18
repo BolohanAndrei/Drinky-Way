@@ -101,6 +101,11 @@ public class MON_Orc extends BaseMonster {
         down2 = setup("monsters/Orc3/Walk/orc_walk_down2");
         left2 = setup("monsters/Orc3/Walk/orc_walk_left2");
         right2 = setup("monsters/Orc3/Walk/orc_walk_right2");
+
+        upLeft1 = up1; upLeft2 = left2;
+        upRight1 = right1; upRight2 = right2;
+        downLeft1 = left1; downLeft2 = left2;
+        downRight1 = right1; downRight2 = right2;
     }
 
     @Override

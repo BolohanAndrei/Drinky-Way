@@ -1,5 +1,6 @@
 package Main;
 
+import Entity.DrunkNPC;
 import Entity.DrunkNPC1;
 import Entity.MerchantNPC;
 import Monster.MON_GSlime;
@@ -55,6 +56,10 @@ public class AssetManager {
         int i=0;
         gp.npc[mapNum][i]=new DrunkNPC1(gp);
         gp.npc[mapNum][i].x = 21 * gp.tileSize;
+        gp.npc[mapNum][i].y = 23 * gp.tileSize;
+        i++;
+        gp.npc[mapNum][i]=new DrunkNPC(gp);
+        gp.npc[mapNum][i].x = 25 * gp.tileSize;
         gp.npc[mapNum][i].y = 23 * gp.tileSize;
 
         mapNum++;

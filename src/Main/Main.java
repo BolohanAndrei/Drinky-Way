@@ -22,6 +22,7 @@ public class Main {
             window.setContentPane(gamePanel);
 
             GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+            System.setProperty("sun.java2d.ddforcevram", "true");
             System.setProperty("sun.java2d.d3d","true");
             System.setProperty("sun.java2d.translaccel","true");
             window.setUndecorated(true);

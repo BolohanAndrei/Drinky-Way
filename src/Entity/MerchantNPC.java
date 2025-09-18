@@ -54,7 +54,10 @@ public class MerchantNPC extends MovementNPC {
     }
 
     public void setDialogue() {
-        dialogue[0] = "Arrr, welcome ye scallywag! Got items to TRADE enough to sink a whale. What be ticklin’ yer fancy today?";
+        dialogue[0][0] = "Arrr, welcome ye scallywag! Got items to TRADE enough to sink a whale. What be ticklin’ yer fancy today?";
+        dialogue[1][0]="Har har! Yer pockets be emptier than a sober tavern. Come back with more gold, ye stingy barnacle!";
+        dialogue[2][0]="Arrr, yer bag be fuller than me belly after ten barrels o’ rum! Toss some junk afore ye buy more.";
+        dialogue[3][0]="Arrr, ye can’t sell the steel on yer back, ye drunken fool! Unequip it first!";
     }
 
     public void setItems() {
@@ -70,7 +73,7 @@ public class MerchantNPC extends MovementNPC {
 
     @Override
     public void speak() {
-        super.speak();
+
         gp.keyHandler.previousGameState = gp.gameState;
         gp.gameState = gp.tradeState;
         gp.ui.subState = 0;

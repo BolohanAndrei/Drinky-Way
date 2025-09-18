@@ -38,13 +38,15 @@ public class Entity {
     public BufferedImage idle_up, idle_down, idle_left, idle_right;
     public BufferedImage idle_1, idle_2, idle_3, idle_4;
     public BufferedImage image1, image2, image3;
+    public BufferedImage guardUp, guardDown, guardLeft, guardRight;
 
     // ========== 4. Animation State ==========
     public int spriteCounter = 0;
     public int spriteNum = 1;
 
     // ========== 5. Dialogue System ==========
-    String[] dialogue = new String[20];
+    public String[][] dialogue = new String[20][20];
+    public int dialogueSet=0;
     public int dialogueIndex = 0;
 
     // ========== 6. Collision & Spatial Bounds ==========
@@ -67,6 +69,11 @@ public class Entity {
     public int invincibleCounter = 0;
     public boolean hpBarOn = false;
     public int hpBarCounter = 0;
+    public boolean guard=false;
+    public boolean transparent=false;
+    public int guardCounter = 0;
+    public int offBalanceCounter = 0;
+    public boolean offBalance=false;
 
     // ========== 9. Progression & Core Stats ==========
     public int level;
@@ -147,26 +154,39 @@ public class Entity {
     }
 
     public void speak(){
-    if(dialogueIndex<0 || dialogueIndex>dialogue.length-1 || dialogue[dialogueIndex]==null){
-        dialogueIndex = 0;
-    }
-        String line=dialogue[dialogueIndex];
-    line=gp.drinkSystem.slurIfNeeded(line);
-        gp.ui.currentDialogue = line;
-        ++dialogueIndex;
-        if(dialogueIndex<0 || dialogueIndex>dialogue.length-1 || dialogue[dialogueIndex]==null){
-            dialogueIndex = 0;
-        }
-        facePlayer();
+
+
 
     }
     public void facePlayer(){
-        switch(gp.player.direction) {
-            case "down": direction = "up"; break;
-            case "left": direction = "right"; break;
-            case "right": direction = "left"; break;
-            default: direction = "down"; break;
+        int playerCenterX = gp.player.x + gp.player.solidArea.x + gp.player.solidArea.width/2;
+        int playerCenterY = gp.player.y + gp.player.solidArea.y + gp.player.solidArea.height/2;
+        int npcCenterX = x + solidArea.x + solidArea.width/2;
+        int npcCenterY = y + solidArea.y + solidArea.height/2;
+
+        int deltaX = playerCenterX - npcCenterX;
+        int deltaY = playerCenterY - npcCenterY;
+
+        if (Math.abs(deltaX) > Math.abs(deltaY) * 2) {
+            direction = deltaX > 0 ? "right" : "left";
+        } else if (Math.abs(deltaY) > Math.abs(deltaX) * 2) {
+            direction = deltaY > 0 ? "down" : "up";
+        } else {
+            if (deltaX > 0 && deltaY > 0) {
+                direction = "down_right";
+            } else if (deltaX > 0 && deltaY < 0) {
+                direction = "up_right";
+            } else if (deltaX < 0 && deltaY > 0) {
+                direction = "down_left";
+            } else {
+                direction = "up_left";
+            }
         }
+    }
+    public void startDialogue(Entity entity,int setNum){
+        gp.gameState=gp.dialogueState;
+        gp.ui.trade=entity;
+        dialogueSet=setNum;
     }
 
     public boolean use(Entity e){
@@ -209,6 +229,26 @@ public class Entity {
                 case "down": y += speed; break;
                 case "left": x -= speed; break;
                 case "right": x += speed; break;
+                case "up_left":
+                    int diagonalSpeed = (int)(speed / Math.sqrt(2));
+                    x -= diagonalSpeed;
+                    y -= diagonalSpeed;
+                    break;
+                case "up_right":
+                    diagonalSpeed = (int)(speed / Math.sqrt(2));
+                    x += diagonalSpeed;
+                    y -= diagonalSpeed;
+                    break;
+                case "down_left":
+                    diagonalSpeed = (int)(speed / Math.sqrt(2));
+                    x -= diagonalSpeed;
+                    y += diagonalSpeed;
+                    break;
+                case "down_right":
+                    diagonalSpeed = (int)(speed / Math.sqrt(2));
+                    x += diagonalSpeed;
+                    y += diagonalSpeed;
+                    break;
             }
         }
         spriteCounter++;
@@ -230,21 +270,67 @@ public class Entity {
         if(shotAvailableCounter<60){
             shotAvailableCounter++;
         }
+        if(offBalance){
+            offBalanceCounter++;
+            if(offBalanceCounter > 60){
+                offBalance = false;
+                offBalanceCounter = 0;
+            }
+        }
     }
 
-    public void damagePlayer(int attack){
-        if(!gp.player.invincible){
-            gp.se.playSE(18);
+    public String getOppositeDirection(String direction){
+        return switch (direction) {
+            case "up" -> "down";
+            case "down" -> "up";
+            case "left" -> "right";
+            case "right" -> "left";
+            case "up_left"->"down_right";
+            case "up_right"->"down_left";
+            case "down_left"->"up_right";
+            case "down_right"->"up_left";
+            default -> "";
+        };
+    }
+    public void damagePlayer(int attack) {
+        if (!gp.player.invincible) {
+            int damage = attack - gp.player.defense;
 
-            int damage=attack-gp.player.defense;
-            if(damage<=0){
-                damage=1;
+            boolean guarded = false;
+
+            if (gp.player.guard) {
+                String lockedDir = gp.player.getGuardDirection();
+                String requiredDir = getOppositeDirection(direction);
+                if (lockedDir != null && lockedDir.equals(requiredDir)) {
+                    guarded = true;
+                    if (gp.player.guardCounter < Player.PARRY_WINDOW_FRAMES) {
+                        damage = 0;
+                        offBalance = true;
+                        spriteCounter = Math.max(0, spriteCounter - 60);
+                        Player p = gp.player;
+                        p.onParry();
+                        gp.se.playSE(34);
+                    } else {
+                        damage = damage / 3;
+                        if (damage <= 0) damage = 1;
+                        Player p = gp.player;
+                        p.onGuardBlock();
+                        gp.se.playSE(33);
+                    }
+                }
             }
-            gp.player.health-=damage;
-            if(gp.player.health<=0){
-                gp.player.health=0;
+
+            if (!guarded) {
+                if (damage <= 0) damage = 1;
+                gp.se.playSE(18);
             }
-            gp.player.invincible=true;
+
+            gp.player.transparent = true;
+            gp.player.health -= damage;
+            if (gp.player.health <= 0) {
+                gp.player.health = 0;
+            }
+            gp.player.invincible = true;
         }
     }
 
@@ -546,10 +632,10 @@ public class Entity {
         int nextWorldY=user.getTopY();
 
         switch(user.direction){
-            case "up": nextWorldY=user.getTopY()-1; break;
-            case "down": nextWorldY=user.getBottomY()+1; break;
-            case "left": nextWorldX=user.getLeftX()-1; break;
-            case "right": nextWorldX=user.getRightX()+1; break;
+            case "up": nextWorldY=user.getTopY()-speed; break;
+            case "down": nextWorldY=user.getBottomY()+speed; break;
+            case "left": nextWorldX=user.getLeftX()-speed; break;
+            case "right": nextWorldX=user.getRightX()+speed; break;
             case "up_left":
                 nextWorldY=user.getTopY()-1;
                 nextWorldX=user.getLeftX()-1; break;

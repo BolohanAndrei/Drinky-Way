@@ -27,6 +27,7 @@ public class Obj_Chest extends Entity {
         solidAreaDefaultX=solidArea.x;
         solidAreaDefaultY=solidArea.y;
         setItems();
+        setDialogue();
     }
 
     public void interact() {
@@ -47,5 +48,12 @@ public class Obj_Chest extends Entity {
         inventory.add(new object.Obj_Emerald_Key(gp));
         inventory.add(new object.Obj_Iron_Sword(gp));
         inventory.add(new object.Obj_Beer(gp));
+    }
+
+    public void setDialogue() {
+        dialogue[0][0]="Arrr, ye can't drop the steel on yer back, ye drunken fool! Unequip it first!";
+        dialogue[1][0]="Chest Full";
+        dialogue[2][0]="Inventory Full";
+
     }
 }

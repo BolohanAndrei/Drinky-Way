@@ -1,6 +1,7 @@
 package Main;
 
 import AI.PathFind;
+import Data.SaveLoad;
 import Entity.Entity;
 import Entity.Player;
 import Envire.EnvManager;
@@ -51,6 +52,12 @@ public class GamePanel extends JPanel implements Runnable {
     public final int chestState=8;
     public final int sleepState=9;
     public final int mapState=10;
+    public final int saveState=11;
+
+    public long autoSaveTimer = 0;
+    public final long AUTO_SAVE_INTERVAL = 36000;
+    public boolean showAutoSaveMessage = false;
+    public int autoSaveMessageTimer = 0;
 
     public KeyHandler keyHandler = new KeyHandler(this);
     public tileManager tileManager = new tileManager(this);
@@ -65,6 +72,7 @@ public class GamePanel extends JPanel implements Runnable {
     public PathFind pathFind = new PathFind(this);
     public EnvManager envManager = new EnvManager(this);
     public Map map = new Map(this);
+    SaveLoad sl = new SaveLoad(this);
 
     public Entity[][] obj = new Entity[maxMap][100];
     public Player player = new Player(this, keyHandler);
@@ -104,6 +112,7 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void setupGame() {
+
         assetManager.setObj();
         music.playMusic(0);
         assetManager.setNPC();
@@ -121,7 +130,7 @@ public class GamePanel extends JPanel implements Runnable {
     public void retry(){
         player.dieFrame=0;
         player.setDefaultPosition();
-        player.setDefaultLife();
+        player.restoreStatus();
         assetManager.setNPC();
         assetManager.setMonster();
     }
@@ -173,8 +182,24 @@ public class GamePanel extends JPanel implements Runnable {
     public void update() {
         if (gameState == playState) {
             tick++;
+
+            autoSaveTimer++;
+            if (autoSaveTimer >= AUTO_SAVE_INTERVAL) {
+                autoSaveTimer = 0;
+                sl.save();
+                showAutoSaveMessage = true;
+                autoSaveMessageTimer = 180;
+                se.playSE(12);
+            }
+
+            if (showAutoSaveMessage) {
+                autoSaveMessageTimer--;
+                if (autoSaveMessageTimer <= 0) {
+                    showAutoSaveMessage = false;
+                }
+            }
+
             player.update();
-            // Reveal current tile (fog of war)
             map.updateExploration();
             drinkSystem.update(player);
             for(int i=0;i<npc[currentMap].length;i++){
@@ -446,4 +471,5 @@ public class GamePanel extends JPanel implements Runnable {
         g.setColor(new Color(255,0,0)); g.drawString("Melee Active",12,y);
     }
 
+    public int getCurrentFps(){ return fps; }
 }

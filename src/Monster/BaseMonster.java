@@ -563,7 +563,8 @@ public abstract class BaseMonster extends Entity {
     protected String getDirectionTowardPlayer() {
         int dx = gp.player.x - x;
         int dy = gp.player.y - y;
-        if (Math.abs(dx) > Math.abs(dy)) {
+
+        if (Math.abs(dx) > Math.abs(dy) * 2) {
             return dx > 0 ? "right" : "left";
         } else {
             return dy > 0 ? "down" : "up";
@@ -572,9 +573,10 @@ public abstract class BaseMonster extends Entity {
     protected String getOppositeDirectionToPlayer() {
         int dx = gp.player.x - x;
         int dy = gp.player.y - y;
-        if (Math.abs(dx) > Math.abs(dy)) {
+
+        if (Math.abs(dx) > Math.abs(dy) * 2) {
             return dx > 0 ? "left" : "right";
-        } else {
+        } else{
             return dy > 0 ? "up" : "down";
         }
     }
@@ -641,7 +643,7 @@ public abstract class BaseMonster extends Entity {
         Random rand = new Random();
         int i = rand.nextInt(100) + 1;
         if (i <= 35) {
-            // keep same
+            // keep same direction
         } else if (i <= 65) {
             direction = getPerpendicularDirection();
         } else {

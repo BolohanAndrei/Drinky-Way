@@ -6,7 +6,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 public class KeyHandler implements KeyListener, MouseListener {
-    public boolean upPressed, downPressed, leftPressed, rightPressed,enterPressed,ePressed,spacePressed;
+    public boolean upPressed, downPressed, leftPressed, rightPressed,enterPressed,ePressed,spacePressed,qPressed;
     public boolean attackClicked,shotKeyPressed;
     public int previousGameState;
     GamePanel gp;
@@ -23,6 +23,7 @@ public class KeyHandler implements KeyListener, MouseListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
+
         int code= e.getKeyCode();
         if(code==KeyEvent.VK_SPACE){
             spacePressed = true;
@@ -101,6 +102,10 @@ public class KeyHandler implements KeyListener, MouseListener {
         else if(gp.gameState==gp.mapState){
             mapState(code);
         }
+        //Save State
+        else if(gp.gameState==gp.saveState){
+            saveState(code);
+        }
 
     }
 
@@ -123,13 +128,21 @@ public class KeyHandler implements KeyListener, MouseListener {
             if (code == KeyEvent.VK_ENTER) {
                 switch (gp.ui.commandNum) {
                     case 0 -> gp.ui.titleScreenState = 1;
-                    case 1 -> System.out.println("Load Game");
+                    case 1 -> {
+                        gp.sl.load();
+                        gp.music.stop();
+                        gp.gameState = gp.playState;
+                        gp.music.playMusic(15);
+                    }
                     case 2 -> System.exit(0);
                 }
             }
         }
     }
     public void playState(int code){
+        if(code==KeyEvent.VK_Q){
+            qPressed = true;
+        }
         if(code==KeyEvent.VK_W) {
             upPressed=true;
         }
@@ -248,10 +261,9 @@ public class KeyHandler implements KeyListener, MouseListener {
                 gp.ui.subState = 0;
                 gp.ui.commandNum = 0;
             } else {
-                gp.gameState = gp.playState;
+                ePressed = true;
             }
-            gp.keyHandler.enterPressed = false;
-            ePressed=false;
+            enterPressed = false;
         }
     }
     public void characterState(int code) {
@@ -470,6 +482,27 @@ public class KeyHandler implements KeyListener, MouseListener {
             gp.gameState = gp.playState;
         }
     }
+    public void saveState(int code) {
+        if(code == KeyEvent.VK_ENTER) {
+            enterPressed=true;
+        }
+        if(gp.gameState==gp.saveState){
+            if (code == KeyEvent.VK_W) {
+                gp.se.playSE(19);
+                gp.ui.commandNum--;
+                if (gp.ui.commandNum < 0) {
+                    gp.ui.commandNum = 1;
+                }
+            }
+            if (code == KeyEvent.VK_S) {
+                gp.se.playSE(19);
+                gp.ui.commandNum++;
+                if (gp.ui.commandNum > 1) {
+                    gp.ui.commandNum = 0;
+                }
+            }
+        }
+    }
 
     @Override
     public void keyReleased(KeyEvent e) {
@@ -494,6 +527,9 @@ public class KeyHandler implements KeyListener, MouseListener {
         }
         if(code==KeyEvent.VK_SPACE){
             spacePressed = false;
+        }
+        if(code==KeyEvent.VK_Q){
+            qPressed=false;
         }
     }
 

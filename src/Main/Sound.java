@@ -47,6 +47,8 @@ public class Sound {
         soundURL[30] = load(base + "move_item.wav");
         soundURL[31] = load(base + "chest_open.wav");
         soundURL[32] = load(base + "chest_close.wav");
+        soundURL[33] = load(base + "guard.wav");
+        soundURL[34] = load(base + "perry.wav");
     }
 
     private URL load(String path) {
@@ -106,12 +108,12 @@ public class Sound {
 
     public void checkVolume(){
         switch (volumeScale){
-            case 0: volume=-80f; break;
+            case 0: volume=fc.getMinimum(); break;
             case 1: volume=-40f; break;
             case 2: volume=-30f; break;
             case 3: volume=-20f; break;
             case 4: volume=0f; break;
-            case 5: volume=10f; break;
+            case 5: volume=fc.getMaximum(); break;
         }
         fc.setValue(volume);
     }

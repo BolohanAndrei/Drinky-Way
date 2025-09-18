@@ -9,6 +9,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 public class Player extends Entity {
@@ -19,8 +20,10 @@ public class Player extends Entity {
 
     public double currentSpeed = 0;
 
+    public static final int PARRY_WINDOW_FRAMES = 10;
     private String moveDirection = "down";
     private String facingDirection = "down";
+    private String guardDirection = null;
 
     private boolean hasHit = false;
     private int attackCounter = 0;
@@ -83,6 +86,7 @@ public class Player extends Entity {
         getPlayerAttackImage();
         getPlayerIdleImages();
         setItems();
+        setDialogue();
     }
 
     public void setDefaultValues() {
@@ -94,10 +98,9 @@ public class Player extends Entity {
 
         speed = 4;
 
-        //TO DO de schimbat
-        maxHealth = 100;
+        maxHealth = 6;
         health = maxHealth;
-        coin=1000;
+        coin=0;
 
         maxDrunk = 6;
         drunk = 0;
@@ -127,12 +130,27 @@ public class Player extends Entity {
         moveDirection = "down";
         facingDirection = "down";
         invincible=false;
+        transparent=false;
+        attacking=false;
+        guard=false;
+        actionLockCounter = 0;
+        attackCounter = 0;
+        longIdleCounter = 0;
+        spriteCounter = 0;
+        dyingCounter = 0;
+        invincibleCounter = 0;
+        guardCounter = 0;
+        offBalanceCounter = 0;
+        shotAvailableCounter=0;
+        idleCounter = 0;
+
         gp.gameState = gp.playState;
     }
 
-    public void setDefaultLife(){
-        health = 6;
-        invincible=false;
+    public void restoreStatus(){
+        maxHealth = 6;
+        health = maxHealth;
+
     }
 
     private List<Entity> getEquippedItems(){
@@ -198,8 +216,6 @@ public class Player extends Entity {
         inventory.add(currentWeapon);
         inventory.add(currentShield);
         inventory.add(new Obj_Gold_Key(gp));
-        canObtainItem(new Obj_Drugs(gp));
-        canObtainItem(new Obj_Drugs(gp));
 
     }
 
@@ -226,6 +242,11 @@ public class Player extends Entity {
             for(int i=0;i<13;i++){
                 wake[i]=setup("player/wake_" + (i+1));
             }
+
+            guardDown = setup("player/shield_down");
+            guardUp = setup("player/shield_up");
+            guardLeft = setup("player/shield_left");
+            guardRight = setup("player/shield_right");
         } catch (NullPointerException e) {
             e.getMessage();
         }
@@ -258,6 +279,22 @@ public class Player extends Entity {
         screenX = gp.screenWidth / 2 - (gp.tileSize / 2);
         screenY = gp.screenHeight / 2 - (gp.tileSize / 2);
     }
+
+    public String getGuardDirection(){ return guardDirection; }
+    private void spawnGuardParticles(boolean parry){
+        Color c = parry ? new Color(255,215,0) : new Color(140,160,255);
+        int size = parry ? 6 : 4;
+        int speed = parry ? 2 : 1;
+        int life = parry ? 22 : 14;
+        for(int i=0;i<10;i++){
+            int vx = (int)Math.round((Math.random()*2)-1);
+            int vy = (int)Math.round((Math.random()*2)-1);
+            if(vx==0 && vy==0) vy=1;
+            gp.particles.add(new Particle(gp,this,c,vx,vy,size,speed,life));
+        }
+    }
+    public void onParry(){ spawnGuardParticles(true); }
+    public void onGuardBlock(){ spawnGuardParticles(false); }
 
     public void update() {
 
@@ -534,6 +571,20 @@ public class Player extends Entity {
 
         if (attacking) {
             attack();
+        } else {
+            boolean q = keyHandler.qPressed;
+            if(q){
+                if(!guard){
+                    guard = true;
+                    guardCounter = 0;
+                    guardDirection = facingDirection;
+                } else {
+                    guardCounter++;
+                }
+            } else {
+                guard = false;
+                guardDirection = null;
+            }
         }
 
         if(gp.keyHandler.shotKeyPressed && !projectile.alive && shotAvailableCounter==60){
@@ -549,6 +600,7 @@ public class Player extends Entity {
             invincibleCounter++;
             if (invincibleCounter > 60) {
                 invincible = false;
+                transparent=false;
                 invincibleCounter = 0;
             }
         }
@@ -788,7 +840,6 @@ public class Player extends Entity {
         if (gp.keyHandler.ePressed) {
             int nearestNPC = findNearestNPC();
             if (nearestNPC != 999) {
-                gp.gameState = gp.dialogueState;
                 gp.npc[gp.currentMap][nearestNPC].speak();
             }
         }
@@ -824,6 +875,9 @@ public class Player extends Entity {
     public void contactMonster(int i) {
         if (i != 999 && !invincible && !gp.monster[gp.currentMap][i].dying) {
             gp.se.playSE(18);
+            if(gp.monster[gp.currentMap][i].offBalance){
+                attack*=2;
+            }
             int damage=gp.monster[gp.currentMap][i].attack-defense;
             if(damage<=0){
                 damage=1;
@@ -833,6 +887,7 @@ public class Player extends Entity {
                 health=0;
             }
             invincible = true;
+            transparent=true;
             damageReaction();
         }
     }
@@ -860,31 +915,41 @@ public class Player extends Entity {
                     case "left" -> image = attackLeftImages[attackAnimationFrame];
                     case "right" -> image = attackRightImages[attackAnimationFrame];
                 }
-            } else {
-                if (currentSpeed > 0) {
-                    switch (moveDirection) {
-                        case "up" -> image = upImages[walkAnimationFrame];
-                        case "down" -> image = downImages[walkAnimationFrame];
-                        case "left", "up_left", "down_left" -> image = leftImages[walkAnimationFrame];
-                        case "right", "up_right", "down_right" -> image = rightImages[walkAnimationFrame];
-                    }
-                } else {
-                    image = switch (facingDirection) {
-                        case "up", "up_left", "up_right" -> idle_up;
-                        case "down", "down_left", "down_right" -> idle_down;
-                        case "left" -> idle_left;
-                        case "right" -> idle_right;
-                        default -> idle_down;
-                    };
-                }
+            } else if(guard)
+        {
+            String dir = guardDirection != null ? guardDirection : facingDirection;
+            switch (dir) {
+                case "up", "up_left", "up_right" -> image = guardUp;
+                case "down", "down_left", "down_right" -> image = guardDown;
+                case "left" -> image = guardLeft;
+                case "right" -> image = guardRight;
             }
+        }
+        else {
+            if (currentSpeed > 0) {
+                switch (moveDirection) {
+                    case "up" -> image = upImages[walkAnimationFrame];
+                    case "down" -> image = downImages[walkAnimationFrame];
+                    case "left", "up_left", "down_left" -> image = leftImages[walkAnimationFrame];
+                    case "right", "up_right", "down_right" -> image = rightImages[walkAnimationFrame];
+                }
+            } else {
+                image = switch (facingDirection) {
+                    case "up", "up_left", "up_right" -> idle_up;
+                    case "down", "down_left", "down_right" -> idle_down;
+                    case "left" -> idle_left;
+                    case "right" -> idle_right;
+                    default -> idle_down;
+                };
+            }
+        }
 
         if(image==null){
             image=idleImages[3];
         }
 
             Composite originalComposite = g2d.getComposite();
-            if (invincible) {
+            if (transparent) {
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
             }
 
@@ -893,14 +958,64 @@ public class Player extends Entity {
 
     }
 
+    private boolean collidesTilesAt(int nx, int ny){
+        int leftWorldX   = nx + solidArea.x;
+        int rightWorldX  = nx + solidArea.x + solidArea.width  - 1;
+        int topWorldY    = ny + solidArea.y;
+        int bottomWorldY = ny + solidArea.y + solidArea.height - 1;
+        int leftCol   = leftWorldX / gp.tileSize;
+        int rightCol  = rightWorldX / gp.tileSize;
+        int topRow    = topWorldY / gp.tileSize;
+        int bottomRow = bottomWorldY / gp.tileSize;
+        int maxCol = gp.tileManager.mapTileNum[gp.currentMap].length - 1;
+        int maxRow = gp.tileManager.mapTileNum[gp.currentMap][0].length - 1;
+        if(leftCol<0) leftCol=0; if(rightCol<0) rightCol=0; if(topRow<0) topRow=0; if(bottomRow<0) bottomRow=0;
+        if(leftCol>maxCol) leftCol=maxCol; if(rightCol>maxCol) rightCol=maxCol; if(topRow>maxRow) topRow=maxRow; if(bottomRow>maxRow) bottomRow=maxRow;
+        return gp.tileManager.isCollision(gp.currentMap,leftCol,topRow)
+                || gp.tileManager.isCollision(gp.currentMap,rightCol,topRow)
+                || gp.tileManager.isCollision(gp.currentMap,leftCol,bottomRow)
+                || gp.tileManager.isCollision(gp.currentMap,rightCol,bottomRow);
+    }
+    private void safePixelMove(int dx, int dy){
+        if(dx==0 && dy==0) return;
+        int nx = x + dx;
+        int ny = y + dy;
+        if(!collidesTilesAt(nx, ny)){
+            x = nx; y = ny;
+        }
+    }
+    private void safeKnockback(int dx, int dy){
+        int steps = Math.max(Math.abs(dx), Math.abs(dy));
+        if(steps==0) return;
+        double stepX = dx / (double)steps;
+        double stepY = dy / (double)steps;
+        double accX = 0, accY = 0;
+        for(int i=0;i<steps;i++){
+            accX += stepX;
+            accY += stepY;
+            int moveX = (int)Math.round(accX);
+            int moveY = (int)Math.round(accY);
+            if(moveX!=0 || moveY!=0){
+                safePixelMove(moveX, moveY);
+                accX -= moveX;
+                accY -= moveY;
+            }
+        }
+    }
+
     public void damageReaction() {
         int knock = gp.tileSize / 4;
         switch (facingDirection) {
-            case "up","up_left","up_right" -> y += knock;
-            case "down","down_left","down_right" -> y -= knock;
-            case "left" -> x += knock;
-            case "right" -> x -= knock;
+            case "up","up_left","up_right" -> safeKnockback(0, knock);
+            case "down","down_left","down_right" -> safeKnockback(0, -knock);
+            case "left" -> safeKnockback(knock, 0);
+            case "right" -> safeKnockback(-knock, 0);
         }
+    }
+
+    public void setDialogue(){
+        dialogue[0][0]="Ahoy, you are at another level,"+level+"!\nStats improved";
+
     }
 
     public void checkLevelUp(){
@@ -917,7 +1032,7 @@ public class Player extends Entity {
             coin+=exp;
             exp=0;
             gp.gameState=gp.dialogueState;
-            gp.ui.currentDialogue="Ahoy, you are at another level,"+level+"!\nStats improved";
+            startDialogue(this,0);
         }
     }
 
@@ -1043,6 +1158,17 @@ public class Player extends Entity {
             }
         }
      return canObtain;
+    }
+
+    public int getSlotForGear(Entity item){
+        if(item==null) return -1;
+
+        for(int i=0;i<inventory.size();i++){
+            if(Objects.equals(inventory.get(i).name, item.name)){
+                return i;
+            }
+        }
+        return -1;
     }
 }
 

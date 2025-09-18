@@ -22,8 +22,8 @@ public class UI {
 
     ArrayList<String> message=new ArrayList<>();
     ArrayList<Integer> messageID=new ArrayList<>();
-    public String[] controlLabels = {"Move Up","Move Down","Move Left","Move Right", "Attack", "Shoot", "Interact", "Inventory","Equip/Unequip","Map","Mini Map", "Options", "Back"};
-    public String[] controlKeys = {"W","S","A","R", "Left Click", "Right Click", "E", "TAB","Enter","M","N", "ESC", ""};
+    public String[] controlLabels = {"Move Up","Move Down","Move Left","Move Right","Guard", "Attack", "Shoot", "Interact", "Inventory","Equip/Unequip","Map","Mini Map", "Options", "Back"};
+    public String[] controlKeys = {"W","S","A","D","Q", "Left Click", "Right Click", "E", "TAB","Enter","M","N", "ESC", ""};
     private int controlScrollOffset = 0;
 
 
@@ -44,7 +44,7 @@ public class UI {
     private int currentSleepPhase = 0; // 0 sleep, 1 wake
     private int phaseFrame = 0;
 
-    public Entity trade;
+    public Entity trade; //NPC
     public Entity chest;
 
     private int optionScrollOffset=0;
@@ -66,6 +66,7 @@ public class UI {
             PublicPixel = new Font("Arial", Font.BOLD, 24);
         }
 
+        cacheFonts();
         //HEARTS
         Entity heart = new Obj_Heart(gp);
         heartFull = heart.image1;
@@ -83,6 +84,17 @@ public class UI {
         coin=coinI.down1;
     }
 
+    private static final boolean ENABLE_UI_CACHING = true;
+
+    private Font font10, font12, font15, font20, font24, font48, font64, font68;
+
+    private final java.util.Map<Long, BufferedImage> subWindowCache = new java.util.HashMap<>();
+
+    private static class InventoryCache { String signature; BufferedImage image; int width; int height; }
+    private final java.util.IdentityHashMap<Entity, InventoryCache> inventoryCaches = new java.util.IdentityHashMap<>();
+
+    private final StringBuilder sigBuilder = new StringBuilder(256);
+
     public void addMessage(String text){
         message.add(text);
         messageID.add(0);
@@ -99,7 +111,7 @@ public class UI {
             drawTitleScreen();
         }
 
-        //PLAT STATE
+        //PLAY STATE
         if (gp.gameState == gp.playState) {
             drawPlayerLife();
             drawDrunkLevel();
@@ -147,6 +159,15 @@ public class UI {
             drawSleepScreen();
         }
 
+        //SAVE STATE
+        if(gp.gameState == gp.saveState){
+            drawSaveScreen();
+        }
+
+        //AUTO-SAVE MESSAGE
+        if(gp.showAutoSaveMessage){
+            drawAutoSaveMessage();
+        }
     }
 
     public void drawDialogueScreen() {
@@ -159,7 +180,7 @@ public class UI {
 
         drawSubWindow(x, y, width, height);
 
-        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 12F));
+        g2.setFont(sized(12f));
         if(gp.gameState == gp.tradeState || gp.gameState == gp.chestState){
             drawSubWindow(gp.tileSize*12, (int)(gp.tileSize*4.5), gp.tileSize*7, gp.tileSize);
             g2.drawString("Press ENTER to continue", (int)(gp.tileSize*12.5), (int)(gp.tileSize*5.1));
@@ -171,12 +192,25 @@ public class UI {
             g2.drawString("Press E to continue", (int)(gp.tileSize*13.5), (int)(gp.tileSize*5.1));
         }
 
-        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 20F));
-
-
+        g2.setFont(sized(20f));
 
         x += gp.tileSize;
         y += gp.tileSize;
+
+        if(trade.dialogue[trade.dialogueSet][trade.dialogueIndex]!=null){
+            currentDialogue = trade.dialogue[trade.dialogueSet][trade.dialogueIndex];
+            if(gp.keyHandler.ePressed){
+                if(gp.gameState == gp.dialogueState){
+                    trade.dialogueIndex++;
+                    gp.keyHandler.ePressed = false;
+                }
+            }
+        }else{
+            trade.dialogueIndex=0;
+            if(gp.gameState == gp.dialogueState){
+                gp.gameState=gp.playState;
+            }
+        }
 
         int availableWidth = width - (gp.tileSize * 2);
 
@@ -192,14 +226,14 @@ public class UI {
 
         if (titleScreenState == 0) {
 
-            g2.setFont(getPublicPixel().deriveFont(68F));
+            g2.setFont(sized(68f));
             String text = "Drinky Way";
             int x = getXforCenteredText(text);
             int y = gp.screenHeight / 4;
             g2.drawString(text, x, y);
 
 
-            g2.setFont(getPublicPixel().deriveFont(48F));
+            g2.setFont(sized(48f));
             text = "New Game";
             x = getXforCenteredText(text);
             y += gp.tileSize * 3;
@@ -223,7 +257,7 @@ public class UI {
                 drawMenuPlayerImages(text, 4);
             }
 
-            g2.setFont(getPublicPixel().deriveFont(12F));
+            g2.setFont(sized(12f));
             text = "Press ENTER to confirm";
             x = getXforCenteredText(text);
             y += gp.tileSize * 2;
@@ -249,7 +283,7 @@ public class UI {
         drawSubWindow(frameX,frameY,frameWidth,frameHeight);
 
         g2.setColor(Color.white);
-        g2.setFont(getPublicPixel().deriveFont(12F));
+        g2.setFont(sized(12f));
 
         int textX=frameX+20;
         int textY=frameY+gp.tileSize;
@@ -332,7 +366,7 @@ public class UI {
         int frameX;
         int frameY=gp.screenHeight/4;
 
-        g2.setFont(getPublicPixel().deriveFont(64F));
+        g2.setFont(sized(64f));
         String text="Game Over";
         g2.setColor(Color.black);
         frameX=getXforCenteredText(text);
@@ -340,7 +374,7 @@ public class UI {
         g2.setColor(Color.white);
         g2.drawString(text,frameX-4,frameY-4);
 
-        g2.setFont(getPublicPixel().deriveFont(24F));
+        g2.setFont(sized(24f));
         text="Ye drank too much... or not enough.";
         g2.setColor(Color.black);
         frameX=getXforCenteredText(text);
@@ -349,7 +383,7 @@ public class UI {
         g2.drawString(text,frameX-4,frameY+gp.tileSize-4);
 
 
-        g2.setFont(getPublicPixel().deriveFont(15F));
+        g2.setFont(sized(15f));
         text="Hoist yer boots and TRY AGAIN, ye stubborn sea dog!";
         g2.setColor(Color.black);
         frameY=gp.screenHeight-gp.tileSize*3;
@@ -368,7 +402,7 @@ public class UI {
             }
         }
 
-        g2.setFont(getPublicPixel().deriveFont(15F));
+        g2.setFont(sized(15f));
         text="BACK to the tavern’s map, where all bad journeys begin.";
         g2.setColor(Color.black);
         frameY=gp.screenHeight-gp.tileSize*2;
@@ -383,7 +417,7 @@ public class UI {
             gp.music.stop();
             commandNum=0;
             titleScreenState=0;
-           gp.setupGame();
+            gp.setupGame();
         }
         }
         gp.keyHandler.enterPressed=false;
@@ -396,8 +430,7 @@ public class UI {
 
         if(counter>=50){
             counter=0;
-            gp.gameState=gp.dialogueState;
-            gp.ui.currentDialogue = "Shiver my timbers! One blink I be here, next blink I be lost… hope there be rum where I land!";
+            gp.eventHandler.event.startDialogue(gp.eventHandler.event,1);
             gp.currentMap=gp.eventHandler.tempMap;
             gp.player.x=gp.tileSize*gp.eventHandler.tempCol;
             gp.player.y=gp.tileSize*gp.eventHandler.tempRow;
@@ -416,6 +449,7 @@ public class UI {
     }
 
     public void tradeSelect(){
+        trade.dialogueSet=0;
         drawDialogueScreen();
 
         int x=gp.tileSize*15;
@@ -483,8 +517,7 @@ public class UI {
                     gp.keyHandler.previousGameState = gp.gameState;
                     commandNum=0;
                     subState=0;
-                    gp.gameState=gp.dialogueState;
-                    currentDialogue="Har har! Yer pockets be emptier than a sober tavern. Come back with more gold, ye stingy barnacle!";
+                    trade.startDialogue(trade,1);
 
                 }
                 else{
@@ -493,8 +526,7 @@ public class UI {
                     }else{
                         subState=0;
                         commandNum=0;
-                        gp.gameState=gp.dialogueState;
-                    currentDialogue="Arrr, yer bag be fuller than me belly after ten barrels o’ rum! Toss some junk afore ye buy more.";
+                        trade.startDialogue(trade,2);
 
                     }
                 }
@@ -538,8 +570,7 @@ public class UI {
                     gp.keyHandler.previousGameState = gp.gameState;
                     commandNum=0;
                     subState=0;
-                    gp.gameState=gp.dialogueState;
-                    currentDialogue="Arrr, ye can’t sell the steel on yer back, ye drunken fool! Unequip it first!";
+                    trade.startDialogue(trade,3);
                 }else{
                     if(gp.player.inventory.get(itemIndex).amount>1){
                         gp.player.inventory.get(itemIndex).amount--;
@@ -593,15 +624,15 @@ public class UI {
                             || item == gp.player.currentHelmet || item == gp.player.currentChest
                             || item == gp.player.currentBoots) {
                         gp.keyHandler.previousGameState = gp.gameState;
-                        gp.gameState = gp.dialogueState;
-                        currentDialogue = "Arrr, ye can't drop the steel on yer back, ye drunken fool! Unequip it first!";
-                    } else {
+                        chest.startDialogue(chest,0);
+                        chest.down1=chest.image1;
+                        } else {
                         if (transferItemToChest(item, itemIndex)) {
                             gp.se.playSE(30);
                         } else {
                             gp.keyHandler.previousGameState = gp.gameState;
-                            gp.gameState = gp.dialogueState;
-                            currentDialogue = "Chest Full";
+                            chest.startDialogue(chest,1);
+                            chest.down1=chest.image1;
                         }
                     }
                 }
@@ -619,8 +650,8 @@ public class UI {
                         gp.se.playSE(30);
                     } else {
                         gp.keyHandler.previousGameState = gp.gameState;
-                        gp.gameState = gp.dialogueState;
-                        currentDialogue = "Inventory Full";
+                        chest.startDialogue(chest,2);
+                        chest.down1=chest.image1;
                     }
                 }
             }
@@ -693,6 +724,93 @@ public class UI {
         counter++;
     }
 
+    public void drawSaveScreen(){
+        g2.setColor(new Color(0,0,0,200));
+        g2.fillRect(0,0,gp.screenWidth,gp.screenHeight);
+
+        int frameX;
+        int frameY=gp.screenHeight/6;
+
+        g2.setFont(sized(64f));
+        String text="Save Game";
+        g2.setColor(Color.black);
+        frameX=getXforCenteredText(text);
+        g2.drawString(text,frameX,frameY);
+        g2.setColor(Color.white);
+        g2.drawString(text,frameX-4,frameY-4);
+
+        frameY += 50;
+        g2.setFont(sized(24f));
+        text="By the seas! The siren's brew heals my wounds… and curses me with sobriety!\nThe siren's brew preserves yer journey...";
+        int availableWidth=gp.screenWidth;
+        ArrayList<String> wrappedLines = wrapText(text, availableWidth);
+
+        for (String line : wrappedLines) {
+            g2.drawString(line, gp.tileSize, frameY);
+            frameY += 40;
+        }
+
+        g2.setFont(sized(15f));
+        text="SAVE and continue yer drunken adventure";
+        g2.setColor(Color.black);
+        frameY=gp.screenHeight-gp.tileSize*3;
+        frameX=getXforCenteredText(text);
+        g2.drawString(text,frameX,frameY);
+        g2.setColor(Color.white);
+        g2.drawString(text,frameX-4,frameY-4);
+        if(commandNum==0){
+            g2.drawImage(gp.player.rightImages[0], frameX - 55, frameY - 30, gp.tileSize, gp.tileSize, null);
+            g2.drawImage(gp.player.leftImages[0], frameX-5+g2.getFontMetrics().stringWidth(text), frameY-30, gp.tileSize, gp.tileSize, null);
+            if(gp.keyHandler.enterPressed){
+                gp.sl.save();
+                gp.gameState=gp.playState;
+                gp.se.playSE(12);
+            }
+        }
+
+        g2.setFont(sized(15f));
+        text="BACK to the fountain without saving";
+        g2.setColor(Color.black);
+        frameY=gp.screenHeight-gp.tileSize*2;
+        frameX=getXforCenteredText(text);
+        g2.drawString(text,frameX,frameY);
+        g2.setColor(Color.white);
+        g2.drawString(text,frameX-4,frameY-4);
+        if(commandNum==1){
+            g2.drawImage(gp.player.rightImages[0], frameX - 55, frameY - 30, gp.tileSize, gp.tileSize, null);
+            g2.drawImage(gp.player.leftImages[0], frameX-5+g2.getFontMetrics().stringWidth(text), frameY-30, gp.tileSize, gp.tileSize, null);
+            if(gp.keyHandler.enterPressed){
+                gp.gameState=gp.playState;
+                commandNum=0;
+            }
+        }
+        gp.keyHandler.enterPressed=false;
+    }
+
+    public void drawAutoSaveMessage(){
+        g2.setFont(sized(15f));
+        String text = "Game Auto-Saved";
+
+        int x = getXforCenteredText(text);
+        int y = gp.tileSize;
+
+        int textWidth = g2.getFontMetrics().stringWidth(text);
+        int textHeight = g2.getFontMetrics().getHeight();
+        int padding = 10;
+
+        g2.setColor(new Color(0, 0, 0, 150));
+        g2.fillRoundRect(x - padding, y - textHeight + 5, textWidth + 2 * padding, textHeight + padding, 10, 10);
+
+        g2.setColor(new Color(255, 255, 255, 200));
+        g2.setStroke(new BasicStroke(2));
+        g2.drawRoundRect(x - padding, y - textHeight + 5, textWidth + 2 * padding, textHeight + padding, 10, 10);
+
+        g2.setColor(Color.black);
+        g2.drawString(text, x + 2, y + 2);
+        g2.setColor(Color.white);
+        g2.drawString(text, x, y);
+    }
+
     public void optionsTop(int frameX,int frameY){
         int textX; int textY;
         String header="Options";
@@ -763,7 +881,7 @@ public class UI {
         textY = frameY + gp.tileSize;
         g2.drawString(text, textX, textY);
 
-        g2.setFont(getPublicPixel().deriveFont(12F));
+        g2.setFont(sized(12f));
 
         textX = frameX + gp.tileSize;
         textY += gp.tileSize;
@@ -826,7 +944,7 @@ public class UI {
         int textX=frameX+gp.tileSize;
         int textY=frameY+gp.tileSize*2;
 
-        g2.setFont(getPublicPixel().deriveFont(12F));
+        g2.setFont(sized(12f));
         String text="Abandon ship, ye coward!\nEven the rum can’t save you.\nAre you sure captain?";
         int availableWidth = frameX + (gp.tileSize * 8);
         ArrayList<String> wrappedLines = wrapText(text, availableWidth);
@@ -835,7 +953,7 @@ public class UI {
             textY += gp.tileSize;
         }
 
-        g2.setFont(getPublicPixel().deriveFont(24F));
+        g2.setFont(sized(24f));
 
         text="No";
         textX=getXforCenteredText(text);
@@ -863,6 +981,80 @@ public class UI {
             }
         }
 
+    }
+
+    private String buildInventorySignature(Entity entity){
+        sigBuilder.setLength(0);
+        if(entity.inventory.isEmpty()) return "empty";
+        for(int i=0;i<entity.inventory.size();i++){
+            Entity it = entity.inventory.get(i);
+            if(it==null){
+                sigBuilder.append('n').append(i).append(';');
+                continue;
+            }
+            sigBuilder.append(it.name).append(':').append(it.amount);
+            if(entity==gp.player && (
+                    it==entity.currentWeapon || it==entity.currentShield || it==entity.currentBoots ||
+                            it==entity.currentChest || it==entity.currentHelmet)){
+                sigBuilder.append(':').append('E');
+            }
+            sigBuilder.append('|');
+        }
+        sigBuilder.append('#').append(entity.inventory.size());
+        return sigBuilder.toString();
+    }
+
+    private BufferedImage getInventoryBaseImage(Entity entity,int frameWidth,int frameHeight){
+        if(!ENABLE_UI_CACHING) return null;
+        InventoryCache cache = inventoryCaches.get(entity);
+        String sig = buildInventorySignature(entity);
+        if(cache!=null && cache.width==frameWidth && cache.height==frameHeight && sig.equals(cache.signature)){
+            return cache.image;
+        }
+        BufferedImage img = new BufferedImage(frameWidth,frameHeight,BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        g.setComposite(AlphaComposite.SrcOver);
+        final int slotXStart=20;
+        final int slotYStart=20;
+        int slotX=slotXStart;
+        int slotY=slotYStart;
+        int slotSize=gp.tileSize+3;
+        g.setFont(sized(12f));
+        for(int i=0;i<entity.inventory.size();i++){
+            Entity item = entity.inventory.get(i);
+            if(item==null){
+                slotX+=slotSize;
+                if(i%5==4){ slotX=slotXStart; slotY+=slotSize; }
+                continue;
+            }
+            if(entity==gp.player && (item==entity.currentWeapon || item==entity.currentShield || item==entity.currentBoots || item==entity.currentChest || item==entity.currentHelmet)){
+                g.setColor(new Color(98,189,38,139));
+                g.fillRoundRect(slotX,slotY,gp.tileSize,gp.tileSize,10,10);
+            }
+            g.drawImage(item.down1,slotX,slotY,null);
+            if((entity==gp.player || entity==chest) && item.amount>1){
+                String s = String.valueOf(item.amount);
+                g.setColor(new Color(60,60,60));
+                int amountX = getXAlignToRightTextOffscreen(g,s,slotX+44);
+                int amountY = slotY+gp.tileSize;
+                g.drawString(s,amountX,amountY);
+                g.setColor(Color.white);
+                g.drawString(s,amountX-3,amountY-3);
+            }
+            slotX+=slotSize;
+            if(i%5==4){ slotX=slotXStart; slotY+=slotSize; }
+        }
+        g.dispose();
+        if(cache==null){ cache=new InventoryCache(); inventoryCaches.put(entity,cache); }
+        cache.signature=sig;
+        cache.image=img;
+        cache.width=frameWidth; cache.height=frameHeight;
+        return img;
+    }
+
+    private int getXAlignToRightTextOffscreen(Graphics2D g,String text,int tailX){
+        int length = (int) g.getFontMetrics().getStringBounds(text,g).getWidth();
+        return tailX-length;
     }
 
     public void drawInventory(Entity entity,boolean cursor){
@@ -894,66 +1086,67 @@ public class UI {
         }
          drawSubWindow(frameX,frameY,frameWidth,frameHeight);
 
-         final int slotXStart=frameX+20;
-         final int slotYStart=frameY+20;
-         int slotX=slotXStart;
-         int slotY=slotYStart;
-         int slotSize=gp.tileSize+3;
+         BufferedImage base = getInventoryBaseImage(entity,frameWidth,frameHeight);
+         if(base!=null){
+             g2.drawImage(base,frameX,frameY,null);
+         } else {
+             final int slotXStart=frameX+20;
+             final int slotYStart=frameY+20;
+             int slotX=slotXStart;
+             int slotY=slotYStart;
+             int slotSize=gp.tileSize+3;
+             for(int i=0;i<entity.inventory.size();i++) {
+                 if (entity==gp.player && entity.inventory.get(i) == entity.currentWeapon ||
+                         entity.inventory.get(i) == entity.currentShield ||
+                         entity.inventory.get(i) == entity.currentBoots ||
+                         entity.inventory.get(i) == entity.currentChest ||
+                         entity.inventory.get(i) == entity.currentHelmet) {
+                     g2.setColor(new Color(98, 189, 38, 139));
+                     g2.fillRoundRect(slotX,slotY,gp.tileSize,gp.tileSize,10,10);
+                 }
+                 if (entity.inventory.get(i) != null) {
+                     g2.drawImage(entity.inventory.get(i).down1, slotX, slotY, null);
+                     if((entity==gp.player || entity==chest )&& entity.inventory.get(i).amount>1) {
+                         g2.setFont(sized(12f));
+                         int amountX;
+                         int amountY;
+                         String s=""+entity.inventory.get(i).amount;
+                         amountX=getXAlignToRightText(s,slotX+44);
+                         amountY=slotY+gp.tileSize;
+                         g2.setColor(new Color(60, 60, 60));
+                         g2.drawString(s, amountX, amountY);
+                         g2.setColor(Color.white);
+                         g2.drawString(s, amountX-3, amountY-3);
+                     }
+                     slotX += slotSize;
 
-         //draw items
-        for(int i=0;i<entity.inventory.size();i++) {
+                     if (i % 5 == 4) {
+                         slotX = slotXStart;
+                         slotY += slotSize;
+                     }
+                 }
+             }
+         }
 
-            //equip cursor
-            if (entity==gp.player && entity.inventory.get(i) == entity.currentWeapon ||
-                    entity.inventory.get(i) == entity.currentShield ||
-                    entity.inventory.get(i) == entity.currentBoots ||
-                    entity.inventory.get(i) == entity.currentChest ||
-                    entity.inventory.get(i) == entity.currentHelmet) {
-                g2.setColor(new Color(98, 189, 38, 139));
-                g2.fillRoundRect(slotX,slotY,gp.tileSize,gp.tileSize,10,10);
-            }
-            if (entity.inventory.get(i) != null) {
-                g2.drawImage(entity.inventory.get(i).down1, slotX, slotY, null);
-                if((entity==gp.player || entity==chest )&& entity.inventory.get(i).amount>1) {
-                    g2.setFont(getPublicPixel().deriveFont(12F));
-                    int amountX;
-                    int amountY;
-                    String s=""+entity.inventory.get(i).amount;
-                    amountX=getXAlignToRightText(s,slotX+44);
-                    amountY=slotY+gp.tileSize;
-                    g2.setColor(new Color(60, 60, 60));
-                    g2.drawString(s, amountX, amountY);
-                    g2.setColor(Color.white);
-                    g2.drawString(s, amountX-3, amountY-3);
-                }
-                slotX += slotSize;
-
-                if (i % 5 == 4) {
-                    slotX = slotXStart;
-                    slotY += slotSize;
-                }
-            }
-        }
-
-         //cursor
+         //cursor (dynamic overlay always drawn)
         if(cursor) {
+            final int slotXStart=frameX+20;
+            final int slotYStart=frameY+20;
+            int slotSize=gp.tileSize+3;
             int cursorX=slotXStart+(slotSize*slotTCol);
             int cursorY=slotYStart+(slotSize*slotTRow);
             int cursorWidth=gp.tileSize;
             int cursorHeight=gp.tileSize;
-            //draw cursor
             g2.setColor(Color.white);
             g2.setStroke(new BasicStroke(3));
             g2.drawRoundRect(cursorX,cursorY,cursorWidth,cursorHeight,10,10);
 
-
-            //description
+            // description
             int dFrameY=frameY+frameHeight+gp.tileSize;
             int dFrameHeight=gp.tileSize*5;
-            //draw description
             int textX= frameX +20;
             int textY=dFrameY+gp.tileSize;
-            g2.setFont(getPublicPixel().deriveFont(10F));
+            g2.setFont(sized(10f));
 
             int itemIndex=getItemIndexSlot(slotTCol,slotTRow);
 
@@ -963,13 +1156,12 @@ public class UI {
 
                 ArrayList<String> wrappedLines = wrapText(entity.inventory.get(itemIndex).itemDescription, frameWidth);
 
-                // Draw each wrapped line
                 for (String line : wrappedLines) {
                     g2.drawString(line, textX, textY);
                     textY += 40;
                 }
                 if(entity==gp.player && gp.gameState==gp.characterState) {
-                    g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 12F));
+                    g2.setFont(sized(12f));
                     if (entity.inventory.get(itemIndex) != null) {
                         if (gp.player.inventory.get(itemIndex).gearType > 1) {
                             drawSubWindow((int) (gp.tileSize * 12.8), gp.tileSize * 6, (int) (gp.tileSize * 6.4), gp.tileSize);
@@ -1063,7 +1255,11 @@ public class UI {
     }
 
     public void drawSubWindow(int x, int y, int width, int height) {
-
+        if(ENABLE_UI_CACHING){
+            BufferedImage cached = getSubWindowBuffered(width,height);
+            g2.drawImage(cached,x,y,null);
+            return;
+        }
         Color c = new Color(0, 0, 0, 175);
         g2.setColor(c);
         g2.fillRoundRect(x, y, width, height, 35, 35);
@@ -1072,6 +1268,25 @@ public class UI {
         g2.setColor(c);
         g2.setStroke(new BasicStroke(5));
         g2.drawRoundRect(x + 5, y + 5, width - 10, height - 10, 25, 25);
+    }
+
+    private BufferedImage getSubWindowBuffered(int width,int height){
+        long key = (((long)width)<<32) ^ (height & 0xffffffffL);
+        BufferedImage img = subWindowCache.get(key);
+        if(img!=null) return img;
+        img = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        g.setComposite(AlphaComposite.SrcOver);
+        Color fill = new Color(0,0,0,175);
+        g.setColor(fill);
+        g.fillRoundRect(0,0,width,height,35,35);
+        Color border = new Color(255,255,255,200);
+        g.setColor(border);
+        g.setStroke(new BasicStroke(5));
+        g.drawRoundRect(5,5,width-10,height-10,25,25);
+        g.dispose();
+        subWindowCache.put(key,img);
+        return img;
     }
 
     public void drawMenuPlayerImages(String text, int index) {
@@ -1141,7 +1356,7 @@ public class UI {
     public void drawMessage(){
         int messageX = gp.tileSize;
         int messageY = gp.screenHeight - gp.tileSize * 2;
-        g2.setFont(getPublicPixel().deriveFont(10F));
+        g2.setFont(sized(10f));
 
         int i = 0;
         while(i < message.size()){
@@ -1214,5 +1429,28 @@ public class UI {
         }
         return false;
     }
-}
 
+    private void cacheFonts(){
+        Font base = PublicPixel != null ? PublicPixel : new Font("Arial", Font.PLAIN, 12);
+        font10 = base.deriveFont(Font.PLAIN,10f);
+        font12 = base.deriveFont(Font.PLAIN,12f);
+        font15 = base.deriveFont(Font.PLAIN,15f);
+        font20 = base.deriveFont(Font.PLAIN,20f);
+        font24 = base.deriveFont(Font.PLAIN,24f);
+        font48 = base.deriveFont(Font.PLAIN,48f);
+        font64 = base.deriveFont(Font.PLAIN,64f);
+        font68 = base.deriveFont(Font.PLAIN,68f);
+    }
+
+    private Font sized(float sz){
+        if(font10==null) cacheFonts();
+        if(sz<=10f) return font10;
+        if(sz<=12f) return font12;
+        if(sz<=15f) return font15;
+        if(sz<=20f) return font20;
+        if(sz<=24f) return font24;
+        if(sz<=48f) return font48;
+        if(sz<=64f) return font64;
+        return font68 != null ? font68 : (PublicPixel!=null?PublicPixel: new Font("Arial",Font.PLAIN,(int)sz));
+    }
+}

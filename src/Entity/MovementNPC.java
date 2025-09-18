@@ -17,11 +17,17 @@ public class MovementNPC extends Entity {
     public void move(){
 
         if(onPath){
-            int endCol=12;
-            int endRow=9;
-//            endCol=(gp.player.x+gp.player.solidArea.x)/gp.tileSize;
-//            endCol=(gp.player.y+gp.player.solidArea.y)/gp.tileSize;
-            searchPath(endCol,endRow);
+            int endCol;
+            int endRow;
+
+            if (this instanceof DrunkNPC1) {
+                endCol = 12;
+                endRow = 9;
+            } else {
+                endCol = (gp.player.x + gp.player.solidArea.x) / gp.tileSize;
+                endRow = (gp.player.y + gp.player.solidArea.y) / gp.tileSize;
+            }
+            searchPath(endCol, endRow);
         }else{
             if (isIdle) {
                 idleCounter++;
@@ -47,10 +53,15 @@ public class MovementNPC extends Entity {
             if (actionLockCounter == 240) {
                 Random rand = new Random();
                 int i = rand.nextInt(100) + 1;
-                if (i <= 25) direction = "up";
-                else if (i <= 50) direction = "down";
-                else if (i <= 75) direction = "left";
-                else direction = "right";
+                // Updated to include 8 directions
+                if (i <= 12) direction = "up";
+                else if (i <= 24) direction = "down";
+                else if (i <= 36) direction = "left";
+                else if (i <= 48) direction = "right";
+                else if (i <= 60) direction = "up_left";
+                else if (i <= 72) direction = "up_right";
+                else if (i <= 84) direction = "down_left";
+                else direction = "down_right";
 
                 if (rand.nextInt(100) < 30) {
                     isIdle = true;
