@@ -1,19 +1,17 @@
-### IntelliJ IDEA ###
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+### Build ###
+/out/
+/target/
+/build/
 
-### Eclipse ###
-.apt_generated
+### IntelliJ IDEA ###
+.idea/
+/*.iml
+
+### Eclipse (în caz că cineva folosește) ###
 .classpath
-.factorypath
 .project
-.settings
-.springBeans
-.sts4-cache
+.settings/
 bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
 
 ### NetBeans ###
 /nbproject/private/
@@ -25,5 +23,6 @@ bin/
 ### VS Code ###
 .vscode/
 
-### Mac OS ###
+### OS ###
 .DS_Store
+Thumbs.db
