@@ -4,9 +4,10 @@ import Entity.Entity;
 import Main.GamePanel;
 
 public class Obj_Damage_Pit extends Entity {
+    public static final String objName="Damage Pit";
     public Obj_Damage_Pit(GamePanel gp) {
         super(gp);
-        name="Damage Pit";
+        name=objName;
         down1=setup("objects/pit");
         pickable=false;
 

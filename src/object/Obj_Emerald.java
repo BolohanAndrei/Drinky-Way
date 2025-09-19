@@ -5,12 +5,13 @@ import Main.GamePanel;
 
 public class Obj_Emerald extends Entity {
     GamePanel gp;
+    public static final String objName="Emerald";
     public Obj_Emerald(GamePanel gp) {
         super(gp);
         this.gp=gp;
 
         gearType=3;
-        name="Emerald";
+        name=objName;
         down1=setup("/objects/emerald");
         value=30;
     }

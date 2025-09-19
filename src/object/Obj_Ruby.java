@@ -5,12 +5,13 @@ import Main.GamePanel;
 
 public class Obj_Ruby extends Entity {
     GamePanel gp;
+    public static final String objName="Ruby";
     public Obj_Ruby(GamePanel gp) {
         super(gp);
         this.gp=gp;
 
         gearType=3;
-        name="Ruby";
+        name=objName;
         down1=setup("/objects/ruby");
         value=25;
     }

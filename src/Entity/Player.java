@@ -100,7 +100,7 @@ public class Player extends Entity {
 
         maxHealth = 6;
         health = maxHealth;
-        coin=0;
+        coin=1000;
 
         maxDrunk = 6;
         drunk = 0;
@@ -1031,7 +1031,7 @@ public class Player extends Entity {
             reStats();
             coin+=exp;
             exp=0;
-            gp.gameState=gp.dialogueState;
+            setDialogue();
             startDialogue(this,0);
         }
     }
@@ -1140,20 +1140,21 @@ public class Player extends Entity {
 
     public boolean canObtainItem(Entity item){
         boolean canObtain=false;
-        if(item.stackable){
-            int index=searchItemInInventory(item.name);
+        Entity newItem=gp.eGen.getObject(item.name);
+        if(newItem.stackable){
+            int index=searchItemInInventory(newItem.name);
             if(index!=999){
                 inventory.get(index).amount++;
                 canObtain=true;
             }else{
                 if(inventory.size()<maxInventorySize){
-                    inventory.add(item);
+                    inventory.add(newItem);
                     canObtain=true;
                 }
             }
         }else{
             if(inventory.size()<maxInventorySize){
-                inventory.add(item);
+                inventory.add(newItem);
                 canObtain=true;
             }
         }

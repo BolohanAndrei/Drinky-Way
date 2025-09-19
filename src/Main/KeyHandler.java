@@ -129,7 +129,7 @@ public class KeyHandler implements KeyListener, MouseListener {
                 switch (gp.ui.commandNum) {
                     case 0 -> gp.ui.titleScreenState = 1;
                     case 1 -> {
-                        gp.sl.load();
+                        gp.saveload.load();
                         gp.music.stop();
                         gp.gameState = gp.playState;
                         gp.music.playMusic(15);

@@ -111,9 +111,4 @@ public class Light {
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,1f));
         }
     }
-    public void reset(){
-        dayState=day;
-        filterAlpha=0f;
-
-    }
 }

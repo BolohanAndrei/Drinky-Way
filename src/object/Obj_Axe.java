@@ -4,9 +4,10 @@ import Entity.Entity;
 import Main.GamePanel;
 
 public class Obj_Axe extends Entity {
+    public static final String objName="Axe";
     public Obj_Axe(GamePanel gp) {
         super(gp);
-        name="Axe";
+        name=objName;
         gearType=0;
         down1=setup("objects/pirate_axe");
         attackValue=1;

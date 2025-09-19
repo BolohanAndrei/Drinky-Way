@@ -96,6 +96,7 @@ public class UI {
     private final StringBuilder sigBuilder = new StringBuilder(256);
 
     public void addMessage(String text){
+        text = gp.drinkSystem.slurIfNeeded(text);
         message.add(text);
         messageID.add(0);
     }
@@ -199,6 +200,8 @@ public class UI {
 
         if(trade.dialogue[trade.dialogueSet][trade.dialogueIndex]!=null){
             currentDialogue = trade.dialogue[trade.dialogueSet][trade.dialogueIndex];
+            currentDialogue = gp.drinkSystem.slurIfNeeded(currentDialogue);
+
             if(gp.keyHandler.ePressed){
                 if(gp.gameState == gp.dialogueState){
                     trade.dialogueIndex++;
@@ -762,7 +765,7 @@ public class UI {
             g2.drawImage(gp.player.rightImages[0], frameX - 55, frameY - 30, gp.tileSize, gp.tileSize, null);
             g2.drawImage(gp.player.leftImages[0], frameX-5+g2.getFontMetrics().stringWidth(text), frameY-30, gp.tileSize, gp.tileSize, null);
             if(gp.keyHandler.enterPressed){
-                gp.sl.save();
+                gp.saveload.save();
                 gp.gameState=gp.playState;
                 gp.se.playSE(12);
             }
@@ -1157,6 +1160,7 @@ public class UI {
                 ArrayList<String> wrappedLines = wrapText(entity.inventory.get(itemIndex).itemDescription, frameWidth);
 
                 for (String line : wrappedLines) {
+                    line = gp.drinkSystem.slurIfNeeded(line);
                     g2.drawString(line, textX, textY);
                     textY += 40;
                 }

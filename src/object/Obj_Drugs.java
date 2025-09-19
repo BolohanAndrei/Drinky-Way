@@ -4,9 +4,10 @@ import Entity.Entity;
 import Main.GamePanel;
 
 public class Obj_Drugs extends Entity {
+    public static final String objName="drugs";
     public Obj_Drugs(GamePanel gp) {
         super(gp);
-        name="drugs";
+        name=objName;
         gearType=2;
         down1=setup("objects/drugs");
         alcohol=80;

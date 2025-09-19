@@ -3,15 +3,14 @@ package object;
 import Entity.Entity;
 import Main.GamePanel;
 
-import javax.imageio.ImageIO;
-
 public class Obj_Gold_Key extends Entity {
     GamePanel gp;
+    public static final String objName="Gold Key";
     public Obj_Gold_Key(GamePanel gp)
     {
         super(gp);
         this.gp=gp;
-        name="Gold Key";
+        name=objName;
         gearType=2;
         stackable=true;
         down1=setup("objects/gold_key");

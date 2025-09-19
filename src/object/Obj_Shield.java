@@ -4,10 +4,10 @@ import Entity.Entity;
 import Main.GamePanel;
 
 public class Obj_Shield extends Entity{
-
+    public static final String objName="Wooden Shield";
     public Obj_Shield(GamePanel gp) {
         super(gp);
-        name="Wooden Shield";
+        name=objName;
         gearType=1;
         down1=setup("objects/shield");
         defenseValue=1;

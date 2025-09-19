@@ -5,12 +5,13 @@ import Main.GamePanel;
 
 public class Obj_Diamond extends Entity {
     GamePanel gp;
+    public static final String objName="Diamond";
     public Obj_Diamond(GamePanel gp) {
         super(gp);
         this.gp=gp;
 
         gearType=3;
-        name="Diamond";
+        name=objName;
         down1=setup("/objects/diamond_smooth");
         value=40;
     }

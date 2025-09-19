@@ -7,13 +7,14 @@ import java.util.ArrayList;
 
 public class Obj_Chest extends Entity {
     GamePanel gp;
+    public static final String objName="Chest";
     public Obj_Chest(GamePanel gp) {
         super(gp);
         this.gp=gp;
 
         obstacle=true;
         pickable=false;
-        name = "Chest";
+        name = objName;
         collision = true;
 
         image1=setup("objects/chest_closed");

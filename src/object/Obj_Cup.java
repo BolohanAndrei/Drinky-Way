@@ -5,12 +5,13 @@ import Main.GamePanel;
 
 public class Obj_Cup extends Entity {
     GamePanel gp;
+    public static final String objName="Cup";
     public Obj_Cup(GamePanel gp) {
         super(gp);
         this.gp=gp;
 
         gearType=3;
-        name="Cup";
+        name=objName;
         down1=setup("/objects/cup");
         value=2;
     }

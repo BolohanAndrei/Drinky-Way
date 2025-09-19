@@ -72,7 +72,8 @@ public class GamePanel extends JPanel implements Runnable {
     public PathFind pathFind = new PathFind(this);
     public EnvManager envManager = new EnvManager(this);
     public Map map = new Map(this);
-    SaveLoad sl = new SaveLoad(this);
+    SaveLoad saveload = new SaveLoad(this);
+    public EntityGen eGen = new EntityGen(this);
 
     public Entity[][] obj = new Entity[maxMap][100];
     public Player player = new Player(this, keyHandler);
@@ -186,7 +187,7 @@ public class GamePanel extends JPanel implements Runnable {
             autoSaveTimer++;
             if (autoSaveTimer >= AUTO_SAVE_INTERVAL) {
                 autoSaveTimer = 0;
-                sl.save();
+                saveload.save();
                 showAutoSaveMessage = true;
                 autoSaveMessageTimer = 180;
                 se.playSE(12);

@@ -4,9 +4,10 @@ import Entity.Entity;
 import Main.GamePanel;
 
 public class Obj_Hook extends Entity {
+    public static final String objName="Hook";
     public Obj_Hook(GamePanel gp) {
         super(gp);
-        name="Hook";
+        name=objName;
         gearType=0;
         down1=setup("objects/hook");
         attackValue=1;

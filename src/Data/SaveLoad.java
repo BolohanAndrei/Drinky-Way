@@ -31,7 +31,7 @@ public class SaveLoad {
 
             gp.player.inventory.clear();
             for (int i = 0; i < ds.itemNames.size(); i++) {
-                Entity item = getObject(ds.itemNames.get(i));
+                Entity item = gp.eGen.getObject(ds.itemNames.get(i));
                 if (item != null) {
                     item.amount = ds.itemAmounts.get(i);
                     gp.player.inventory.add(item);
@@ -49,7 +49,7 @@ public class SaveLoad {
                     if (ds.mapObjectNames[mapNum][i] == null || ds.mapObjectNames[mapNum][i].equals("N/A")) {
                         gp.obj[mapNum][i] = null;
                     } else {
-                        Entity entity = getObject(ds.mapObjectNames[mapNum][i]);
+                        Entity entity = gp.eGen.getObject(ds.mapObjectNames[mapNum][i]);
                         if (entity != null) {
                             gp.obj[mapNum][i] = entity;
                             gp.obj[mapNum][i].x = ds.mapObjectX[mapNum][i];
@@ -58,7 +58,7 @@ public class SaveLoad {
                                 Obj_Chest chest = (Obj_Chest) entity;
                                 chest.inventory.clear();
                                 for (int j = 0; j < ds.chestItemNames.size(); j++) {
-                                    Entity item = getObject(ds.chestItemNames.get(j));
+                                    Entity item = gp.eGen.getObject(ds.chestItemNames.get(j));
                                     if (item != null) {
                                         item.amount = ds.chestItemAmounts.get(j);
                                         chest.inventory.add(item);
@@ -139,31 +139,6 @@ public class SaveLoad {
         }
     }
 
-    private Entity getObject(String itemName){
-        return switch (itemName) {
-            case "Crusty Boots" -> new Obj_Armour_Boots_Crusty(gp);
-            case "Crusty Chest" -> new Obj_Armour_Chest_Crusty(gp);
-            case "Crusty Helmet" -> new Obj_Armour_Helmet_Crusty(gp);
-            case "Axe" -> new Obj_Axe(gp);
-            case "beer" -> new Obj_Beer(gp);
-            case "cigarette" -> new Obj_Cigarette(gp);
-            case "drugs" -> new Obj_Drugs(gp);
-            case "Emerald_Key" -> new Obj_Emerald_Key(gp);
-            case "Gold Key" -> new Obj_Gold_Key(gp);
-            case "Heal Potion" -> new Obj_Heal_Potion(gp);
-            case "Hook" -> new Obj_Hook(gp);
-            case "Iron Sword" -> new Obj_Iron_Sword(gp);
-            case "Rum" -> new Obj_Rum(gp);
-            case "Wooden Shield" -> new Obj_Shield(gp);
-            case "Silver_Key" -> new Obj_Silver_Key(gp);
-            case "Tequila" -> new Obj_Tequila(gp);
-            case "Whiskey" -> new Obj_Whiskey(gp);
-            case "Wooden Sword" -> new Obj_Wooden_Sword(gp);
-            case "Door" -> new Obj_Door(gp);
-            case "Chest" -> new Obj_Chest(gp);
-            default -> null;
-        };
-    }
     private Entity getItemFromInventory(int slot) {
         return (slot >= 0 && slot < gp.player.inventory.size())
                 ? gp.player.inventory.get(slot)

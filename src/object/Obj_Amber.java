@@ -4,13 +4,16 @@ import Entity.Entity;
 import Main.GamePanel;
 
 public class Obj_Amber extends Entity {
+
+    public static final String objName="Amber";
+
     GamePanel gp;
     public Obj_Amber(GamePanel gp) {
         super(gp);
         this.gp=gp;
 
         gearType=3;
-        name="Amber";
+        name=objName;
         down1=setup("/objects/amber");
         value=10;
     }

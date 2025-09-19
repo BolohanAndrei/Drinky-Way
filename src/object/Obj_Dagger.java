@@ -7,10 +7,11 @@ import java.awt.*;
 
 public class Obj_Dagger extends Projectile {
     GamePanel gp;
+    public static final String objName="Dagger";
     public Obj_Dagger(GamePanel gp) {
         super(gp);
         this.gp = gp;
-        name="Dagger";
+        name=objName;
         speed=8;
         maxHealth=30;
         health=maxHealth;

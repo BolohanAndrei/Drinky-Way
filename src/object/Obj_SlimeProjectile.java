@@ -7,10 +7,11 @@ import java.awt.*;
 
 public class Obj_SlimeProjectile extends Projectile {
     GamePanel gp;
+    public static final String objName="Slime Projectile";
     public Obj_SlimeProjectile(GamePanel gp) {
         super(gp);
         this.gp = gp;
-        name="Slime Projectile";
+        name=objName;
         speed=5;
         maxHealth=60;
         health=maxHealth;

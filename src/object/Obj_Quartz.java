@@ -5,12 +5,13 @@ import Main.GamePanel;
 
 public class Obj_Quartz extends Entity {
     GamePanel gp;
+    public static final String objName="Quartz";
     public Obj_Quartz(GamePanel gp) {
         super(gp);
         this.gp=gp;
 
         gearType=3;
-        name="Quartz";
+        name=objName;
         down1=setup("/objects/quartz");
         value=5;
     }

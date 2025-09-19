@@ -5,12 +5,13 @@ import Main.GamePanel;
 
 public class Obj_Sapphire extends Entity {
     GamePanel gp;
+    public static final String objName="Sapphire";
     public Obj_Sapphire(GamePanel gp) {
         super(gp);
         this.gp=gp;
 
         gearType=3;
-        name="Sapphire";
+        name=objName;
         down1=setup("/objects/sapphire");
         value=20;
     }

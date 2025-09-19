@@ -1,7 +1,5 @@
 package Data;
 
-import Entity.Entity;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -19,9 +17,9 @@ public class DataStorage implements Serializable {
     int strength;
     int dexterity;
 
-    ArrayList<String> itemNames=new ArrayList<String>();
+    ArrayList<String> itemNames= new ArrayList<>();
     ArrayList<Integer> itemAmounts=new  ArrayList<>();
-    ArrayList<String> chestItemNames=new ArrayList<String>();
+    ArrayList<String> chestItemNames= new ArrayList<>();
     ArrayList<Integer> chestItemAmounts=new  ArrayList<>();
     int currentWeaponSlot;
     int currentShieldSlot;
