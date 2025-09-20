@@ -49,6 +49,12 @@ public class Sound {
         soundURL[32] = load(base + "chest_close.wav");
         soundURL[33] = load(base + "guard.wav");
         soundURL[34] = load(base + "perry.wav");
+        soundURL[35] = load(base + "pirate_tavern.wav");
+        soundURL[36] = load(base + "pickaxe.wav");
+        soundURL[37] = load(base + "metal_door_bang.wav");
+        soundURL[38] = load(base + "iron_plate.wav");
+        soundURL[39] = load(base + "door_iron_open.wav");
+
     }
 
     private URL load(String path) {

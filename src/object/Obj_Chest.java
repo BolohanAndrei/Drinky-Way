@@ -42,13 +42,8 @@ public class Obj_Chest extends Entity {
     }
 
     public void setItems() {
-        inventory.add(new object.Obj_Drugs(gp));
-        inventory.add(new object.Obj_Rum(gp));
         inventory.add(new object.Obj_Gold_Key(gp));
         inventory.add(new object.Obj_Silver_Key(gp));
-        inventory.add(new object.Obj_Emerald_Key(gp));
-        inventory.add(new object.Obj_Iron_Sword(gp));
-        inventory.add(new object.Obj_Beer(gp));
     }
 
     public void setDialogue() {

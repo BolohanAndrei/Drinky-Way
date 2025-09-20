@@ -32,7 +32,9 @@ public class Map extends tileManager{
                 int tileNum=mapTileNum[i][col][row];
                 int x=gp.tileSize*col;
                 int y=gp.tileSize*row;
-                g2.drawImage(tiles[tileNum].image,x,y,null);
+                if(tiles[tileNum]!=null){
+                    g2.drawImage(tiles[tileNum].image,x,y,null);
+                }
                 col++;
                 if(col==gp.maxWorldCol){
                     row++;

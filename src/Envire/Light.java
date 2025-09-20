@@ -21,6 +21,8 @@ public class Light {
     private int framesSinceLastUpdate = 0;
     private static final int MIN_FRAMES_BETWEEN_UPDATES = 10;
 
+    private int previousMap = -1;
+
 
     public Light(GamePanel gp,int circle) {
         generateDarknessFilter(gp, circle);
@@ -74,32 +76,76 @@ public class Light {
             }
         }
 
-        if(dayState==day){
+
+
+        if (previousMap != gp.currentMap) {
+            handleMapTransition(gp.currentMap, previousMap);
+            previousMap = gp.currentMap;
+            return;
+        }
+
+        if (gp.currentMap == 2 || gp.currentMap == 3) {
+            filterAlpha = 1f;
+        } else {
+            updateDayNightCycle();
+        }
+    }
+
+    private void handleMapTransition(int currentMap, int prevMap) {
+        if (currentMap == 2 || currentMap == 3) {
+            filterAlpha = 1f;
+        }
+        else if ((prevMap == 2 || prevMap == 3) && (currentMap == 0 || currentMap == 1)) {
+            resetToOverworldLighting();
+        }
+    }
+
+    private void resetToOverworldLighting() {
+        switch (dayState) {
+            case day:
+                filterAlpha = 0f;
+                break;
+            case dusk:
+                filterAlpha = 0f;
+                break;
+            case night:
+                filterAlpha = 1f;
+                break;
+            case dawn:
+                filterAlpha = 1f;
+                break;
+        }
+    }
+
+    private void updateDayNightCycle() {
+        if (dayState == day) {
             dayCounter++;
-            if(dayCounter>36000){
-                dayState=dusk;
-                dayCounter=0;
+            if (dayCounter > 36000) {
+                dayState = dusk;
+                filterAlpha = 0f;
+                dayCounter = 0;
             }
         }
-        if(dayState==dusk){
-            filterAlpha+=0.0001f;
-            if(filterAlpha>1f){
-                filterAlpha=1f;
-                dayState=night;
+        if (dayState == dusk) {
+            filterAlpha += 0.0001f;
+            if (filterAlpha > 1f) {
+                filterAlpha = 1f;
+                dayState = night;
             }
         }
-        if(dayState==night){
+        if (dayState == night) {
             dayCounter++;
-            if(dayCounter>36000){
-                dayState=dawn;
-                dayCounter=0;
+            if (dayCounter > 36000) {
+                filterAlpha = 1f;
+                dayState = dawn;
+                dayCounter = 0;
             }
         }
-        if(dayState==dawn){
-            filterAlpha-=0.0001f;
-            if(filterAlpha<0f){
-                filterAlpha=0f;
-                dayState=day;
+        if (dayState == dawn) {
+            filterAlpha -= 0.0001f;
+            if (filterAlpha < 0f) {
+                filterAlpha = 0f;
+                dayState = day;
             }
         }
     }

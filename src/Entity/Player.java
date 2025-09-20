@@ -3,6 +3,8 @@ package Entity;
 import Main.GamePanel;
 import Main.KeyHandler;
 import object.*;
+import tiles_interactive.IT_DryTree;
+import tiles_interactive.IT_Wall;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -98,7 +100,7 @@ public class Player extends Entity {
 
         speed = 4;
 
-        maxHealth = 6;
+        maxHealth = 100;
         health = maxHealth;
         coin=1000;
 
@@ -123,10 +125,11 @@ public class Player extends Entity {
     }
 
     public void setDefaultPosition(){
-        x = gp.tileSize * 23;
-        y = gp.tileSize * 23;
-//        x = gp.tileSize * 12;
-//        y = gp.tileSize * 12;
+//        x = gp.tileSize * 23;
+//        y = gp.tileSize * 23;
+        gp.currentMap=2;
+        x = gp.tileSize * 9;
+        y = gp.tileSize * 42;
         moveDirection = "down";
         facingDirection = "down";
         invincible=false;
@@ -216,6 +219,7 @@ public class Player extends Entity {
         inventory.add(currentWeapon);
         inventory.add(currentShield);
         inventory.add(new Obj_Gold_Key(gp));
+        inventory.add(new Obj_Pickaxe(gp));
 
     }
 
@@ -792,18 +796,30 @@ public class Player extends Entity {
 
         if(!gp.iTile[gp.currentMap][chosenIndex].isCorrectItem(this)){
             gp.se.playSE(27);
-            gp.ui.addMessage("Need an Axe");
+            if(gp.iTile[gp.currentMap][chosenIndex] instanceof IT_DryTree) {
+                gp.ui.addMessage("Need an Axe");
+            }else if(gp.iTile[gp.currentMap][chosenIndex] instanceof IT_Wall) {
+                gp.ui.addMessage("Need an Pickaxe");
+            }
             return;
         }
 
-        gp.se.playSE(26);
+        gp.iTile[gp.currentMap][chosenIndex].playSE();
         gp.iTile[gp.currentMap][chosenIndex].health--;
         gp.iTile[gp.currentMap][chosenIndex].invincible = true;
         generateParticle(gp.iTile[gp.currentMap][chosenIndex],gp.iTile[gp.currentMap][chosenIndex]);
         if(gp.iTile[gp.currentMap][chosenIndex].health<=0){
             gp.iTile[gp.currentMap][chosenIndex].health=0;
-            gp.ui.addMessage("Tree felled");
-            gp.iTile[gp.currentMap][chosenIndex] = gp.iTile[gp.currentMap][chosenIndex].getDestroyedFrom();
+            if(gp.iTile[gp.currentMap][chosenIndex] instanceof IT_DryTree) {
+                gp.ui.addMessage("Tree felled");
+                gp.iTile[gp.currentMap][chosenIndex] = gp.iTile[gp.currentMap][chosenIndex].getDestroyedFrom();
+            }
+            else if(gp.iTile[gp.currentMap][chosenIndex] instanceof IT_Wall) {
+                gp.ui.addMessage("Wall destroyed");
+                gp.iTile[gp.currentMap][chosenIndex].checkDrop();
+                gp.iTile[gp.currentMap][chosenIndex] = gp.iTile[gp.currentMap][chosenIndex].getDestroyedFrom();
+
+            }
         }
     }
 
@@ -842,6 +858,94 @@ public class Player extends Entity {
             if (nearestNPC != 999) {
                 gp.npc[gp.currentMap][nearestNPC].speak();
             }
+        }
+
+        if (isMoving()) {
+            int nearestNPC = findNearestNPCForPushing();
+            if (nearestNPC != 999) {
+                Entity npc = gp.npc[gp.currentMap][nearestNPC];
+                if (npc.name != null && npc.name.equals("Rock")) {
+                    if (isMovingTowardsNPC(npc)) {
+                        npc.move(direction);
+                    }
+                }
+            }
+        }
+    }
+
+
+    private int findNearestNPCForPushing() {
+        int nearestIndex = 999;
+        double shortestDistance = Double.MAX_VALUE;
+        int pushingRange = gp.tileSize;
+
+        for (int i = 0; i < gp.npc[gp.currentMap].length; i++) {
+            if (gp.npc[gp.currentMap][i] != null) {
+                Entity npc = gp.npc[gp.currentMap][i];
+
+                if (isPlayerTouchingNPC(npc)) {
+                    double playerCenterX = x + gp.tileSize / 2.0;
+                    double playerCenterY = y + gp.tileSize / 2.0;
+                    double npcCenterX = npc.x + gp.tileSize / 2.0;
+                    double npcCenterY = npc.y + gp.tileSize / 2.0;
+
+                    double distance = Math.sqrt(
+                            Math.pow(playerCenterX - npcCenterX, 2) +
+                                    Math.pow(playerCenterY - npcCenterY, 2)
+                    );
+
+                    if (distance <= pushingRange && distance < shortestDistance) {
+                        shortestDistance = distance;
+                        nearestIndex = i;
+                    }
+                }
+            }
+        }
+
+        return nearestIndex;
+    }
+
+    private boolean isPlayerTouchingNPC(Entity npc) {
+        Rectangle playerRect = new Rectangle(
+            x + solidArea.x,
+            y + solidArea.y,
+            solidArea.width,
+            solidArea.height
+        );
+
+        int buffer = 8;
+        Rectangle npcRect = new Rectangle(
+            npc.x + npc.solidArea.x - buffer,
+            npc.y + npc.solidArea.y - buffer,
+            npc.solidArea.width + (buffer * 2),
+            npc.solidArea.height + (buffer * 2)
+        );
+
+        return playerRect.intersects(npcRect);
+    }
+
+    private boolean isMoving() {
+        return gp.keyHandler.upPressed || gp.keyHandler.downPressed ||
+               gp.keyHandler.leftPressed || gp.keyHandler.rightPressed;
+    }
+
+    private boolean isMovingTowardsNPC(Entity npc) {
+        int playerCenterX = x + solidArea.x + solidArea.width / 2;
+        int playerCenterY = y + solidArea.y + solidArea.height / 2;
+        int npcCenterX = npc.x + npc.solidArea.x + npc.solidArea.width / 2;
+        int npcCenterY = npc.y + npc.solidArea.y + npc.solidArea.height / 2;
+
+        switch (direction) {
+            case "up":
+                return playerCenterY > npcCenterY + (npc.solidArea.height / 4);
+            case "down":
+                return playerCenterY < npcCenterY - (npc.solidArea.height / 4);
+            case "left":
+                return playerCenterX > npcCenterX + (npc.solidArea.width / 4);
+            case "right":
+                return playerCenterX < npcCenterX - (npc.solidArea.width / 4);
+            default:
+                return false;
         }
     }
 

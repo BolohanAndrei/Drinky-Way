@@ -66,7 +66,6 @@ public class DrunkNPC extends MovementNPC {
         if(dialogue[dialogueSet][0]==null){
             dialogueSet--;
         }
-
     }
 }
 

@@ -70,14 +70,26 @@ public class EventHandler{
            else if (hit(0,23, 12, "any")) {
                 healingEvent();
             }
-            else if (hit(0,25, 19, "any")) {
+            else if (hit(0,25, 19, "any")) { //upper map
                 teleportEvent(0,37,10);
             }
-            else if(hit(0,10,39,"any")){
+            else if(hit(0,10,39,"any")){  //shop
                 teleportEvent(1,12,13);
             }
-            else if(hit(1,12,13,"any")){
+            else if(hit(1,12,13,"any")){  //back from shop
                 teleportEvent(0,10,39);
+            }
+            else if(hit(0,12,9,"any")){  //dungeon
+                teleportEvent(2,9,41);
+            }
+            else if(hit(2,9,41,"any")){  //back from dungeon
+                teleportEvent(0,12,9);
+            }
+            else if(hit(2,8,7,"any")){  //b2
+                teleportEvent(3,26,41);
+            }
+            else if(hit(3,26,41,"any")){  //back from shop
+                teleportEvent(2,8,7);
             }
         }
     }
@@ -124,6 +136,22 @@ public class EventHandler{
     public void teleportEvent(int map, int col, int row){
 
         gp.gameState = gp.transitionState;
+        if(gp.currentMap!=map) {
+            if (map == 0) {
+                gp.music.stopMusic();
+                gp.music.playMusic(15);
+            }
+            if(map==1){
+                gp.music.stopMusic();
+                gp.music.playMusic(35);
+            }
+            if (map == 2 || map == 3) {
+                gp.music.stopMusic();
+                gp.music.playMusic(1);
+                gp.assetManager.setNPC();
+            }
+        }
+
         tempMap=map;
         tempRow=row;
         tempCol=col;

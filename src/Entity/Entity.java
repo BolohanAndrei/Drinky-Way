@@ -112,6 +112,7 @@ public class Entity {
     public int value;
     public boolean stackable = false;
     public int amount=1;
+    public Entity linkedEntity;
 
     // ========== 13. Inventory ==========
 
@@ -148,15 +149,11 @@ public class Entity {
 
     public void setAction(){
     }
+    public void move(String direction) {}
     public void interact(){}
-
     public void damageReaction(){
     }
-
     public void speak(){
-
-
-
     }
     public void facePlayer(){
         int playerCenterX = gp.player.x + gp.player.solidArea.x + gp.player.solidArea.width/2;

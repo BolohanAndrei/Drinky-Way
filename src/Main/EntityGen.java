@@ -46,6 +46,8 @@ public class EntityGen {
             case Obj_Teleport.objName -> new Obj_Teleport(gp);
             case Obj_Whiskey.objName -> new Obj_Whiskey(gp);
             case Obj_Wooden_Sword.objName -> new Obj_Wooden_Sword(gp);
+            case Obj_Pickaxe.objName -> new Obj_Pickaxe(gp);
+            case Obj_Door_Iron.objName -> new Obj_Door_Iron(gp);
             default -> null;
         };
     }
