@@ -61,12 +61,15 @@ public class MerchantNPC extends MovementNPC {
     }
 
     public void setItems() {
-        inventory.add(new object.Obj_Drugs(gp));
-        inventory.add(new object.Obj_Rum(gp));
         inventory.add(new object.Obj_Gold_Key(gp));
         inventory.add(new object.Obj_Silver_Key(gp));
         inventory.add(new object.Obj_Emerald_Key(gp));
         inventory.add(new object.Obj_Iron_Sword(gp));
+        inventory.add(new object.Obj_Axe(gp));
+        inventory.add(new object.Obj_Pickaxe(gp));
+        inventory.add(new object.Obj_Armour_Boots_Crusty(gp));
+        inventory.add(new object.Obj_Armour_Chest_Crusty(gp));
+        inventory.add(new object.Obj_Armour_Boots_Crusty(gp));
         inventory.add(new object.Obj_Beer(gp));
         inventory.add(new Obj_Heal_Potion(gp));
     }

@@ -54,6 +54,8 @@ public class Sound {
         soundURL[37] = load(base + "metal_door_bang.wav");
         soundURL[38] = load(base + "iron_plate.wav");
         soundURL[39] = load(base + "door_iron_open.wav");
+        soundURL[40] = load(base + "dice.wav");
+        soundURL[41] = load(base + "dice_long.wav");
 
     }
 
@@ -111,6 +113,7 @@ public class Sound {
         setFile(i);
         play();
     }
+
 
     public void checkVolume(){
         switch (volumeScale){

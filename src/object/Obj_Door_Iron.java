@@ -27,7 +27,7 @@ public class Obj_Door_Iron extends Entity {
     }
 
     public void setDialogue(){
-        dialogue[0][0]= "Arrr! This door won’t budge without a doing a challenge, matey!";
+        dialogue[0][0] = "Arrr! This door won’t budge ‘til ye prove yer worth!";
 
     }
     public void interact(){

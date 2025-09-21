@@ -1,6 +1,8 @@
 package Entity;
 
 import AI.Node;
+import Gambling.BlackJack;
+import Gambling.Dice;
 import Main.GamePanel;
 import Main.Utility;
 
@@ -123,6 +125,9 @@ public class Entity {
     boolean isIdle = false;
     int idleCounter = 0;
     int idleDuration = 120;
+
+    public Dice diceGame;
+    public BlackJack blackJackGame;
     public Entity(GamePanel gp) {
         this.gp = gp;
     }
@@ -466,6 +471,9 @@ public class Entity {
             scale = ImageIO.read(is);
             if(name.contains("door")){
                 scale = u.scaleImage(scale, (int) (gp.tileSize*2.0), (int) (gp.tileSize*2.0));
+            }
+            if(name.contains("card")){
+                scale = u.scaleImage(scale, (int) (gp.tileSize*3.0), (int) (gp.tileSize*3.0));
             }
             scale = u.scaleImage(scale, gp.tileSize, gp.tileSize);
         } catch (IOException e) {

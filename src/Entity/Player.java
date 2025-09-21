@@ -125,11 +125,11 @@ public class Player extends Entity {
     }
 
     public void setDefaultPosition(){
-//        x = gp.tileSize * 23;
-//        y = gp.tileSize * 23;
-        gp.currentMap=2;
-        x = gp.tileSize * 9;
-        y = gp.tileSize * 42;
+        x = gp.tileSize * 23;
+        y = gp.tileSize * 23;
+//        gp.currentMap=2;
+//        x = gp.tileSize * 9;
+//        y = gp.tileSize * 42;
         moveDirection = "down";
         facingDirection = "down";
         invincible=false;

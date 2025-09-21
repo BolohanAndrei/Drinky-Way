@@ -1,9 +1,6 @@
 package Main;
 
-import Entity.DrunkNPC;
-import Entity.DrunkNPC1;
-import Entity.MerchantNPC;
-import Entity.RockNPC;
+import Entity.*;
 import Monster.MON_GSlime;
 import Monster.MON_BlueSlime;
 import Monster.MON_Orc;
@@ -97,7 +94,7 @@ public class AssetManager {
         gp.npc[mapNum][i].y = 23 * gp.tileSize;
 
         mapNum++;
-        i++;
+        i=0;
         gp.npc[mapNum][i]=new MerchantNPC(gp);
         gp.npc[mapNum][i].x = 12 * gp.tileSize;
         gp.npc[mapNum][i].y = 7 * gp.tileSize;
@@ -116,8 +113,41 @@ public class AssetManager {
         gp.npc[mapNum][i]=new RockNPC(gp);
         gp.npc[mapNum][i].x = 23 * gp.tileSize;
         gp.npc[mapNum][i].y = 14 * gp.tileSize;
-        i++;
 
+        mapNum=4;
+        i=0;
+        gp.npc[mapNum][i]=new MerchantNPC(gp);
+        gp.npc[mapNum][i].inventory.clear();
+        gp.npc[mapNum][i].inventory.add(new object.Obj_Beer(gp));
+        gp.npc[mapNum][i].inventory.add(new object.Obj_Cigarette(gp));
+        gp.npc[mapNum][i].inventory.add(new object.Obj_Drugs(gp));
+        gp.npc[mapNum][i].inventory.add(new object.Obj_Tequila(gp));
+        gp.npc[mapNum][i].inventory.add(new object.Obj_Rum(gp));
+        gp.npc[mapNum][i].inventory.add(new object.Obj_Whiskey(gp));
+        gp.npc[mapNum][i].x = 12 * gp.tileSize;
+        gp.npc[mapNum][i].y = 7 * gp.tileSize;
+        i++;
+        gp.npc[mapNum][i]=new DiceGamberNPC(gp);
+        gp.npc[mapNum][i].x = 21 * gp.tileSize;
+        gp.npc[mapNum][i].y = 4 * gp.tileSize;
+        i++;
+        gp.npc[mapNum][i]=new DiceGamberNPC(gp);
+        gp.npc[mapNum][i].diceGame.betOptions= new int[]{100, 200, 500, 1000, 2000};
+        gp.npc[mapNum][i].x = 24 * gp.tileSize;
+        gp.npc[mapNum][i].y = 4 * gp.tileSize;
+        i++;
+        gp.npc[mapNum][i]=new DiceGamberNPC(gp);
+        gp.npc[mapNum][i].x = 21 * gp.tileSize;
+        gp.npc[mapNum][i].y = 14 * gp.tileSize;
+        i++;
+        gp.npc[mapNum][i]=new DiceGamberNPC(gp);
+        gp.npc[mapNum][i].diceGame.betOptions= new int[]{100, 200, 500, 1000, 2000};
+        gp.npc[mapNum][i].x = 24 * gp.tileSize;
+        gp.npc[mapNum][i].y = 14 * gp.tileSize;
+        i++;
+        gp.npc[mapNum][i]=new BlackJackGamblerNPC(gp);
+        gp.npc[mapNum][i].x = 27 * gp.tileSize;
+        gp.npc[mapNum][i].y = 14 * gp.tileSize;
 
     }
 

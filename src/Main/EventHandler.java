@@ -79,6 +79,12 @@ public class EventHandler{
             else if(hit(1,12,13,"any")){  //back from shop
                 teleportEvent(0,10,39);
             }
+            else if(hit(0,30,29,"any")){  //tavern
+                teleportEvent(4,12,13);
+            }
+            else if(hit(4,12,13,"any")){  //back from tavern
+                teleportEvent(0,30,29);
+            }
             else if(hit(0,12,9,"any")){  //dungeon
                 teleportEvent(2,9,41);
             }
@@ -141,7 +147,7 @@ public class EventHandler{
                 gp.music.stopMusic();
                 gp.music.playMusic(15);
             }
-            if(map==1){
+            if(map==1 || map==4){
                 gp.music.stopMusic();
                 gp.music.playMusic(35);
             }

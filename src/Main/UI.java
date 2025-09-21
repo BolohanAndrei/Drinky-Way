@@ -46,6 +46,8 @@ public class UI {
 
     public Entity trade; //NPC
     public Entity chest;
+    public Gambling.Dice diceGame; // Dice gambling game reference
+    public Gambling.BlackJack blackJackGame; // BlackJack gambling game reference
 
     private int optionScrollOffset=0;
 
@@ -163,6 +165,16 @@ public class UI {
         //SAVE STATE
         if(gp.gameState == gp.saveState){
             drawSaveScreen();
+        }
+
+        //DICE GAMBLING STATE
+        if(gp.gameState == gp.diceGambleState){
+            drawDiceGambleScreen();
+        }
+
+        //BLACKJACK GAMBLING STATE
+        if(gp.gameState == gp.blackJackGambleState){
+            drawBlackJackGambleScreen();
         }
 
         //AUTO-SAVE MESSAGE
@@ -1456,5 +1468,16 @@ public class UI {
         if(sz<=48f) return font48;
         if(sz<=64f) return font64;
         return font68 != null ? font68 : (PublicPixel!=null?PublicPixel: new Font("Arial",Font.PLAIN,(int)sz));
+    }
+
+    public void drawDiceGambleScreen() {
+        if (diceGame != null) {
+            diceGame.draw(g2);
+        }
+    }
+    public void drawBlackJackGambleScreen() {
+        if (blackJackGame != null) {
+            blackJackGame.draw(g2);
+        }
     }
 }

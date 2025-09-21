@@ -56,6 +56,10 @@ public class KeyHandler implements KeyListener, MouseListener {
                 previousGameState = gp.chestState;
                 gp.gameState=gp.optionState;
             }
+            else if(gp.gameState==gp.diceGambleState){
+                previousGameState = gp.diceGambleState;
+                gp.gameState = gp.optionState;
+            }
             else if(gp.gameState==gp.sleepState){
                 previousGameState = gp.sleepState;
                 gp.gameState=gp.optionState;
@@ -97,6 +101,14 @@ public class KeyHandler implements KeyListener, MouseListener {
         //Chest State
         else if(gp.gameState==gp.chestState){
             chestState(code);
+        }
+        //Dice Gambling State
+        else if(gp.gameState==gp.diceGambleState){
+            diceGambleState(code);
+        }
+        //BlackJack Gambling State
+        else if(gp.gameState==gp.blackJackGambleState){
+            blackJackGambleState(code);
         }
         //Map Stat
         else if(gp.gameState==gp.mapState){
@@ -499,6 +511,63 @@ public class KeyHandler implements KeyListener, MouseListener {
                 gp.ui.commandNum++;
                 if (gp.ui.commandNum > 1) {
                     gp.ui.commandNum = 0;
+                }
+            }
+        }
+    }
+    public void diceGambleState(int code) {
+        if (gp.ui.diceGame != null) {
+            if (gp.ui.diceGame.gamePhase == 0) {
+                if(code == KeyEvent.VK_E) {
+                    gp.gameState = gp.playState;
+                }
+                if (code == KeyEvent.VK_W) {
+                    gp.se.playSE(19);
+                    gp.ui.diceGame.decreaseBet();
+                }
+                if (code == KeyEvent.VK_S) {
+                    gp.se.playSE(19);
+                    gp.ui.diceGame.increaseBet();
+                }
+                if (code == KeyEvent.VK_ENTER) {
+                    gp.se.playSE(19);
+                    gp.ui.diceGame.confirmBet();
+                }
+            }
+        }
+    }
+    public void blackJackGambleState(int code) {
+        if (gp.ui.blackJackGame != null) {
+            if (gp.ui.blackJackGame.gamePhase == 0) {
+                // Bet selection phase
+                if(code == KeyEvent.VK_E) {
+                    gp.gameState = gp.playState;
+                }
+                if (code == KeyEvent.VK_W) {
+                    gp.se.playSE(19);
+                    gp.ui.blackJackGame.decreaseBet();
+                }
+                if (code == KeyEvent.VK_S) {
+                    gp.se.playSE(19);
+                    gp.ui.blackJackGame.increaseBet();
+                }
+                if (code == KeyEvent.VK_ENTER) {
+                    gp.se.playSE(19);
+                    gp.ui.blackJackGame.confirmBet();
+                }
+            } else if (gp.ui.blackJackGame.gamePhase == 2) {
+                // Player's turn - handle action selection
+                if (code == KeyEvent.VK_W) {
+                    gp.se.playSE(19);
+                    gp.ui.blackJackGame.handlePlayerInput("w");
+                }
+                if (code == KeyEvent.VK_S) {
+                    gp.se.playSE(19);
+                    gp.ui.blackJackGame.handlePlayerInput("s");
+                }
+                if (code == KeyEvent.VK_ENTER) {
+                    gp.se.playSE(19);
+                    gp.ui.blackJackGame.handlePlayerInput("enter");
                 }
             }
         }

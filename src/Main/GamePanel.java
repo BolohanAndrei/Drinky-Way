@@ -53,6 +53,8 @@ public class GamePanel extends JPanel implements Runnable {
     public final int sleepState=9;
     public final int mapState=10;
     public final int saveState=11;
+    public final int diceGambleState=12;
+    public final int blackJackGambleState=13;
 
     public long autoSaveTimer = 0;
     public final long AUTO_SAVE_INTERVAL = 36000;
@@ -180,7 +182,16 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    public void printPlayerTile() {
+        int centerX = player.x + player.solidArea.x + player.solidArea.width / 2;
+        int centerY = player.y + player.solidArea.y + player.solidArea.height / 2;
+        int col = centerX / tileSize;
+        int row = centerY / tileSize;
+        System.out.println("Player tile -> row=" + row + " col=" + col);
+    }
+
     public void update() {
+        //printPlayerTile();
         if (gameState == playState) {
             tick++;
 
@@ -203,29 +214,44 @@ public class GamePanel extends JPanel implements Runnable {
             player.update();
             map.updateExploration();
             drinkSystem.update(player);
-            for(int i=0;i<npc[currentMap].length;i++){
-                if(npc[currentMap][i] == null) continue;
+            for (int i = 0; i < npc[currentMap].length; i++) {
+                if (npc[currentMap][i] == null) continue;
                 npc[currentMap][i].update();
             }
             for (int i = 0; i < monster[currentMap].length; i++) {
                 Entity m = monster[currentMap][i];
                 if (m == null) continue;
                 if (m.alive) m.update();
-                if (!m.alive) { m.checkDrop(); monster[currentMap][i] = null; }
+                if (!m.alive) {
+                    m.checkDrop();
+                    monster[currentMap][i] = null;
+                }
             }
             for (int i = projectiles.size() - 1; i >= 0; i--) {
                 Entity p = projectiles.get(i);
-                if (p == null || !p.alive) projectiles.remove(i); else p.update();
+                if (p == null || !p.alive) projectiles.remove(i);
+                else p.update();
             }
             for (int i = particles.size() - 1; i >= 0; i--) {
                 Entity p = particles.get(i);
-                if (p == null || !p.alive) particles.remove(i); else p.update();
+                if (p == null || !p.alive) particles.remove(i);
+                else p.update();
             }
-            for(int i=0;i<iTile[currentMap].length;i++){
-                if(iTile[currentMap][i] == null) continue;
+            for (int i = 0; i < iTile[currentMap].length; i++) {
+                if (iTile[currentMap][i] == null) continue;
                 iTile[currentMap][i].update();
             }
             envManager.update();
+        }
+        if (gameState == diceGambleState) {
+            if (ui.diceGame != null) {
+                ui.diceGame.update();
+            }
+        }
+        if (gameState == blackJackGambleState) {
+            if (ui.blackJackGame != null) {
+                ui.blackJackGame.update();
+            }
         }
     }
 

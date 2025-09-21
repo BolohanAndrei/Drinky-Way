@@ -47,7 +47,8 @@ public class tileManager {
                 new MapSpec("/res/maps/worldV3.txt",0),
                 new MapSpec("/res/maps/interior01.txt",1),
                 new MapSpec("/res/maps/dungeon01.txt",2),
-                new MapSpec("/res/maps/dungeon02.txt",3)
+                new MapSpec("/res/maps/dungeon02.txt",3),
+                new MapSpec("/res/maps/tavern.txt",4)
         );
 
         int maxW = 0, maxH = 0;
@@ -230,7 +231,11 @@ public class tileManager {
             g2.drawImage(terrainBuffer, -worldLeft, -worldTop, null);
         }
 
-        g2.setColor(EDGE_COLOR);
+        if(gp.currentMap!=0){
+            g2.setColor(new Color(0,0,0,0));
+        }else{
+            g2.setColor(EDGE_COLOR);
+        }
         if (worldLeft < 0) { int w = -worldLeft; g2.fillRect(0, 0, w, gp.screenHeight); }
         if (worldRight > worldPixelWidth) { int w = worldRight - worldPixelWidth; g2.fillRect(gp.screenWidth - w, 0, w, gp.screenHeight); }
         if (worldTop < 0) { int h2 = -worldTop; g2.fillRect(0, 0, gp.screenWidth, h2); }
