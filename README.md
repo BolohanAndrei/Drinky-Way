@@ -52,33 +52,22 @@ You’re a washed-up privateer with a reputation, a tab at every port, and a cur
 
 ---
 
-## Download & Play (Not finished yet)
+## Download & Play (🚀 How to Play)
 
 - Easiest: Grab the latest build from [Releases](https://github.com/BolohanAndrei/Drinky-Way/releases) and run it.
-- Cross-Platform: Windows, macOS, Linux (Java 17+)
+- Cross-Platform: Windows, macOS, Linux (Java 24+)
 
-### Run from Source (Java 17+)
+### Run from Source (Java 24+)
 
-- Install: JDK 17 or newer
-- Clone:
+- 1. Make sure you have Java 24 or newer installed.
+- 2. Go to the Releases page.
+- 3. Download the latest DrinkyWay2D.jar file.
+- 4. Run the game OR run the game from your terminal:
+
   ```bash
-  git clone https://github.com/BolohanAndrei/Drinky-Way.git
-  cd Drinky-Way
+    java -jar DrinkyWay2D.jar
+
   ```
-- Compile & Run (generic Java layout):
-  - Linux/macOS:
-    ```bash
-    mkdir -p out
-    javac -d out $(find src -name "*.java")
-    java -cp out src.Main
-    ```
-  - Windows (PowerShell):
-    ```powershell
-    mkdir out
-    Get-ChildItem -Recurse -Filter *.java -Path src | ForEach-Object FullName | javac -d out @-
-    java -cp out src.Main
-    ```
-- Using Gradle/Maven? Text me!.
 
 ---
 
