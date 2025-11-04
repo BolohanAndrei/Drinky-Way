@@ -17,7 +17,7 @@ public class IT_DryTree extends InteractiveTiles{
         solidAreaDefaultY = solidArea.y;
         this.x=gp.tileSize*col;
         this.y=gp.tileSize*row;
-        down1=setup("/tiles_interactive/drytree");
+        down1=setup("tiles_interactive/drytree");
         destructible=true;
         health=3;
     }

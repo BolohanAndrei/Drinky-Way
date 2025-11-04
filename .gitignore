@@ -26,3 +26,12 @@ bin/
 ### OS ###
 .DS_Store
 Thumbs.db
+
+build.gradle
+.gradle/
+/gradle/
+gradle/
+settings.gradle
+gradlew
+gradlew.bat
+qodana.yaml

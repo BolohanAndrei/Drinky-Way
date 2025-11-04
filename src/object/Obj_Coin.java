@@ -12,7 +12,7 @@ public class Obj_Coin extends Entity {
 
         gearType=3;
         name=objName;
-        down1=setup("/objects/coin");
+        down1=setup("objects/coin");
         value=1;
     }
     public boolean use(Entity e){

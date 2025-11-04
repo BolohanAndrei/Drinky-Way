@@ -75,7 +75,7 @@ public class tileManager {
     }
 
     private void loadTileMeta(){
-        try(InputStream is = getClass().getClassLoader().getResourceAsStream("maps/tiledata.txt");
+        try(InputStream is = getClass().getResourceAsStream("/res/maps/tiledata.txt");
             BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(is)))) {
             String line;
             while ((line = br.readLine()) != null) {

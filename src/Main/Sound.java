@@ -13,7 +13,7 @@ public class Sound {
     float volume;
 
     public Sound() {
-        String base = "/sound/";
+        String base = "/res/sound/";
         soundURL[0]  = load(base + "background_1.wav");
         soundURL[1]  = load(base + "background_2.wav");
         soundURL[2]  = load(base + "key_pick_up.wav");

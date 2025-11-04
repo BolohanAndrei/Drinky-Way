@@ -17,7 +17,7 @@ public class IT_Wall extends InteractiveTiles{
         solidAreaDefaultY = solidArea.y;
         this.x=gp.tileSize*col;
         this.y=gp.tileSize*row;
-        down1=setup("/tiles_interactive/destructiblewall");
+        down1=setup("tiles_interactive/destructiblewall");
         destructible=true;
         health=4;
     }

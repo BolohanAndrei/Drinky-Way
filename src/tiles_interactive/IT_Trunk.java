@@ -14,6 +14,6 @@ public class IT_Trunk extends InteractiveTiles{
         solidAreaDefaultY = solidArea.y;
         this.x=gp.tileSize*col;
         this.y=gp.tileSize*row;
-        down1=setup("/tiles_interactive/trunk");
+        down1=setup("tiles_interactive/trunk");
     }
 }

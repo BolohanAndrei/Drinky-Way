@@ -16,6 +16,6 @@ public class IT_MetalPlate extends InteractiveTiles{
         solidAreaDefaultY = solidArea.y;
         this.x=gp.tileSize*col;
         this.y=gp.tileSize*row;
-        down1=setup("/tiles_interactive/metalplate");
+        down1=setup("tiles_interactive/metalplate");
     }
 }

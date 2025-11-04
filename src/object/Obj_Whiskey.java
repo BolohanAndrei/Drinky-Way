@@ -9,7 +9,7 @@ public class Obj_Whiskey extends Entity {
         super(gp);
         name=objName;
         gearType=2;
-        down1=setup("objects/Whiskey");
+        down1=setup("objects/whiskey");
         alcohol=40;
         value=50;
         stackable=true;
